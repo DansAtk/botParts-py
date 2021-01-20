@@ -1,22 +1,21 @@
 # A test bot module to utilize the commands module.
 
-#import sys
 import config
-import commands
+import commandsmodule
 
 includes = {}
 
-study = commands.command('study', __name__)
+study = commandsmodule.command('study', __name__)
 
 def init():
     includes.update({study.name : study})
     study.description = "A command for tracking and monitoring study habits."
     study.function = 'studyF'
 
-    study.parameters.update({'log' : commands.command('log', __name__)})
-    study.parameters['log'].parameters.update({'mark' : commands.command('mark', __name__)})
-    study.parameters['log'].parameters.update({'unmark' : commands.command('unmark', __name__)})
-    study.parameters['log'].parameters.update({'check' : commands.command('check', __name__)})
+    study.parameters.update({'log' : commandsmodule.command('log', __name__)})
+    study.parameters['log'].parameters.update({'mark' : commandsmodule.command('mark', __name__)})
+    study.parameters['log'].parameters.update({'unmark' : commandsmodule.command('unmark', __name__)})
+    study.parameters['log'].parameters.update({'check' : commandsmodule.command('check', __name__)})
 
     study.parameters['log'].function = 'logF'
     study.parameters['log'].description = "Allows manipulation of tracked study sessions."

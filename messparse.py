@@ -5,7 +5,7 @@ import sys
 
 def read(text):
 
-    if text.startswith('!'):
+    if text.startswith(config.trigger):
         message = text[1:].split(" ")
         valid = 0
         for module in config.imported:
