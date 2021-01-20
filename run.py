@@ -3,6 +3,7 @@ import commands
 import messparse
 import saymodule
 import studymodule
+import controlmodule
 
 def main():
     while True:
