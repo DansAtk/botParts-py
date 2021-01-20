@@ -1,12 +1,13 @@
 # Classes and functions for organising available commands in each module.
 
-import config
 import sys
+
+import config
 
 includes = {}
 
 def init():
-    config.imported.append('commands')
+    config.imported.append('commandsmodule')
 
 class command:
     def __init__(self, callname, module):
