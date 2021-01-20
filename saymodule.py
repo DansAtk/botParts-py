@@ -7,26 +7,26 @@ import commands
 def init():
     say = commands.command('say', __name__)
     includes.update({say.name : say})
-    say.description = "repeats the input text."
-    say.function = 'say'
+    say.description = "Repeats the input text."
+    say.function = 'sayF'
 
     say.parameters.update({'quietly' : commands.command('quietly', __name__)})
     say.parameters.update({'loudly' : commands.command('loudly', __name__)})
 
-    say.parameters['quietly'].function = 'quietly'
-    say.parameters['quietly'].description = "quietly says things"
-    say.parameters['loudly'].function = 'loudly'
-    say.parameters['loudly'].description = "shouts things in all caps"
+    say.parameters['quietly'].function = 'quietlyF'
+    say.parameters['quietly'].description = "Quietly says things."
+    say.parameters['loudly'].function = 'loudlyF'
+    say.parameters['loudly'].description = "Shouts things in all caps."
 
-def say(message):
+def sayF(message):
     fullMessage = ' '.join(message)
     print(fullMessage)
 
-def loudly(message):
+def loudlyF(message):
     fullMessage = ' '.join(message)
     print(fullMessage.upper())
 
-def quietly(message):
+def quietlyF(message):
     fullMessage = ' '.join(message)
     print(fullMessage.lower())
 
