@@ -4,11 +4,10 @@ import config
 import sys
 
 def read(text):
-
-    if text.startswith(config.trigger):
+    if text.startswith(config.settings['trigger']):
         message = text[1:].split(" ")
         valid = 0
-        for module in config.imported:
+        for module in config.imports:
             if message[0] in sys.modules[module].includes.keys():
                 valid = 1
                 i = 1 
@@ -26,4 +25,4 @@ def read(text):
             print("Invalid command!")
 
 if __name__ == "__main__":
-    print("Don't use this as a main!")
+    print("No main.")
