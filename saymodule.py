@@ -1,4 +1,4 @@
-# A test bot module to utilize the commands module.
+# A test bot module that repeats an input phrase in different ways.
 
 import sys
 import config
@@ -31,9 +31,9 @@ def quietly(message):
     print(fullMessage.lower())
 
 if __name__ == "__main__":
-    print("botmodule is in control.")
+    print("saymodule is in control.")
     init()
 else:
-    config.imported.append('botmodule')
+    config.imported.append('saymodule')
     includes = {}
     init()
