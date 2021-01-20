@@ -1,12 +1,13 @@
 import sys
 
 import config
-import commands
+import commandsmodule
 
 includes = {}
 
+exit = commandsmodule.command('exit', __name__)
+
 def init():
-    exit = commands.command('exit', __name__)
     includes.update({exit.name : exit})
     exit.description = "Closes the bot gracefully."
     exit.function = 'exitF'
@@ -16,6 +17,6 @@ def exitF(message):
     sys.exit()
 
 if __name__ == "__main__":
-    main()
+    print("No main.")
 else:
     init()

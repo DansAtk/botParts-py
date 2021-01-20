@@ -2,16 +2,17 @@
 
 import sys
 import config
-import commands
+import commandsmodule
+
+say = commandsmodule.command('say', __name__)
 
 def init():
-    say = commands.command('say', __name__)
     includes.update({say.name : say})
     say.description = "Repeats the input text."
     say.function = 'sayF'
 
-    say.parameters.update({'quietly' : commands.command('quietly', __name__)})
-    say.parameters.update({'loudly' : commands.command('loudly', __name__)})
+    say.parameters.update({'quietly' : commandsmodule.command('quietly', __name__)})
+    say.parameters.update({'loudly' : commandsmodule.command('loudly', __name__)})
 
     say.parameters['quietly'].function = 'quietlyF'
     say.parameters['quietly'].description = "Quietly says things."
