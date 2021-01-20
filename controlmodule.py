@@ -11,7 +11,7 @@ def init():
     includes.update({exit.name : exit})
     exit.description = "Closes the bot gracefully."
     exit.function = 'exitF'
-    config.imported.append('controlmodule')
+    config.imports.append('controlmodule')
 
 def exitF(message):
     sys.exit()

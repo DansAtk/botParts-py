@@ -7,7 +7,7 @@ import config
 includes = {}
 
 def init():
-    config.imported.append('commandsmodule')
+    config.imports.append('commandsmodule')
 
 class command:
     def __init__(self, callname, module):
@@ -26,7 +26,12 @@ class command:
 
         helptext += "help."
         return helptext
-    def execute(self, additional):
+
+    def paramError(self, additional):
+        errorText = "Unknown parameter(s) \'" + ' '.join(additional) + "\'. Available parameters: " + ', '.join(self.parameters) + (', ' * (len(self.parameters) > 0)) + "help."
+        return errorText
+
+    def execute(self, additional=""):
         getattr(sys.modules[self.parent_module], self.function)(additional)
 
 def main():
