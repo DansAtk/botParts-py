@@ -35,6 +35,6 @@ if __name__ == "__main__":
     print("saymodule is in control.")
     init()
 else:
-    config.imported.append('saymodule')
+    config.imports.append('saymodule')
     includes = {}
     init()

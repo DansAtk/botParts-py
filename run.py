@@ -5,13 +5,16 @@ import messparse
 import saymodule
 import studymodule
 import controlmodule
+import usertimemodule
 
 def main():
-    while True:
-        input_text = input()
+    try:
+        while True:
+            input_text = input()
 
-        messparse.read(input_text)
-
+            messparse.read(input_text)
+    finally:
+        configmodule.cleanUp()
 
 if __name__ == "__main__":
     main()
