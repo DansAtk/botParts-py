@@ -9,16 +9,14 @@ def init():
     config.imported.append('commands')
     print("\n")
 class command:
-    name = ""
-    parent_module = ""
     def __init__(self, callname, module):
         self.name = callname
         self.parent_module = module
-    description = ""
-    function = ""
-    parameters = {}
-    enabled = True
-    permlevel = 0
+        self.description = ""
+        self.parameters = {}
+        self.function = ""
+        self.enabled = True
+        self.permlevel = 0
 
     def help(self):
         helptext = self.description + " Available parameters: "
@@ -41,4 +39,3 @@ if __name__ == "__main__":
     main()
 else:
     init()
-    print("Commands module has been imported.")

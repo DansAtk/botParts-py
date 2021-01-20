@@ -1,9 +1,8 @@
-import sys
-
 import config
 import commands
-import botmodule
 import messparse
+import saymodule
+import studymodule
 
 def main():
     while True:

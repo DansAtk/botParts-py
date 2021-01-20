@@ -17,9 +17,10 @@ def read(text):
                     if word in pack.parameters.keys():
                         pack = pack.parameters[word]
                         i += 1
-                
-                #thetext = ' '.join(message[i:])
-                pack.execute(message[i:])
+                if ' '.join(message[i:]) == "help":
+                    print(pack.help())
+                else:
+                    pack.execute(message[i:])
 
         if valid == 0:
             print("Invalid command!")
