@@ -7,7 +7,7 @@ includes = {}
 
 def init():
     config.imported.append('commands')
-    print("\n")
+
 class command:
     def __init__(self, callname, module):
         self.name = callname
@@ -27,10 +27,6 @@ class command:
         return helptext
     def execute(self, additional):
         getattr(sys.modules[self.parent_module], self.function)(additional)
-
-def parseCommand():
-    print("parsing")
-    return
 
 def main():
     return
