@@ -1,1 +1,2 @@
 imported = []
+trigger = '!'

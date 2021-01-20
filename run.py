@@ -1,5 +1,6 @@
 import config
-import commands
+import configmodule
+import commandsmodule
 import messparse
 import saymodule
 import studymodule
