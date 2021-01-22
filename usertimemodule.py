@@ -23,14 +23,15 @@ def timeF(message):
     if len(message) > 0:
         print(time.paramError(message))
     else:
-        today = datetime.datetime.now()
-        print(today)
+        print(getTime())
 
 def setF(message):
     if len(message) > 0:
         print(time.parameters['set'].paramError(message))
     else:
         print("The time has been set.")
+def getTime():
+    return datetime.datetime.now().strftime("%H:%M:%S")
 
 if __name__ == "__main__":
     print("No main.")
