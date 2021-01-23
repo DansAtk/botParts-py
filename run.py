@@ -7,6 +7,7 @@ import studymodule
 import controlmodule
 import usertimemodule
 #import drawmodule
+import moduletemplate
 
 def main():
     try:
