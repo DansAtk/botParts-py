@@ -6,7 +6,7 @@ includes = {}
 commandtemplate = commandsmodule.command('commandtemplate', __name__)
 
 def init():
-    config.imports.append('ref.moduletemplate')
+    config.imports.append('moduletemplate')
     includes.update({commandtemplate.name : commandtemplate})
     commandtemplate.description = "A template for a new command."
     commandtemplate.function = 'commandtemplateF'
