@@ -1,3 +1,4 @@
+import sqlite3
 import config
 import commandsmodule
 
@@ -6,7 +7,7 @@ includes = {}
 commandtemplate = commandsmodule.command('commandtemplate', __name__)
 
 def init():
-    config.imports.append('moduletemplate')
+    config.imports.append('databasemodule')
     includes.update({commandtemplate.name : commandtemplate})
     commandtemplate.description = "A template for a new command."
     commandtemplate.function = 'commandtemplateF'
@@ -16,7 +17,22 @@ def init():
         "A template for a new command.")
     commandtemplate.parameters['parametertemplate'].function = (
         'parametertemplateF')
-    print("Imported moduletemplate.")
+
+def initialize():
+    try:
+        conn = sqlite3.connect(config.database)
+        cursor = conn.cursor()
+        cursor.execute("CREATE TABLE users(id INTEGER PRIMARY KEY, username TEXT, " 
+        + "password TEXT, rank INTEGER)")
+        print("Users table initialized.")
+    except:
+        print("Error.")
+    finally:
+        conn.commit()
+        conn.close()
+
+def getUser():
+    print("Hello")
 
 def commandtemplateF(message):
     if len(message) > 0:
