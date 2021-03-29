@@ -42,8 +42,7 @@ def logF(message):
     print("Please specify a parameter. Available parameters: " + ', '.join(study.parameters['log'].parameters) + ", help.")
 
 if __name__ == "__main__":
-    print("This is the study module.")
-    init()
+    print("A collection of study tracking commands for a botParts bot. No main.")
 else:
     config.imports.append('studymodule')
     init()
