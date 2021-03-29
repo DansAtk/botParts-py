@@ -32,6 +32,9 @@ def parametertemplateF(message):
         print("A template for a new parameter's function. Should expect the " +
         "remainder of the typed command as an argument.")
 
+def dbinit(DB):
+    print("moduletemplate dbinit")
+
 if __name__ == "__main__":
     print("No main.")
 else:

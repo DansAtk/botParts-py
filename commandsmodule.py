@@ -45,10 +45,14 @@ def read(text):
                     if word in pack.parameters.keys():
                         pack = pack.parameters[word]
                         i += 1
-                if ' '.join(message[1:]) == "help":
+                if ' '.join(message[i:]) == "help":
                     print(pack.help())
                 else:
-                    pack.execute(message[1:])
+                    try:
+                        pack.execute(' '.join(message[i:]))
+                    except AttributeError:
+                        print("This parameter does not have an associated function.")
+
         if valid == 0:
             print("Invalid command!")
 

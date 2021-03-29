@@ -32,8 +32,7 @@ def quietlyF(message):
     print(fullMessage.lower())
 
 if __name__ == "__main__":
-    print("saymodule is in control.")
-    init()
+    print("A module for repeating a given message in a number of formats. No main.")
 else:
     config.imports.append('saymodule')
     includes = {}
