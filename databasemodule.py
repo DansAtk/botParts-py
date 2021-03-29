@@ -1,49 +1,51 @@
+import os
 import sqlite3
 import config
 import commandsmodule
 
 includes = {}
 
-commandtemplate = commandsmodule.command('commandtemplate', __name__)
+data = commandsmodule.command('data', __name__)
 
 def init():
     config.imports.append('databasemodule')
-    includes.update({commandtemplate.name : commandtemplate})
-    commandtemplate.description = "A template for a new command."
-    commandtemplate.function = 'commandtemplateF'
-    commandtemplate.parameters.update({'parametertemplate' : 
+    includes.update({data.name : data})
+    data.description = "A template for a new command."
+    data.function = 'dataF'
+    data.parameters.update({'parametertemplate' : 
         commandsmodule.command('parametertemplate', __name__)})
-    commandtemplate.parameters['parametertemplate'].description = (
+    data.parameters['parametertemplate'].description = (
         "A template for a new command.")
-    commandtemplate.parameters['parametertemplate'].function = (
+    data.parameters['parametertemplate'].function = (
         'parametertemplateF')
 
 def initialize():
+    if not os.path.isdir(config.dataPath):
+        os.mkdir(config.dataPath)
+    
     try:
         conn = sqlite3.connect(config.database)
         cursor = conn.cursor()
         cursor.execute("CREATE TABLE users(id INTEGER PRIMARY KEY, username TEXT, " 
         + "password TEXT, rank INTEGER)")
         print("Users table initialized.")
-    except:
-        print("Error.")
-    finally:
         conn.commit()
         conn.close()
+    except:
+        print("Error.")
 
 def getUser():
     print("Hello")
 
-def commandtemplateF(message):
+def dataF(message):
     if len(message) > 0:
-        print(commandtemplate.paramError(message))
+        print(data.paramError(message))
     else:
-        print("A template for a new command's function. Should expect the " +
-        "remainder of the typed command as an argument.")
+        initialize()
 
 def parametertemplateF(message):
     if len(message) > 0:
-        print(commandtemplate.parameters['parametertemplate'].paramError(message))
+        print(data.parameters['parametertemplate'].paramError(message))
     else:
         print("A template for a new parameter's function. Should expect the " +
         "remainder of the typed command as an argument.")
