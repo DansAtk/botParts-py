@@ -49,7 +49,7 @@ def read(text):
                     print(pack.help())
                 else:
                     try:
-                        pack.execute(' '.join(message[i:]))
+                        pack.execute(message[i:])
                     except AttributeError:
                         print("This parameter does not have an associated function.")
 
