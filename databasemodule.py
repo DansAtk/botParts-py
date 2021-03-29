@@ -15,6 +15,7 @@ def init():
     config.imports.append('databasemodule')
     includes.update({database.name : database})
     database.description = "Commands for managing databases in the bot's data folder."
+    database.function = 'databaseF'
     database.parameters.update({'setup' : 
         commandsmodule.command('setup', __name__)})
     database.parameters['setup'].description = (
@@ -24,7 +25,7 @@ def init():
         commandsmodule.command('set', __name__)})
     database.parameters['set'].description = (
         "Sets the current active database.")
-    database.parameters['set'].function = 'setDB'
+    database.parameters['set'].function = 'setDBF'
     database.parameters.update({'get' : 
         commandsmodule.command('get', __name__)})
     database.parameters['get'].description = (
@@ -35,7 +36,18 @@ def init():
     database.parameters['list'].description = (
         "Lists all databases in the bot's data folder.")
     database.parameters['list'].function = 'listDBF'
+    database.parameters.update({'delete' : 
+        commandsmodule.command('delete', __name__)})
+    database.parameters['delete'].description = (
+        "Deletes a database. By default, deletes the currently active database if one is not specified.")
+    database.parameters['delete'].function = 'deleteF'
 
+def databaseF(message):
+    if len(message) > 0:
+        print(database.paramError(message))
+    else:
+        initialize()
+        
 def initialize(message=''):
     global currentDB
 
@@ -97,7 +109,7 @@ def listDBF(message=''):
     for DB in DBlist:
         print(DB.stem)
 
-def setDB(message):
+def setDBF(message):
     global currentDB
     messageDB = config.dataPath / (message + '.db')
     if messageDB.exists():
@@ -109,18 +121,28 @@ def setDB(message):
         else:
             print('Canceled.')
 
-def databaseF(message):
-    if len(message) > 0:
-        print(data.paramError(message))
-    else:
-        initialize()
+def deleteF(message=''):
+    doDelete = False
 
-def parametertemplateF(message):
     if len(message) > 0:
-        print(data.parameters['parametertemplate'].paramError(message))
+        thisDB = config.dataPath / (message + '.db')
+        if thisDB.exists():
+            doDelete = True
+        else:
+            print('Database \'{dbname}\' does not exist!'.format(dbname=message))
+
     else:
-        print("A template for a new parameter's function. Should expect the " +
-        "remainder of the typed command as an argument.")
+       thisDB = getDB() 
+       doDelete = True
+
+    if doDelete:
+       response = input('Are you sure you want to delete database \'{dbname}\'? <y/N> '.format(dbname=thisDB.stem))
+       
+       if response.lower() == 'y':
+           os.remove(thisDB)
+           print('Database deleted.')
+       else:
+           print('Cancelled.')
 
 if __name__ == "__main__":
     print("No main.")
