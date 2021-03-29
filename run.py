@@ -6,6 +6,7 @@ import studymodule
 import controlmodule
 import usertimemodule
 import moduletemplate
+import databasemodule
 
 def main():
     try:
