@@ -1,20 +1,19 @@
 import config
 import configmodule
 import commandsmodule
-import messparse
 import saymodule
 import studymodule
 import controlmodule
 import usertimemodule
-#import drawmodule
 import moduletemplate
+import databasemodule
 
 def main():
     try:
         while True:
             input_text = input()
 
-            messparse.read(input_text)
+            commandsmodule.read(input_text)
     finally:
         configmodule.cleanUp()
 
