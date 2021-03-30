@@ -2,6 +2,8 @@
 
 import config
 import commandsmodule
+import sqlite3
+import datetime
 
 includes = {}
 
@@ -30,6 +32,7 @@ def studyF(message):
     print("Please specify a parameter. Available parameters: " + ', '.join(study.parameters) + ", help.")
 
 def markF(message):
+
     print(study.parameters['log'].parameters['mark'].description)
 
 def unmarkF(message):
@@ -40,6 +43,29 @@ def checkF(message):
 
 def logF(message):
     print("Please specify a parameter. Available parameters: " + ', '.join(study.parameters['log'].parameters) + ", help.")
+
+def logPull():
+    conn = sqlite3.connect(DB)
+    cursor = conn.cursor()
+    conn.commit()
+    conn.close()
+    return
+
+def logPush():
+    conn = sqlite3.connect(DB)
+    cursor = conn.cursor()
+    conn.commit()
+    conn.close()
+    return
+
+def dbinit(DB):
+    print('Configuring for study logging...')
+    conn = sqlite3.connect(DB)
+    cursor = conn.cursor()
+    cursor.execute("CREATE TABLE studysessions(id INTEGER PRIMARY KEY AUTOINCREMENT, userid INTEGER, datestudied TEXT, streak INTEGER)")
+    print('\'studysessions\' table created.')
+    conn.commit()
+    conn.close()
 
 if __name__ == "__main__":
     print("A collection of study tracking commands for a botParts bot. No main.")
