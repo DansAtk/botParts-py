@@ -4,6 +4,8 @@ import config
 import commandsmodule
 import sys
 import pathlib
+import shutil
+from datetime import *
 
 includes = {}
 
@@ -41,6 +43,11 @@ def init():
     database.parameters['delete'].description = (
         "Deletes a database. By default, deletes the currently active database if one is not specified.")
     database.parameters['delete'].function = 'deleteF'
+    database.parameters.update({'backup' : 
+        commandsmodule.command('backup', __name__)})
+    database.parameters['backup'].description = (
+        "Creates a backup of the selected database, or all databases.")
+    database.parameters['backup'].function = 'backupF'
 
 def databaseF(message):
     if len(message) > 0:
@@ -55,7 +62,7 @@ def initialize(message=''):
         os.mkdir(config.dataPath)
     
     if len(message) > 0:
-        thisDB = config.dataPath / (message + '.db')
+        thisDB = config.dataPath / (' '.join(message) + '.db')
     else:
         thisDB = getDB()
     
@@ -68,7 +75,10 @@ def initialize(message=''):
             else:
                 print('Canceled.')
         else:
-            doInit = True
+            if thisDB.stem.lower() == 'all':
+                print('\'All\' is a reserved word and cannot be used as a database name.')
+            else:
+                doInit = True
 
         if doInit:
             conn = sqlite3.connect(thisDB)
@@ -111,11 +121,11 @@ def listDBF(message=''):
 
 def setDBF(message):
     global currentDB
-    messageDB = config.dataPath / (message + '.db')
+    messageDB = config.dataPath / (' '.join(message) + '.db')
     if messageDB.exists():
         currentDB = messageDB
     else:
-        response = input('Database \'{dbname}\' not found! Would you like to create it? <y/N>'.format(dbname=message))
+        response = input('Database \'{dbname}\' not found! Would you like to create it? <y/N>'.format(dbname=' '.join(message)))
         if response.lower() == 'y':
             initialize(message)
         else:
@@ -125,11 +135,11 @@ def deleteF(message=''):
     doDelete = False
 
     if len(message) > 0:
-        thisDB = config.dataPath / (message + '.db')
+        thisDB = config.dataPath / (' '.join(message) + '.db')
         if thisDB.exists():
             doDelete = True
         else:
-            print('Database \'{dbname}\' does not exist!'.format(dbname=message))
+            print('Database \'{dbname}\' does not exist!'.format(dbname=' '.join(message)))
 
     else:
        thisDB = getDB() 
@@ -143,6 +153,39 @@ def deleteF(message=''):
            print('Database deleted.')
        else:
            print('Cancelled.')
+
+def backup(DB):
+    timestamp = (datetime.now()).strftime("%Y%m%d%H%M%S%f")
+    if not os.path.isdir(config.backupPath):
+        os.mkdir(config.backupPath)
+    backupFile = config.backupPath / ('{dbname}_backup_{code}.db'.format(dbname=DB.stem, code=timestamp))
+    shutil.copy2(DB, backupFile)
+    return backupFile
+
+def backupF(message=''):
+    if len(message) > 0:
+        if ' '.join(message).lower() == 'all':
+            counter = 0
+            for DB in listDB():
+                backup(DB)
+                counter += 1
+
+            print('{dbcount} databases found and backed up.'.format(dbcount=counter))
+
+        else:
+            thisDB = config.dataPath / (' '.join(message) + '.db')
+            if thisDB.exists():
+                oFile = backup(thisDB)
+                print('Database \'{dbname}\' backed up to \'{backupname}\'.'.format(dbname=thisDB.stem, backupname=oFile.name))
+            else:
+                print('Database \'{dbname}\' not found!'.format(dbname=thisDB.stem))
+    else:
+        thisDB = getDB()
+        if thisDB.exists():
+            oFile = backup(thisDB)
+            print('Database \'{dbname}\' backed up to \'{backupname}\'.'.format(dbname=thisDB.stem, backupname=oFile.name))
+        else:
+            print('No database is currently active or selected.')
 
 if __name__ == "__main__":
     print("No main.")
