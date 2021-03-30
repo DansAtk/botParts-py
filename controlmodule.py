@@ -15,6 +15,9 @@ def init():
     config.imports.append('controlmodule')
 
 def exitF(message):
+    for module in config.imports:
+        if hasattr(sys.modules[module], 'cleanup'):
+            sys.modules[module].cleanup()
     sys.exit()
 
 if __name__ == "__main__":
