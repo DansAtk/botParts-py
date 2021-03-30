@@ -187,6 +187,9 @@ def backupF(message=''):
         else:
             print('No database is currently active or selected.')
 
+def cleanup():
+    backupF(['all'])
+
 if __name__ == "__main__":
     print("No main.")
 else:
