@@ -28,11 +28,11 @@ def init():
     database.parameters['set'].description = (
         "Sets the current active database.")
     database.parameters['set'].function = 'setDBF'
-    database.parameters.update({'get' : 
-        commandsmodule.command('get', __name__)})
-    database.parameters['get'].description = (
+    database.parameters.update({'check' : 
+        commandsmodule.command('check', __name__)})
+    database.parameters['check'].description = (
         "Checks the current active database.")
-    database.parameters['get'].function = 'getDBF'
+    database.parameters['check'].function = 'checkDBF'
     database.parameters.update({'list' : 
         commandsmodule.command('list', __name__)})
     database.parameters['list'].description = (
@@ -64,7 +64,7 @@ def initialize(message=''):
     if len(message) > 0:
         thisDB = config.dataPath / (' '.join(message) + '.db')
     else:
-        thisDB = getDB()
+        thisDB = checkDB()
     
     try:
         doInit = False
@@ -83,6 +83,12 @@ def initialize(message=''):
         if doInit:
             conn = sqlite3.connect(thisDB)
             cursor = conn.cursor()
+            cursor.execute("CREATE TABLE info(id INTEGER PRIMARY KEY AUTOINCREMENT, key TEXT, value TEXT)")
+            cursor.execute("INSERT INTO info(key, value) VALUES (?, ?)", ('dbversion', config.dbversion))
+            cursor.execute("INSERT INTO info(key, value) VALUES (?, ?)", ('trigger', '.'))
+            cursor.execute("INSERT INTO info(key, value) VALUES (?, ?)", ('cheer', '\U0001F44D'))
+            cursor.execute("INSERT INTO info(key, value) VALUES (?, ?)", ('serverid', ''))
+            cursor.execute("INSERT INTO info(key, value) VALUES (?, ?)", ('servername', ''))
             conn.commit()
             conn.close()
             for module in config.imports:
@@ -95,7 +101,21 @@ def initialize(message=''):
     except:
         print("Error.")
 
-def getDB():
+def getDB(DBname=''):
+    result = ''
+    if len(DBname) > 0:
+        DB = config.dataPath / (DBname + '.db')
+        if DB.exists():
+            result = DB
+        else:
+            result = 0
+    else:
+        result = 0
+
+    return result
+
+
+def checkDB():
     global currentDB
     DB = ""
     if currentDB:
@@ -105,8 +125,8 @@ def getDB():
 
     return DB
 
-def getDBF(message=''):
-    DB = getDB()
+def checkDBF(message=''):
+    DB = checkDB()
     print('Current active database is: {dbname}'.format(dbname=DB.stem))
 
 def listDB():
@@ -142,7 +162,7 @@ def deleteF(message=''):
             print('Database \'{dbname}\' does not exist!'.format(dbname=' '.join(message)))
 
     else:
-       thisDB = getDB() 
+       thisDB = checkDB() 
        doDelete = True
 
     if doDelete:
@@ -180,7 +200,7 @@ def backupF(message=''):
             else:
                 print('Database \'{dbname}\' not found!'.format(dbname=thisDB.stem))
     else:
-        thisDB = getDB()
+        thisDB = checkDB()
         if thisDB.exists():
             oFile = backup(thisDB)
             print('Database \'{dbname}\' backed up to \'{backupname}\'.'.format(dbname=thisDB.stem, backupname=oFile.name))

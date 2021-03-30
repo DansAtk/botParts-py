@@ -4,9 +4,9 @@ import commandsmodule
 import saymodule
 import studymodule
 import controlmodule
-import usertimemodule
 import moduletemplate
 import databasemodule
+import usermgmtmodule
 
 def main():
     try:
