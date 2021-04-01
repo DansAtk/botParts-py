@@ -59,9 +59,12 @@ class command:
                 print('The associated function requires arguments.')
         
         except AttributeError:
-            print('No associated function found.')
+            if args:
+                print(self.paramError(' '.join(args)))
+            else:
+                print('No associated function found.')
 
-        except :
+        except Exception:
             print(sys.exc_info()[0])
 
 # Utility function for reading incoming text and parsing it for both a valid trigger and valid commands across all imported botParts modules. If a valid command is found, its associated function is executed and passed the remainder of the input text as arguments.
@@ -88,6 +91,8 @@ def read(userinput):
 
         if valid == False:
             print('Invalid command!')
+    else:
+        print('No trigger found!')
 
 # Use init() to declare and set up commands, and register them with the module's dictionary so they can be found by the bot. Command objects can be denoted with a C at the end as a naming convention.
 def init():
