@@ -3,13 +3,14 @@
 # botParts requires sys, commandM and config to be imported by all modules.
 import sys
 import inspect
-import config
+
+from core import config
 
 # These lines are also required by all botParts modules for the module to register itself with the bot and set up its own dictionary of commands. Defining mSelf as the current module makes it easier to define top-level module commands.
 
 mSelf = sys.modules[__name__]
 includes = {}
-config.imports.append('commandM')
+config.imports.append(__name__)
 
 # The command class. Can be used to define top level commands and sub-commands/arguments/parameters. Every command must be given at least a name and a parent. All subcommand trees must lead back to a top level command that has the module itself as a parent.
 class command:
@@ -64,8 +65,8 @@ class command:
             else:
                 print('No associated function found.')
 
-        except Exception:
-            print(sys.exc_info()[0])
+#        except Exception:
+#            print(sys.exc_info()[0])
 
 # Utility function for reading incoming text and parsing it for both a valid trigger and valid commands across all imported botParts modules. If a valid command is found, its associated function is executed and passed the remainder of the input text as arguments.
 def read(userinput):
