@@ -1,10 +1,11 @@
 import sys
-import config
-from commandM import command
+
+from core import config
+from core.commandM import command
 
 mSelf = sys.modules[__name__]
 includes = {}
-config.imports.append('controlM')
+config.imports.append(__name__)
 
 def init():
     shutdownC = command('shutdown', mSelf)
