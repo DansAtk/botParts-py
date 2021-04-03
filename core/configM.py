@@ -1,12 +1,12 @@
+import sys
 import json
 
-from commandM import command
-import sys
-import config
+from core import config
+from core.commandM import command
 
 mSelf = sys.modules[__name__]
 includes = {}
-config.imports.append('configM')
+config.imports.append(__name__)
 
 def init():
     pushC = command('push', mSelf)
@@ -25,7 +25,7 @@ def init():
 def pushF():
     print('Pushing config to file...')
     try:
-        with open('./conf.json', 'w') as conf:
+        with open(config.conFile, 'w') as conf:
             json.dump(config.settings, conf)
         print('Success!')
     except:
@@ -34,7 +34,7 @@ def pushF():
 def pullF():
     print('Pulling config from file...')
     try:
-        with open('./conf.json', 'r') as conf:
+        with open(config.conFile, 'r') as conf:
             config.settings = json.load(conf)
         print('Success!')
     except FileNotFoundError:
