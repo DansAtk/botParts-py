@@ -1,13 +1,15 @@
 import pathlib
 
-settings = {'trigger' : '!'}
+settings = {'trigger' : '!', 'dbversion' : '0.3'}
 
+# Tracking imported botParts modules.
 imports = []
 
-if __name__ == "__main__":
-    print("No main.")
-
+# Paths
 backupPath = pathlib.Path.cwd() / 'backup'
 dataPath = pathlib.Path.cwd() / 'data'
 conFile = pathlib.Path.cwd() / 'core' / 'conf.json'
-dbversion = '0.2'
+database = dataPath / 'unified.db'
+
+if __name__ == "__main__":
+    print("No main.")

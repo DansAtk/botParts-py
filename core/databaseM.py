@@ -67,6 +67,7 @@ def initialize(userinput=''):
         if thisDB.exists():
             response = input('Database \'{dbname}\' already exists. Re-initialize database? This will empty the database. <y/N> '.format(dbname=thisDB.stem))
             if response.lower() == 'y':
+                thisDB.unlink()
                 doInit = True
             else:
                 print('Canceled.')
@@ -97,10 +98,10 @@ def initialize(userinput=''):
             currentDB = thisDB
 
     except:
-        #print(sys.exc_info()[0])
-        print('Error.')
+        print(sys.exc_info()[0])
+        #print('Error.')
 
-def getF(DBname):
+def getDB(DBname):
     result = ''
     DB = config.dataPath / (DBname + '.db')
 
@@ -116,7 +117,6 @@ def checkDB():
     DB = ''
 
     if currentDB:
-        print('nope')
         DB = currentDB
     else:
         DB = config.dataPath / 'defaultDB.db'
