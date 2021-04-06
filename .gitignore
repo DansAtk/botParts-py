@@ -1,0 +1,11 @@
+.venv
+__pycache__
+ref
+*~
+conf.json
+*.swp
+*.pyc
+data
+backup
+core/tester.py
+old
