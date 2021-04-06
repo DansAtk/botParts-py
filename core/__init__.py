@@ -1,1 +1,1 @@
-__all__ = ['config', 'commandM', 'configM', 'controlM', 'databaseM']
+__all__ = ['config', 'commandM', 'configM', 'controlM', 'databaseM', 'userM']
