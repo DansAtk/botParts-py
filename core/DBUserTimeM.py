@@ -353,6 +353,56 @@ def updateServer(profile):
             conn.commit()
             conn.close()
 
+def searchServerbyName(searchstring):
+    DB = config.database
+    if DB.exists():
+        conn = sqlite3.connect(DB)
+        cursor = conn.cursor()
+        cursor.execute(
+                "SELECT id
+                FROM servers
+                WHERE name LIKE ?",
+                ('%{}%'.format(searchstring),)
+                )
+        search = cursor.fetchall()
+        conn.close()
+
+        if len(search) > 0:
+            foundServers = []
+            for result in search:
+                thisServer = getServer(result[0])
+                foundServers.append(thisServer)
+
+            return foundServers
+
+        else:
+            return None
+
+def searchServerbyTZ(searchstring):
+    DB = config.database
+    if DB.exists():
+        conn = sqlite3.connect(DB)
+        cursor = conn.cursor()
+        cursor.execute(
+                "SELECT id
+                FROM servers
+                WHERE tz LIKE ?",
+                ('%{}%'.format(searchstring),)
+                )
+        search = cursor.fetchall()
+        conn.close()
+
+        if len(search) > 0:
+            foundServers = []
+            for result in search:
+                thisServer = getServer(result[0])
+                foundServers.append(thisServer)
+
+            return foundServers
+
+        else:
+            return None
+
 def getUserAlias(userid, serverid):
     DB = config.database
 
@@ -416,57 +466,276 @@ def getTime(reference=None):
         return datetime.datetime.now(pytz.timezone('US/Eastern'))
 
 def searchTZ(userinput):
+    foundTZ = []
+    
+    for timezone in pytz.all_timezones:
+        if userinput in timezone:
+            foundTZ.append(timezone)
 
-
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    if len(foundTZ) > 0:
+        return foundTZ
+    
+    else:
+        return None
 
 def init():
     global databaseC
     databaseC = command('database', mSelf)
     databaseC.description = 'Commands for managing the bot\'s database. Alone, displays information about the database\'s current state.'
     databaseC.function = 'databaseF'
-    global setupC
-    setupC = command('setup', databaseC)
-    setupC.description = 'Initializes the database. If the database already exists, it can be reinitialized or reconfigured, based on imported modules.'
-    setupC.function = 'setupF'
-    global deleteC
-    deleteC = command('delete', databaseC)
-    deleteC.description = 'Deletes the database.' 
-    deleteC.function = 'deleteF'
-    global backupC
-    backupC = command('backup', databaseC)
-    backupC.description = 'Creates a backup of the database.'
-    backupC.function = 'backupF'
-    global userC
-    userC = command('user', mSelf)
-    userC.description = 'Used to create, remove and manipulate user profiles.'
-    userC.function = 'userF'
+    global databaseSetupC
+    databaseSetupC = command('setup', databaseC)
+    databaseSetupC.description = 'Initializes the database. If the database already exists, it can be reinitialized or reconfigured, based on imported modules.'
+    databaseSetupC.function = 'databaseSetupF'
+    global databaseDeleteC
+    databaseDeleteC = command('delete', databaseC)
+    databaseDeleteC.description = 'Deletes the database.' 
+    databaseDeleteC.function = 'databaseDeleteF'
+    global databaseBackupC
+    databaseBackupC = command('backup', databaseC)
+    databaseBackupC.description = 'Creates a backup of the database.'
+    databaseBackupC.function = 'databaseBackupF'
     global addC
-    addC = command('add', userC)
-    addC.description = 'Builds a user from parameters, then adds it to the database.'
+    addC = command('add', mSelf)
+    addC.description = 'Used to create new objects in the database.'
     addC.function = 'addF'
+    global addUserC
+    addUserC = command('user', addC)
+    addUserC.description = 'Builds a user from parameters, then adds it to the database.'
+    addUserC.function = 'addUserF'
+    global addServerC
+    addServerC = command('server', addC)
+    addServerC.description = 'Builds a server from parameters, then adds it to the database.'
+    addServerC.function = 'addServerF'
+    global addColorC
+    addColorC = command('color', addC)
+    addColorC.description = 'Adds a color with the given name and code to the database.'
+    addColorC.function = 'addColorF'
+    global removeC
+    removeC = command('remove', mSelf)
+    removeC.description = 'Used to remove existing objects from the database.'
+    removeC.function = 'removeF'
+    global removeUserC
+    removeUserC = command('user', removeC)
+    removeUserC.description = 'Removes a user from the database.'
+    removeUserC.function = 'removeUserF'
+    global removeServerC
+    removeServerC = command('server', removeC)
+    removeServerC.description = 'Removes a server from the database.'
+    removeServerC.function = 'removeServerF'
+    global removeColorC
+    removeColorC = command('color', removeC)
+    removeColorC.description = 'Removes a color from the database.'
+    removeColorC.function = 'removeColorF'
+    global showC
+    showC = command('show', mSelf)
+    showC.description = 'Displays detailed information about database objects.'
+    showC.function = 'showF'
+    global showUserC
+    showUserC = command('user', showC)
+    showUserC.description = 'Displays detailed information about the user with the given ID. Usage: \'show user ID#\''
+    showUserC.function = 'showUserF'
+    global showServerC
+    showServerC = command('server', showC)
+    showServerC.description = 'Displays detailed information about the server with the given ID. Usage: \'show server ID#\''
+    showServerC.function = 'showServerF'
+    global showColorC
+    showColorC = command('server', showC)
+    showColorC.description = 'Displays detailed information about the color with the given name or code. Usage: \'show color NAME/#CODE\''
+    showColorC.function = 'showColorF'
+    global listC
+    listC = command('list', mSelf)
+    listC.description = 'Lists all objects of the given type currently in the database.'
+    listC.function = 'listF'
+    global listUserC
+    listUserC = command('user', listC)
+    listUserC.description = 'Lists all users in the database.'
+    listUserC.function = 'listUserF'
+    global listUserAliasC
+    listUserAliasC = command('alias', listUserC)
+    listUserAliasC.description = 'Lists all of a user\'s aliases across all servers. Specify a user ID.'
+    listUserAliasC.function = 'listUserAliasF'
+    global listServerC
+    listServerC = command('server', listC)
+    listServerC.description = 'Lists all servers in the database.'
+    listServerC.function = 'listServerF'
+    global listColorC
+    listColorC = command('color', listC)
+    listColorC.description = 'Lists all colors in the database.'
+    listColorC.function = 'listColorF'
     global timeC
     timeC = command('time', mSelf)
     timeC.description = 'Displays the current time.'
     timeC.function = 'timeF'
-    global forC
-    forC = command('for', timeC)
-    forC.description = 'Displays the time in a specific user\'s time zone.'
-    forC.function = 'timeforF'
-    global zoneC
-    zonesC = command('zones', timeC)
-    zonesC.description = 'Lists all available time zones.'
-    zonesC.function = 'zonesF'
-    global listC
-    listC = command('list', zoneC)
-    listC.description = 'Lists all available time zones.'
-    listC.function = 'timezonelistF'
+    global timeForC
+    timeForC = command('for', timeC)
+    timeForC.description = 'Displays the time in a specific user\'s time zone.'
+    timeForC.function = 'timeForF'
+    global timeZonesC
+    timeZonesC = command('zones', timeC)
+    timeZonesC.description = 'Lists all available time zones.'
+    timeZonesC.function = 'timeZonesF'
+    global findC
+    findC = command('find', mSelf)
+    findC.description = 'Searches for objects meeting the given criteria.'
+    findC.function = 'findF'
+    global findUserC
+    findUserC = command('user', findC)
+    findUserC.description = 'Searches for users meeting the given criteria.'
+    findUserC.function = 'findUserF'
+    global findUserNameC
+    findUserNameC = command('name', findUserC)
+    findUserNameC.description = 'Searches for users with names and/or nicknames matching the given query.'
+    findUserNameC.function = 'findUserNameF'
+    global findUserCountryC
+    findUserCountryC = command('country', findUserC)
+    findUserCountryC.description = 'Searches for users with countries matching the given query.'
+    findUserCountryC.function = 'findUserCountryF'
+    global findUserTimezoneC
+    findUserTimezoneC = command('timezone', findUserC)
+    findUserTimezoneC.description = 'Searches for users with timezones matching the given query.'
+    findUserTimezoneC.function = 'findUserTimezoneF'
+    global findUserBirthdayC
+    findUserBirthdayC = command('birthday', findUserC)
+    findUserBirthdayC.description = 'Searches for users with birthdays matching the given query.'
+    findUserBirthdayC.function = 'findUserBirthdayF'
+    global findUserColorC
+    findUserColorC = command('color', findUserC)
+    findUserColorC.description = 'Searches for users with colors matching the given query.'
+    findUserColorC.function = 'findUserColorF'
+    global findServerC
+    findServerC = command('server', findC)
+    findServerC.description = 'Searches for servers meeting the given criteria.'
+    findServerC.function = 'findServerF'
+    global findServerNameC
+    findServerNameC = command('name', findServerC)
+    findServerNameC.description = 'Searches for servers with names matching the given query.'
+    findServerNameC.function = 'findServerNameF'
+    global findServerTimezoneC
+    findServerTimezoneC = command('timezone', findServerC)
+    findServerTimezoneC.description = 'Searches for servers with timezones matching the given query.'
+    findServerTimezoneC.function = 'findServerTimezoneF'
+    global findTimezoneC
+    findTimezoneC = command('timezone' findC)
+    findTimezoneC.description = 'Searches for timezones with names matching the given query.'
+    findTimezoneC.function = 'findTimezoneF'
+    global findColorC
+    findColorC = command('color', findC)
+    findColorC.description = 'Searches for colors with names matching the given query.'
+    findColorC.function = 'findColorF'
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 def databaseF():
     print(databaseC.help() + '\n')
     listF()
     print()
     checkF()
+
+def databaseSetupF():
+    return None
+
+def databaseDeleteF():
+    return None
+
+def databaseBackupF():
+    return None
+
+def addF():
+    return None
+
+def addUserF():
+    return None
+
+def addServerF():
+    return None
+
+def addColorF():
+    return None
+
+def removeF():
+    return None
+
+def removeUserF():
+    return None
+
+def removeServerF():
+    return None
+
+def removeColorF():
+    return None
+
+def showF():
+    return None
+
+def showUserF():
+    return None
+
+def showServerF():
+    return None
+
+def showColorF():
+    return None
+
+def listF():
+    return None
+
+def listUserF():
+    return None
+
+def listUserAliasF():
+    return None
+
+def listServerF():
+    return None
+
+def listColorF():
+    return None
+
+def timeF():
+    return None
+
+def timeForF():
+    return None
+
+def timeZonesF():
+    return None
+
+def findF():
+    return None
+
+def findUserF():
+    return None
+
+def findUserNameF():
+    return None
+
+def findUserCountryF():
+    return None
+
+def findUserTimezoneF():
+    return None
+
+def findUserBirthdayF():
+    return None
+
+def findUserColorF():
+    return None
+
+def findServerF():
+    return None
+
+def findServerNameF():
+    return None
+
+def findServerTimezoneF():
+    return None
+
+def findTimezoneF():
+    return None
+
+def findColorF():
+    return None
 
 def initialize():
     if not config.dataPath.exists():
