@@ -16,17 +16,17 @@ includes = {}
 config.imports.append(__name__)
 
 class user:
-    def __init__(self, ID, NAME=None, NICK=None, TZ='US/Eastern', BOTRANK=None, COLOR=None, BDAY=None, COUNTRY=None, POINTS=None):
+    def __init__(self, ID, NAME=None, TZ='US/Eastern', BOTRANK=None, BDAY=None, COUNTRY=None, POINTS=None):
         self.id = ID 
         self.name = NAME
         self.tz = TZ
         self.botrank = BOTRANK
-        self.nick = NICK
-        self.color = COLOR
         self.bday = BDAY
         self.country = COUNTRY
         self.points = POINTS
         self.serverid = None
+        self.nick = None
+        self.color = None
         self.localrank = None
 
     def decorate(self, serverid):
@@ -61,14 +61,14 @@ class user:
         if serverid != self.serverid:
             self.decorate(serverid)
 
-        if len(self.nick) > 0:
+        if self.nick:
             useName = self.nick
         else:
             useName = self.name
 
         return useName
             
-def getUser(ID, serverid=None):
+def getUser(userid, serverid=None):
     DB = config.database
 
     if DB.exists():
@@ -78,12 +78,12 @@ def getUser(ID, serverid=None):
                 "SELECT name, tz, botrank, bday, country, points
                 FROM users
                 WHERE id = ?",
-                (ID,)
+                (userid,)
                 )
         result = cursor.fetchone()
 
         if result:
-            thisUser = user(ID)
+            thisUser = user(userid)
             thisUser.name = result[0]
             thisUser.tz = result[1]
             thisUser.botrank = result[2]
@@ -119,26 +119,34 @@ def addUser(profile):
         addUserAlias(profile)
 
 def updateUser(profile):
+    thisUser = getUser(profile.id)
 
-
-def addUserAlias(profile):
-    if profile.serverid:
-        if getServer(profile.serverid):
-            DB = config.database
-            if DB.exists():
-                conn = sqlite3.connect(DB)
-                cursor = conn.cursor()
-                cursor.execute(
-                        "INSERT INTO serverusers(
-                        userid, serverid, nick, color, localrank)
-                        VALUES (?, ?, ?, ?, ?)",
-                        (profile.id, profile.serverid, profile.nick, profile.color, profile.localrank)
-                        )
-                conn.commit()
-                conn.close()
-
-def updateUserAlias(profile):
-
+    if thisUser:
+        if profile.name:
+            thisUser.name = profile.name
+        if profile.botrank:
+            thisUser.botrank = profile.botrank
+        if profile.country:
+            thisUser.country = profile.country
+        if profile.tz:
+            thisUser.tz = profile.tz
+        if profile.bday:
+            thisUser.bday = profile.bday
+        if profile.points:
+            thisUser.points = profile.points
+        
+        DB = config.database
+        if DB.exists():
+            conn = sqlite3.connect(DB)
+            cursor = conn.cursor()
+            cursor.execute(
+                    "UPDATE users SET
+                    name = ?, botrank = ?, country = ?, tz = ?, bday = ?, points = ?
+                    WHERE id = ?",
+                    (thisUser.name, thisUser.botrank, thisUser.country, thisUser.tz, thisUser.bday, thisUser.points, thisUser.id)
+                    )
+            conn.commit()
+            conn.close()
 
 class server:
     def __init__(self, ID, NAME=None, TRIGGER='!', TZ='US/Eastern'):
@@ -190,18 +198,81 @@ def updateServer(profile):
     thisServer = getServer(profile.id)
 
     if thisServer:
-        thisServer.name = profile.name
-        thisServer.trigger = profile.trigger
-        thisServer.tz = profile.tz
+        if profile.name:
+            thisServer.name = profile.name
+        if profile.trigger:
+            thisServer.trigger = profile.trigger
+        if profile.tz:
+            thisServer.tz = profile.tz
         
         DB = config.database
         if DB.exists():
             conn = sqlite3.connect(DB)
             cursor = conn.cursor()
             cursor.execute(
-                    "
+                    "UPDATE servers SET
+                    name = ?, trigger = ?, tz = ?
+                    WHERE id = ?",
+                    (thisServer.name, thisServer.trigger, thisServer.tz, thisServer.id)
+                    )
+            conn.commit()
+            conn.close()
 
+def getUserAlias(userid, serverid):
+    DB = config.database
 
+    if DB.exists():
+        thisUser = user(userid)
+        thisUser.decorate(serverid)
+
+        if thisUser.serverid:
+
+            return thisUser
+
+        else:
+            print('User alias not found')
+
+            return None
+
+def addUserAlias(profile):
+    if profile.serverid:
+        if getServer(profile.serverid):
+            DB = config.database
+            if DB.exists():
+                conn = sqlite3.connect(DB)
+                cursor = conn.cursor()
+                cursor.execute(
+                        "INSERT INTO serverusers(
+                        userid, serverid, nick, color, localrank)
+                        VALUES (?, ?, ?, ?, ?)",
+                        (profile.id, profile.serverid, profile.nick, profile.color, profile.localrank)
+                        )
+                conn.commit()
+                conn.close()
+
+def updateUserAlias(profile):
+    thisUser = getUserAlias(profile.id, profile.serverid)
+
+    if thisUser:
+        if profile.nick:
+            thisUser.nick = profile.nick
+        if profile.color:
+            thisUser.color = profile.color
+        if profile.localrank:
+            thisUser.localrank = profile.localrank
+
+        DB = config.database
+        if DB.exists():
+            conn = sqlite3.connect(DB)
+            cursor = conn.cursor()
+            cursor.execute(
+                    "UPDATE serverusers SET
+                    nick = ?, color = ?, localrank = ?
+                    WHERE userid = ? AND serverid = ?",
+                    (thisUser.nick, thisUser.color, thisUser.localrank, thisUser.id, thisUser.serverid)
+                    )
+            conn.commit()
+            conn.close()
 
 def getTime(reference=None):
     if reference:
