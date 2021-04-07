@@ -148,6 +148,141 @@ def updateUser(profile):
             conn.commit()
             conn.close()
 
+def searchUserbyName(searchstring, serverid=None):
+    DB = config.database
+    if DB.exists():
+        conn = sqlite3.connect(DB)
+        cursor = conn.cursor()
+
+        if serverid:
+            cursor.execute(
+                    "SELECT users.id
+                    FROM users JOIN serverusers ON users.id = serverusers.userid
+                    WHERE (users.name LIKE ?) OR (serverusers.serverid = ? AND serverusers.nick LIKE ?)",
+                    ('%{}%'.format(searchstring), serverid, '%{}%'.format(searchstring))
+                    )
+        else:
+            cursor.execute(
+                    "SELECT id
+                    FROM users
+                    WHERE name LIKE ?",
+                    ('%{}%'.format(searchstring),)
+                    )
+
+        search = cursor.fetchall()
+        conn.close()
+
+        if len(search) > 0:
+            foundUsers = []
+            for result in search:
+                thisUser = getUser(result[0], serverid)
+                foundUsers.append(thisUser)
+
+            return foundUsers
+
+        else:
+            return None
+
+def searchUserbyCountry(searchstring, serverid=None):
+    DB = config.database
+    if DB.exists():
+        conn = sqlite3.connect(DB)
+        cursor = conn.cursor()
+        cursor.execute(
+                "SELECT id
+                FROM users
+                WHERE country LIKE ?",
+                ('%{}%'.format(searchstring),)
+                )
+        search = cursor.fetchall()
+        conn.close()
+
+        if len(search) > 0:
+            foundUsers = []
+            for result in search:
+                thisUser = getUser(result[0], serverid)
+                foundUsers.append(thisUser)
+
+            return foundUsers
+
+        else:
+            return None
+
+def searchUserbyTZ(searchstring, serverid=None):
+    DB = config.database
+    if DB.exists():
+        conn = sqlite3.connect(DB)
+        cursor = conn.cursor()
+        cursor.execute(
+                "SELECT id
+                FROM users
+                WHERE tz LIKE ?",
+                ('%{}%'.format(searchstring),)
+                )
+        search = cursor.fetchall()
+        conn.close()
+
+        if len(search) > 0:
+            foundUsers = []
+            for result in search:
+                thisUser = getUser(result[0], serverid)
+                foundUsers.append(thisUser)
+
+            return foundUsers
+
+        else:
+            return None
+
+def searchUserbyBDay(searchstring, serverid=None):
+    DB = config.database
+    if DB.exists():
+        conn = sqlite3.connect(DB)
+        cursor = conn.cursor()
+        cursor.execute(
+                "SELECT id
+                FROM users
+                WHERE bday = ?",
+                (searchstring,)
+                )
+        search = cursor.fetchall()
+        conn.close()
+
+        if len(search) > 0:
+            foundUsers = []
+            for result in search:
+                thisUser = getUser(result[0], serverid)
+                foundUsers.append(thisUser)
+
+            return foundUsers
+
+        else:
+            return None
+
+def searchUserbyColor(searchstring, serverid):
+    DB = config.database
+    if DB.exists():
+        conn = sqlite3.connect(DB)
+        cursor = conn.cursor()
+        cursor.execute(
+                "SELECT userid
+                FROM serverusers
+                WHERE serverid = ? AND color = ?",
+                (serverid, searchstring)
+                )
+        search = cursor.fetchall()
+        conn.close()
+
+        if len(search) > 0:
+            foundUsers = []
+            for result in search:
+                thisUser = getUser(result[0], serverid)
+                foundUsers.append(thisUser)
+
+            return foundUsers
+
+        else:
+            return None
+
 class server:
     def __init__(self, ID, NAME=None, TRIGGER='!', TZ='US/Eastern'):
         self.id = ID
@@ -280,46 +415,36 @@ def getTime(reference=None):
     else:
         return datetime.datetime.now(pytz.timezone('US/Eastern'))
 
+def searchTZ(userinput):
 
 
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
 def init():
     global databaseC
     databaseC = command('database', mSelf)
-    databaseC.description = 'Commands for managing databases in the bot\'s data folder.'
+    databaseC.description = 'Commands for managing the bot\'s database. Alone, displays information about the database\'s current state.'
     databaseC.function = 'databaseF'
     global setupC
     setupC = command('setup', databaseC)
-    setupC.description = 'Initializes a new database. If the database already exists, it can be reinitialized.'
-    setupC.function = 'initialize'
-    global setC
-    setC = command('set', databaseC)
-    setC.description = 'Sets the current active database.'
-    setC.function = 'setF'
-    global checkC
-    checkC = command('check', databaseC)
-    checkC.description = 'Checks the current active database.'
-    checkC.function = 'checkF'
-    global listC
-    listC = command('list', databaseC)
-    listC.description = 'Lists all databases in the bot\'s data folder.'
-    listC.function = 'listF'
+    setupC.description = 'Initializes the database. If the database already exists, it can be reinitialized or reconfigured, based on imported modules.'
+    setupC.function = 'setupF'
     global deleteC
     deleteC = command('delete', databaseC)
-    deleteC.description = 'Deletes a database. By default, deletes the currently active database if one is not specified.'
+    deleteC.description = 'Deletes the database.' 
     deleteC.function = 'deleteF'
     global backupC
     backupC = command('backup', databaseC)
-    backupC.description = 'Creates a backup of the selected database, or all databases.'
+    backupC.description = 'Creates a backup of the database.'
     backupC.function = 'backupF'
     global userC
     userC = command('user', mSelf)
     userC.description = 'Used to create, remove and manipulate user profiles.'
     userC.function = 'userF'
-    global buildC
-    buildC = command('build', userC)
-    buildC.description = 'Builds a user object from parameters, then adds it to the database.'
-    buildC.function = 'buildF'
+    global addC
+    addC = command('add', userC)
+    addC.description = 'Builds a user from parameters, then adds it to the database.'
+    addC.function = 'addF'
     global timeC
     timeC = command('time', mSelf)
     timeC.description = 'Displays the current time.'
@@ -329,9 +454,9 @@ def init():
     forC.description = 'Displays the time in a specific user\'s time zone.'
     forC.function = 'timeforF'
     global zoneC
-    zoneC = command('zone', timeC)
-    zoneC.description = 'For configuring time zones.'
-    zoneC.function = 'timezoneF'
+    zonesC = command('zones', timeC)
+    zonesC.description = 'Lists all available time zones.'
+    zonesC.function = 'zonesF'
     global listC
     listC = command('list', zoneC)
     listC.description = 'Lists all available time zones.'
