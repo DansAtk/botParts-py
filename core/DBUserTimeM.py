@@ -16,7 +16,7 @@ includes = {}
 config.imports.append(__name__)
 
 class user:
-    def __init__(self, ID, NAME='', NICK='', TZ='US/Eastern', BOTRANK='', COLOR='', BDAY='', COUNTRY='', POINTS=0):
+    def __init__(self, ID, NAME=None, NICK=None, TZ='US/Eastern', BOTRANK=None, COLOR=None, BDAY=None, COUNTRY=None, POINTS=None):
         self.id = ID 
         self.name = NAME
         self.tz = TZ
@@ -26,14 +26,14 @@ class user:
         self.bday = BDAY
         self.country = COUNTRY
         self.points = POINTS
-        self.serverid = ''
-        self.localrank = ''
+        self.serverid = None
+        self.localrank = None
 
     def decorate(self, serverid):
-        self.serverid = ''
-        self.nick = ''
-        self.color = ''
-        self.localrank = ''
+        self.serverid = None
+        self.nick = None
+        self.color = None
+        self.localrank = None
 
         conn = sqlite3.connect(config.database)
         cursor = conn.cursor()
@@ -55,9 +55,6 @@ class user:
         else:
             print('No record found.')
     
-    def now(self):
-        return datetime.datetime.now(pytz.timezone(self.tz))
-    
     def goesby(self, serverid):
         useName = ''
 
@@ -71,7 +68,7 @@ class user:
 
         return useName
             
-def getUser(ID, serverid=''):
+def getUser(ID, serverid=None):
     DB = config.database
 
     if DB.exists():
@@ -94,13 +91,15 @@ def getUser(ID, serverid=''):
             thisUser.country = result[4]
             thisUser.points = result[5]
             
-            if len(serverid) > 0:
+            if serverid:
                 thisUser.decorate(serverid)
 
             return thisUser
 
         else:
             print('user not found')
+
+            return None
 
 def addUser(profile):
     DB = config.database
@@ -117,11 +116,36 @@ def addUser(profile):
         conn.commit()
         conn.close()
 
+        addUserAlias(profile)
+
+def updateUser(profile):
+
+
+def addUserAlias(profile):
+    if profile.serverid:
+        if getServer(profile.serverid):
+            DB = config.database
+            if DB.exists():
+                conn = sqlite3.connect(DB)
+                cursor = conn.cursor()
+                cursor.execute(
+                        "INSERT INTO serverusers(
+                        userid, serverid, nick, color, localrank)
+                        VALUES (?, ?, ?, ?, ?)",
+                        (profile.id, profile.serverid, profile.nick, profile.color, profile.localrank)
+                        )
+                conn.commit()
+                conn.close()
+
+def updateUserAlias(profile):
+
+
 class server:
-    def __init__(self, ID, NAME='', TRIGGER='!'):
+    def __init__(self, ID, NAME=None, TRIGGER='!', TZ='US/Eastern'):
         self.id = ID
         self.name = NAME
         self.trigger = TRIGGER
+        self.tz = TZ
 
 def getServer(serverid):
     DB = config.database
@@ -129,7 +153,7 @@ def getServer(serverid):
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
-                "SELECT name, trigger FROM servers WHERE id = ?",
+                "SELECT name, trigger, tz FROM servers WHERE id = ?",
                 (serverid,)
                 )
         result = cursor.fetchone()
@@ -139,13 +163,14 @@ def getServer(serverid):
             thisServer = server(serverid)
             thisServer.name = result[0]
             thisServer.trigger = result[1]
+            thisServer.tz = result[2]
 
             return thisServer
         
         else:
             print('Server not found!')
             
-            return 0
+            return None
 
 def addServer(profile):
     DB = config.database
@@ -154,12 +179,38 @@ def addServer(profile):
         cursor = conn.cursor()
         cursor.execute(
                 "INSERT INTO servers(
-                id, name, trigger)
-                VALUES (?, ?, ?)",
-                (profile.id, profile.name, profile.trigger)
+                id, name, trigger, tz)
+                VALUES (?, ?, ?, ?)",
+                (profile.id, profile.name, profile.trigger, profile.tz)
                 )
         conn.commit()
         conn.close()
+
+def updateServer(profile):
+    thisServer = getServer(profile.id)
+
+    if thisServer:
+        thisServer.name = profile.name
+        thisServer.trigger = profile.trigger
+        thisServer.tz = profile.tz
+        
+        DB = config.database
+        if DB.exists():
+            conn = sqlite3.connect(DB)
+            cursor = conn.cursor()
+            cursor.execute(
+                    "
+
+
+
+def getTime(reference=None):
+    if reference:
+        return datetime.datetime.now(pytz.timezone(reference.tz))
+    else:
+        return datetime.datetime.now(pytz.timezone('US/Eastern'))
+
+
+
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 def init():
     global databaseC
