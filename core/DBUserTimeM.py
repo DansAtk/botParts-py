@@ -38,9 +38,9 @@ class user:
         conn = sqlite3.connect(config.database)
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT nick, color, localrank
-            FROM serverusers
-            WHERE userid = ? AND serverid = ?",
+            "SELECT nick, color, localrank "
+            "FROM serverusers "
+            "WHERE userid = ? AND serverid = ?",
             (self.id, serverid)
             )
             
@@ -55,10 +55,10 @@ class user:
         else:
             print('No record found.')
     
-    def goesby(self, serverid):
+    def goesby(self, serverid=None):
         useName = ''
 
-        if serverid != self.serverid:
+        if serverid:
             self.decorate(serverid)
 
         if self.nick:
@@ -75,9 +75,9 @@ def getUser(userid, serverid=None):
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
-                "SELECT name, tz, botrank, bday, country, points
-                FROM users
-                WHERE id = ?",
+                "SELECT name, tz, botrank, bday, country, points "
+                "FROM users "
+                "WHERE id = ?",
                 (userid,)
                 )
         result = cursor.fetchone()
@@ -101,15 +101,31 @@ def getUser(userid, serverid=None):
 
             return None
 
+def tryGetOneUser(userstring):
+    thisUser = None
+    refInput = ' '.join(userstring)
+
+    try:
+        thisUser = getUser(int(refInput))
+
+    except ValueError:
+        searchResults = searchUserbyName(refInput)
+        
+        if searchResults:
+            if len(searchResults) == 1:
+                thisUser = searchResults[0]
+    
+    return thisUser
+
 def addUser(profile):
     DB = config.database
     if DB.exists():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
-                "INSERT INTO users(
-                id, name, botrank, country, tz, bday, points)
-                VALUES (?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO users( "
+                "id, name, botrank, country, tz, bday, points) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)",
                 (profile.id, profile.name, profile.botrank,
                     profile.country, profile.tz, profile.bday, profile.points)
                 )
@@ -140,9 +156,9 @@ def updateUser(profile):
             conn = sqlite3.connect(DB)
             cursor = conn.cursor()
             cursor.execute(
-                    "UPDATE users SET
-                    name = ?, botrank = ?, country = ?, tz = ?, bday = ?, points = ?
-                    WHERE id = ?",
+                    "UPDATE users SET "
+                    "name = ?, botrank = ?, country = ?, tz = ?, bday = ?, points = ? "
+                    "WHERE id = ?",
                     (thisUser.name, thisUser.botrank, thisUser.country, thisUser.tz, thisUser.bday, thisUser.points, thisUser.id)
                     )
             conn.commit()
@@ -156,16 +172,16 @@ def searchUserbyName(searchstring, serverid=None):
 
         if serverid:
             cursor.execute(
-                    "SELECT users.id
-                    FROM users JOIN serverusers ON users.id = serverusers.userid
-                    WHERE (users.name LIKE ?) OR (serverusers.serverid = ? AND serverusers.nick LIKE ?)",
+                    "SELECT users.id "
+                    "FROM users JOIN serverusers ON users.id = serverusers.userid "
+                    "WHERE (users.name LIKE ?) OR (serverusers.serverid = ? AND serverusers.nick LIKE ?)",
                     ('%{}%'.format(searchstring), serverid, '%{}%'.format(searchstring))
                     )
         else:
             cursor.execute(
-                    "SELECT id
-                    FROM users
-                    WHERE name LIKE ?",
+                    "SELECT id "
+                    "FROM users "
+                    "WHERE name LIKE ?",
                     ('%{}%'.format(searchstring),)
                     )
 
@@ -189,9 +205,9 @@ def searchUserbyCountry(searchstring, serverid=None):
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
-                "SELECT id
-                FROM users
-                WHERE country LIKE ?",
+                "SELECT id "
+                "FROM users "
+                "WHERE country LIKE ?",
                 ('%{}%'.format(searchstring),)
                 )
         search = cursor.fetchall()
@@ -208,15 +224,15 @@ def searchUserbyCountry(searchstring, serverid=None):
         else:
             return None
 
-def searchUserbyTZ(searchstring, serverid=None):
+def searchUserbyTimezone(searchstring, serverid=None):
     DB = config.database
     if DB.exists():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
-                "SELECT id
-                FROM users
-                WHERE tz LIKE ?",
+                "SELECT id "
+                "FROM users "
+                "WHERE tz LIKE ?",
                 ('%{}%'.format(searchstring),)
                 )
         search = cursor.fetchall()
@@ -233,15 +249,15 @@ def searchUserbyTZ(searchstring, serverid=None):
         else:
             return None
 
-def searchUserbyBDay(searchstring, serverid=None):
+def searchUserbyBirthday(searchstring, serverid=None):
     DB = config.database
     if DB.exists():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
-                "SELECT id
-                FROM users
-                WHERE bday = ?",
+                "SELECT id "
+                "FROM users "
+                "WHERE bday = ?",
                 (searchstring,)
                 )
         search = cursor.fetchall()
@@ -258,16 +274,16 @@ def searchUserbyBDay(searchstring, serverid=None):
         else:
             return None
 
-def searchUserbyColor(searchstring, serverid):
+def searchUserbyColor(searchColor, searchServer):
     DB = config.database
     if DB.exists():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
-                "SELECT userid
-                FROM serverusers
-                WHERE serverid = ? AND color = ?",
-                (serverid, searchstring)
+                "SELECT userid "
+                "FROM serverusers "
+                "WHERE serverid = ? AND color = ?",
+                (searchServer.id, searchColor.id)
                 )
         search = cursor.fetchall()
         conn.close()
@@ -275,7 +291,7 @@ def searchUserbyColor(searchstring, serverid):
         if len(search) > 0:
             foundUsers = []
             for result in search:
-                thisUser = getUser(result[0], serverid)
+                thisUser = getUser(result[0], searchServer.id)
                 foundUsers.append(thisUser)
 
             return foundUsers
@@ -315,15 +331,31 @@ def getServer(serverid):
             
             return None
 
+def tryGetOneServer(serverstring):
+    thisServer = None
+    refInput = ' '.join(serverstring)
+
+    try:
+        thisServer = getServer(int(refInput))
+
+    except ValueError:
+        searchResults = searchServerbyName(refInput)
+        
+        if searchResults:
+            if len(searchResults) == 1:
+                thisServer = searchResults[0]
+    
+    return thisServer
+
 def addServer(profile):
     DB = config.database
     if DB.exists():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
-                "INSERT INTO servers(
-                id, name, trigger, tz)
-                VALUES (?, ?, ?, ?)",
+                "INSERT INTO servers"
+                "(id, name, trigger, tz) "
+                "VALUES (?, ?, ?, ?)",
                 (profile.id, profile.name, profile.trigger, profile.tz)
                 )
         conn.commit()
@@ -345,9 +377,9 @@ def updateServer(profile):
             conn = sqlite3.connect(DB)
             cursor = conn.cursor()
             cursor.execute(
-                    "UPDATE servers SET
-                    name = ?, trigger = ?, tz = ?
-                    WHERE id = ?",
+                    "UPDATE servers SET "
+                    "name = ?, trigger = ?, tz = ? "
+                    "WHERE id = ?",
                     (thisServer.name, thisServer.trigger, thisServer.tz, thisServer.id)
                     )
             conn.commit()
@@ -359,9 +391,9 @@ def searchServerbyName(searchstring):
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
-                "SELECT id
-                FROM servers
-                WHERE name LIKE ?",
+                "SELECT id "
+                "FROM servers "
+                "WHERE name LIKE ?",
                 ('%{}%'.format(searchstring),)
                 )
         search = cursor.fetchall()
@@ -378,15 +410,15 @@ def searchServerbyName(searchstring):
         else:
             return None
 
-def searchServerbyTZ(searchstring):
+def searchServerbyTimezone(searchstring):
     DB = config.database
     if DB.exists():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
-                "SELECT id
-                FROM servers
-                WHERE tz LIKE ?",
+                "SELECT id "
+                "FROM servers "
+                "WHERE tz LIKE ?",
                 ('%{}%'.format(searchstring),)
                 )
         search = cursor.fetchall()
@@ -427,9 +459,9 @@ def addUserAlias(profile):
                 conn = sqlite3.connect(DB)
                 cursor = conn.cursor()
                 cursor.execute(
-                        "INSERT INTO serverusers(
-                        userid, serverid, nick, color, localrank)
-                        VALUES (?, ?, ?, ?, ?)",
+                        "INSERT INTO serverusers"
+                        "(userid, serverid, nick, color, localrank) "
+                        "VALUES (?, ?, ?, ?, ?)",
                         (profile.id, profile.serverid, profile.nick, profile.color, profile.localrank)
                         )
                 conn.commit()
@@ -451,9 +483,9 @@ def updateUserAlias(profile):
             conn = sqlite3.connect(DB)
             cursor = conn.cursor()
             cursor.execute(
-                    "UPDATE serverusers SET
-                    nick = ?, color = ?, localrank = ?
-                    WHERE userid = ? AND serverid = ?",
+                    "UPDATE serverusers SET "
+                    "nick = ?, color = ?, localrank = ? "
+                    "WHERE userid = ? AND serverid = ?",
                     (thisUser.nick, thisUser.color, thisUser.localrank, thisUser.id, thisUser.serverid)
                     )
             conn.commit()
@@ -461,11 +493,20 @@ def updateUserAlias(profile):
 
 def getTime(reference=None):
     if reference:
-        return datetime.datetime.now(pytz.timezone(reference.tz))
+        print(reference.tz)
+        return datetime.now(pytz.timezone(reference.tz))
     else:
-        return datetime.datetime.now(pytz.timezone('US/Eastern'))
+        return datetime.now(pytz.timezone('US/Eastern'))
 
-def searchTZ(userinput):
+def tryGetOneTimezone(timezonestring):
+    thisTimezone = None
+
+    
+    
+    return thisServer
+
+
+def searchTimezonebyName(userinput):
     foundTZ = []
     
     for timezone in pytz.all_timezones:
@@ -477,6 +518,113 @@ def searchTZ(userinput):
     
     else:
         return None
+
+class color:
+    def __init__(self, ID, NAME=None, CODE=None):
+        self.id = ID
+        self.name = NAME
+        self.code = CODE
+
+def getColor(colorid):
+    DB = config.database
+    if DB.exists():
+        conn = sqlite3.connect(DB)
+        cursor = conn.cursor()
+        cursor.execute(
+                "SELECT name, code FROM colors WHERE id = ?",
+                (colorid,)
+                )
+        result = cursor.fetchone()
+        conn.close()
+        
+        if result:
+            thisColor = color(colorid)
+            thisColor.name = result[0]
+            thisColor.code = result[1]
+
+            return thisColor
+        
+        else:
+            print('Color not found!')
+            
+            return None
+
+def tryGetOneColor(colorstring):
+    thisColor = None
+    refInput = ' '.join(colorstring)
+
+    try:
+        thisColor = getColor(int(refInput))
+
+    except ValueError:
+        searchResults = searchColorbyName(refInput)
+        
+        if searchResults:
+            if len(searchResults) == 1:
+                thisColor = searchResults[0]
+    
+    return thisColor
+
+def addColor(profile):
+    DB = config.database
+    if DB.exists():
+        conn = sqlite3.connect(DB)
+        cursor = conn.cursor()
+        cursor.execute(
+                "INSERT INTO colors"
+                "(id, name, code) "
+                "VALUES (?, ?, ?)",
+                (profile.id, profile.name, profile.code)
+                )
+        conn.commit()
+        conn.close()
+
+def updateColor(profile):
+    thisColor = getColor(profile.id)
+
+    if thisColor:
+        if profile.name:
+            thisColor.name = profile.name
+        if profile.code:
+            thisColor.code = profile.code
+        
+        DB = config.database
+        if DB.exists():
+            conn = sqlite3.connect(DB)
+            cursor = conn.cursor()
+            cursor.execute(
+                    "UPDATE colors SET "
+                    "name = ?, code = ? "
+                    "WHERE id = ?",
+                    (thisColor.name, thisColor.trigger, thisColor.id)
+                    )
+            conn.commit()
+            conn.close()
+
+def searchColorbyName(searchstring):
+    DB = config.database
+    if DB.exists():
+        conn = sqlite3.connect(DB)
+        cursor = conn.cursor()
+        cursor.execute(
+                "SELECT id "
+                "FROM colors "
+                "WHERE name LIKE ?",
+                ('%{}%'.format(searchstring),)
+                )
+        search = cursor.fetchall()
+        conn.close()
+
+        if len(search) > 0:
+            foundColors = []
+            for result in search:
+                thisColor = getColor(result[0])
+                foundColors.append(thisColor)
+
+            return foundColors
+
+        else:
+            return None
 
 def init():
     global databaseC
@@ -620,7 +768,7 @@ def init():
     findServerTimezoneC.description = 'Searches for servers with timezones matching the given query.'
     findServerTimezoneC.function = 'findServerTimezoneF'
     global findTimezoneC
-    findTimezoneC = command('timezone' findC)
+    findTimezoneC = command('timezone', findC)
     findTimezoneC.description = 'Searches for timezones with names matching the given query.'
     findTimezoneC.function = 'findTimezoneF'
     global findColorC
@@ -629,13 +777,10 @@ def init():
     findColorC.function = 'findColorF'
 
 def databaseF():
-    print(databaseC.help() + '\n')
-    listF()
-    print()
-    checkF()
+    print(databaseC.help())
 
 def databaseSetupF():
-    return None
+    initialize()
 
 def databaseDeleteF():
     return None
@@ -652,7 +797,7 @@ def databaseBackupF():
 def addF():
     return None
 
-def addUserF(*userinput):
+def addUserF(userinput):
     userdata = []
 
     for p in range(0, len(userinput)):
@@ -662,9 +807,9 @@ def addUserF(*userinput):
 
     for q in userdata:
         userDict.update({q[0] : q[1]})
-
+    
     if 'id' in userDict.keys():
-        newUser = user(userDict['id'])
+        newUser = user(int(userDict['id']))
 
         if 'name' in userDict.keys():
             newUser.name = userDict['name']
@@ -698,12 +843,52 @@ def addUserF(*userinput):
 
         addUser(newUser)
 
+def addServerF(userinput):
+    serverdata = []
 
-def addServerF():
-    return None
+    for p in range(0, len(userinput)):
+        serverdata.append(userinput[p].split('='))
 
-def addColorF():
-    return None
+    serverDict = {}
+
+    for q in serverdata:
+        serverDict.update({q[0] : q[1]})
+    
+    if 'id' in serverDict.keys():
+        newServer = server(int(serverDict['id']))
+
+        if 'name' in serverDict.keys():
+            newServer.name = serverDict['name']
+
+        if 'tz' in serverDict.keys():
+            newServer.tz = serverDict['tz']
+
+        if 'trigger' in serverDict.keys():
+            newServer.trigger = serverDict['trigger']
+
+        addServer(newServer)
+
+def addColorF(userinput):
+    colordata = []
+
+    for p in range(0, len(userinput)):
+        colordata.append(userinput[p].split('='))
+
+    colorDict = {}
+
+    for q in colordata:
+        colorDict.update({q[0] : q[1]})
+    
+    if 'id' in colorDict.keys():
+        newColor = color(int(colorDict['id']))
+
+        if 'name' in colorDict.keys():
+            newColor.name = colorDict['name']
+
+        if 'code' in colorDict.keys():
+            newColor.code = colorDict['code']
+
+        addColor(newColor)
 
 def removeF():
     return None
@@ -720,29 +905,93 @@ def removeColorF():
 def showF():
     return None
 
-def showUserF():
-    return None
+def showUserF(userinput):
+    thisUser = tryGetOneUser(userinput)
 
-def showServerF():
-    return None
+    if thisUser:
+        print('Name = {}'.format(thisUser.name))
+        print('ID = {}'.format(thisUser.id))
+        print('Country = {}'.format(thisUser.country))
+        print('Timezone = {}'.format(thisUser.tz))
+        print('Birthday = {}'.format(thisUser.bday))
+        print('Bot Rank = {}'.format(thisUser.botrank))
 
-def showColorF():
-    return None
+    else:
+        print('User not found.')
+
+def showServerF(userinput):
+    thisServer = tryGetOneServer(userinput)
+
+    if thisServer:
+        print('Name = {}'.format(thisServer.name))
+        print('ID = {}'.format(thisServer.id))
+        print('Trigger = {}'.format(thisServer.trigger))
+        print('Timezone = {}'.format(thisServer.tz))
+    
+    else:
+        print('Server not found.')
+
+def showColorF(userinput):
+    thisColor = tryGetOneColor(userinput)
+
+    if thisColor:
+        print('Name = {}'.format(thisColor.name))
+        print('ID = {}'.format(thisColor.id))
+        print('Code = {}'.format(thisColor.code))
+    
+    else:
+        print('Color not found.')
 
 def listF():
     return None
 
 def listUserF():
-    return None
+    DB = config.database
+    if DB.exists():
+        conn = sqlite3.connect(DB)
+        cursor = conn.cursor()
+        cursor.execute(
+                "SELECT id FROM users"
+                )
+        results = cursor.fetchall()
+        conn.close()
+
+        for each in results:
+            thisUser = getUser(each[0])
+            print(thisUser.name)
 
 def listUserAliasF():
     return None
 
 def listServerF():
-    return None
+    DB = config.database
+    if DB.exists():
+        conn = sqlite3.connect(DB)
+        cursor = conn.cursor()
+        cursor.execute(
+                "SELECT id FROM servers"
+                )
+        results = cursor.fetchall()
+        conn.close()
+
+        for each in results:
+            thisServer = getServer(each[0])
+            print(thisServer.name)
 
 def listColorF():
-    return None
+    DB = config.database
+    if DB.exists():
+        conn = sqlite3.connect(DB)
+        cursor = conn.cursor()
+        cursor.execute(
+                "SELECT id FROM colors"
+                )
+        results = cursor.fetchall()
+        conn.close()
+
+        for each in results:
+            thisColor = getColor(each[0])
+            print(thisColor.name)
 
 def listTimezoneF():
     for value in pytz.all_timezones:
@@ -753,12 +1002,16 @@ def timeF():
 
 def timeForF(userinput):
 # Check if user inputted a valid ID
-    thisUser = getUser(userinput)
-    if not thisUser:
+    refInput = ' '.join(userinput)
+    thisUser = None
+
+    try:
+        thisUser = getUser(int(refInput))
+    except ValueError:
 # If not, check if it is a name
-        searchResults = searchUserbyName(userinput)
+        searchResults = searchUserbyName(refInput)
         
-        if len(searchResults) > 0:
+        if searchResults:
             if len(searchResults) == 1:
                 thisUser = searchResults[0]
             else:
@@ -767,7 +1020,7 @@ def timeForF(userinput):
             print('No matching users found.')
     
     if thisUser:
-        print('The current time for {uname} in the {tzone} timezone is {now}.'.format(thisUser.goesby(), thisUser.tz, getTime(thisUser)))
+        print('The current time for {uname} in the {tzone} timezone is {now}.'.format(uname=thisUser.goesby(), tzone=thisUser.tz, now=getTime(thisUser)))
 
 def findF():
     return None
@@ -775,20 +1028,86 @@ def findF():
 def findUserF():
     return None
 
-def findUserNameF():
-    return None
+def findUserNameF(userinput):
+    results = searchUserbyName(' '.join(userinput))
+    if results:
+        if len(results) > 0:
+            if len(results) == 1:
+                print('One user found:')
 
-def findUserCountryF():
-    return None
+            else:
+                print('{} users found:'.format(len(results)))
 
-def findUserTimezoneF():
-    return None
+            for each in results:
+                print(each.name)
+        
+        else:
+            print('No users found!')
 
-def findUserBirthdayF():
-    return None
+def findUserCountryF(userinput):
+    results = searchUserbyCountry(' '.join(userinput))
+    if results:
+        if len(results) > 0:
+            if len(results) == 1:
+                print('One user found:')
 
-def findUserColorF():
-    return None
+            else:
+                print('{} users found:'.format(len(results)))
+
+            for each in results:
+                print(each.name)
+        
+        else:
+            print('No users found!')
+
+def findUserTimezoneF(userinput):
+    results = searchUserbyTimezone(' '.join(userinput))
+    if results:
+        if len(results) > 0:
+            if len(results) == 1:
+                print('One user found:')
+
+            else:
+                print('{} users found:'.format(len(results)))
+
+            for each in results:
+                print(each.name)
+        
+        else:
+            print('No users found!')
+
+def findUserBirthdayF(userinput):
+    results = searchUserbyBirthday(' '.join(userinput))
+    if results:
+        if len(results) > 0:
+            if len(results) == 1:
+                print('One user found:')
+
+            else:
+                print('{} users found:'.format(len(results)))
+
+            for each in results:
+                print(each.name)
+        
+        else:
+            print('No users found!')
+
+def findUserColorF(userinput):
+    if len(userinput) > 1:
+        serverString = userinput[0]
+        colorString = ' '.join(userinput[1:])
+        thisServer = tryGetOneServer(serverString)
+        thisColor = tryGetOneColor(colorString)
+
+        if thisServer:
+            if thisColor:
+
+
+            else:
+                print('Unknown color.')
+
+        else:
+            print('Unknown server.')
 
 def findServerF():
     return None
@@ -799,24 +1118,51 @@ def findServerNameF():
 def findServerTimezoneF():
     return None
 
-def findTimezoneF():
-    return None
+def findTimezoneF(userinput):
+    results = searchTimezonebyName(' '.join(userinput))
+    if results:
+        if len(results) > 0:
+            if len(results) == 1:
+                print('One timezone found:')
 
-def findColorF():
-    return None
+            else:
+                print('{} timezones found:'.format(len(results)))
+
+            for each in results:
+                print(each)
+        
+        else:
+            print('No timezones found!')
+
+def findColorF(userinput):
+    results = searchColorbyName(' '.join(userinput))
+    if results:
+        if len(results) > 0:
+            if len(results) == 1:
+                print('One color found:')
+
+            else:
+                print('{} colors found:'.format(len(results)))
+
+            for each in results:
+                print(each.name)
+        
+        else:
+            print('No colors found!')
 
 def initialize():
     if not config.dataPath.exists():
-        pathlib.path.mkdir(config.dataPath)
+        config.dataPath.mkdir()
 
     DB = config.database
 
-    try:
+    if True:
+    #try:
         doInit = False
         if DB.exists():
             response = input('Database already exists. Re-initialize? This will empty the database. <y/N> ')
             if response.lower() == 'y':
-                thisDB.unlink()
+                DB.unlink()
                 doInit = True
             else:
                 print('Canceled.')
@@ -826,45 +1172,38 @@ def initialize():
         if doInit:
             conn = sqlite3.connect(DB)
             cursor = conn.cursor()
-            cursor.execute("
-                    CREATE TABLE info(
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    key TEXT,
-                    value TEXT
-                    )")
+            cursor.execute(
+                    "CREATE TABLE info("
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, key TEXT, value TEXT)"
+                    )
             cursor.execute("INSERT INTO info(key, value) VALUES (?, ?)",
                     ('dbversion', config.settings['dbversion']))
             print('Configuring for multiple users...')
-            cursor.execute("
-                    CREATE TABLE users(
-                    id INTEGER PRIMARY KEY,
-                    name TEXT,
-                    botrank INTEGER DEFAULT '0',
-                    country TEXT,
-                    tz TEXT DEFAULT 'US/Eastern',
-                    bday TEXT,
-                    points INTEGER DEFAULT '0'
-                    )")
+            cursor.execute(
+                    "CREATE TABLE users("
+                    "id INTEGER PRIMARY KEY, name TEXT, botrank INTEGER DEFAULT '0', country TEXT, "
+                    "tz TEXT DEFAULT 'US/Eastern', bday TEXT, points INTEGER DEFAULT '0')"
+                    )
             print('Configuring for multiple servers...')
-            cursor.execute("
-                    CREATE TABLE servers(
-                    id TEXT NOT NULL PRIMARY KEY,
-                    name TEXT,
-                    trigger TEXT
-                    )")
-            cursor.execute("
-                    CREATE TABLE serverusers(
-                    userid TEXT NOT NULL,
-                    serverid TEXT NOT NULL,
-                    PRIMARY KEY(userid, serverid),
-                    FOREIGN KEY(userid) REFERENCES users(id)
-                        ON DELETE CASCADE ON UPDATE NO ACTION,
-                    FOREIGN KEY(serverid) REFERENCES servers(id)
-                        ON DELETE CASCADE ON UPDATE NO ACTION,
-                    color TEXT,
-                    nick TEXT,
-                    localrank TEXT
-                    )")
+            cursor.execute(
+                    "CREATE TABLE servers("
+                    "id INTEGER PRIMARY KEY, name TEXT, tz TEXT, trigger TEXT)"
+                    )
+            print('Configuring for color management...')
+            cursor.execute(
+                    "CREATE TABLE colors("
+                    "id INTEGER PRIMARY KEY, name TEXT, code TEXT)"
+                    )
+            print('Configuring for user aliases...')
+            cursor.execute(
+                    "CREATE TABLE serverusers("
+                    "userid INTEGER NOT NULL, serverid INTEGER NOT NULL, color INTEGER, nick TEXT, localrank TEXT, "
+                    "PRIMARY KEY(userid, serverid), "
+                    "FOREIGN KEY(userid) REFERENCES users(id) ON DELETE CASCADE ON UPDATE NO ACTION, "
+                    "FOREIGN KEY(serverid) REFERENCES servers(id) ON DELETE CASCADE ON UPDATE NO ACTION, "
+                    "FOREIGN KEY(color) REFERENCES colors(id) ON DELETE SET NULL ON UPDATE NO ACTION)" 
+                    )
+            print('No prob yet.')
             conn.commit()
             conn.close()
 
@@ -874,17 +1213,17 @@ def initialize():
 
             print('Database initialized.')
 
-    except:
-        print(sys.exc_info()[0])
+    #except:
+        #print(sys.exc_info()[0])
         #print('Error.')
 
 def backup():
     timestamp = (datetime.now()).strftime("%Y%m%d%H%M%S%f")
     
     if not config.backupPath.exists():
-        pathlib.path.mkdir(config.backupPath)
+        config.backupPath.mkdir()
 
-    backupFile = config.backupPath / ('{dbname}_backup_{code}.db'.format(dbname=config.database, code=timestamp))
+    backupFile = config.backupPath / ('{dbname}_backup_{code}.db'.format(dbname=config.database.stem, code=timestamp))
     
     shutil.copy2(config.database, backupFile)
 
