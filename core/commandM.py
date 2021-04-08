@@ -47,23 +47,24 @@ class command:
         return errorText
 
     def execute(self, *args):
-        try:
+        #try:
+        if True:
             if args:
                 getattr(self.parent_module, self.function)(args)
             else:
                 getattr(self.parent_module, self.function)()
 
-        except TypeError:
-            if args:
-                print(self.paramError(' '.join(args)))
-            else:
-                print('The associated function requires arguments.')
+        #except TypeError:
+            #if args:
+                #print(self.paramError(' '.join(args)))
+            #else:
+                #print('The associated function requires arguments.')
         
-        except AttributeError:
-            if args:
-                print(self.paramError(' '.join(args)))
-            else:
-                print('No associated function found.')
+        #except AttributeError:
+            #if args:
+                #print(self.paramError(' '.join(args)))
+            #else:
+                #print('No associated function found.')
 
 #        except Exception:
 #            print(sys.exc_info()[0])
