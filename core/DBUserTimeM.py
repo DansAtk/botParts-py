@@ -563,6 +563,10 @@ def init():
     listColorC = command('color', listC)
     listColorC.description = 'Lists all colors in the database.'
     listColorC.function = 'listColorF'
+    global listTimezoneC
+    listTimezoneC = command('timezone', listC)
+    listTimezoneC.description = 'Lists all available time zones.'
+    listTimezoneC.function = 'listTimezoneF'
     global timeC
     timeC = command('time', mSelf)
     timeC.description = 'Displays the current time.'
@@ -574,7 +578,7 @@ def init():
     global timeZonesC
     timeZonesC = command('zones', timeC)
     timeZonesC.description = 'Lists all available time zones.'
-    timeZonesC.function = 'timeZonesF'
+    timeZonesC.function = 'listTimezoneF'
     global findC
     findC = command('find', mSelf)
     findC.description = 'Searches for objects meeting the given criteria.'
@@ -624,8 +628,6 @@ def init():
     findColorC.description = 'Searches for colors with names matching the given query.'
     findColorC.function = 'findColorF'
 
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
 def databaseF():
     print(databaseC.help() + '\n')
     listF()
@@ -639,13 +641,63 @@ def databaseDeleteF():
     return None
 
 def databaseBackupF():
-    return None
+    DB = config.database
+    if DB.exists():
+        oFile = backup()
+        print('Database backed up to \'{backupname}\'.'.format(backupname=oFile.name))
+
+    else:
+        print('Database not found!')
 
 def addF():
     return None
 
-def addUserF():
-    return None
+def addUserF(*userinput):
+    userdata = []
+
+    for p in range(0, len(userinput)):
+        userdata.append(userinput[p].split('='))
+
+    userDict = {}
+
+    for q in userdata:
+        userDict.update({q[0] : q[1]})
+
+    if 'id' in userDict.keys():
+        newUser = user(userDict['id'])
+
+        if 'name' in userDict.keys():
+            newUser.name = userDict['name']
+
+        if 'tz' in userDict.keys():
+            newUser.tz = userDict['tz']
+
+        if 'botrank' in userDict.keys():
+            newUser.botrank = userDict['botrank']
+
+        if 'bday' in userDict.keys():
+            newUser.bday = userDict['bday']
+
+        if 'country' in userDict.keys():
+            newUser.country = userDict['country']
+
+        if 'points' in userDict.keys():
+            newUser.points = userDict['points']
+
+        if 'serverid' in userDict.keys():
+            newUser.serverid = userDict['serverid']
+
+            if 'nick' in userDict.keys():
+                newUser.nick = userDict['nick']
+
+            if 'color' in userDict.keys():
+                newUser.color = userDict['color']
+
+            if 'localrank' in userDict.keys():
+                newUser.localrank = userDict['localrank']
+
+        addUser(newUser)
+
 
 def addServerF():
     return None
@@ -692,14 +744,30 @@ def listServerF():
 def listColorF():
     return None
 
+def listTimezoneF():
+    for value in pytz.all_timezones:
+        print(value)
+
 def timeF():
     return None
 
-def timeForF():
-    return None
-
-def timeZonesF():
-    return None
+def timeForF(userinput):
+# Check if user inputted a valid ID
+    thisUser = getUser(userinput)
+    if not thisUser:
+# If not, check if it is a name
+        searchResults = searchUserbyName(userinput)
+        
+        if len(searchResults) > 0:
+            if len(searchResults) == 1:
+                thisUser = searchResults[0]
+            else:
+                print('Multiple matching users found. Be more specific.')
+        else:
+            print('No matching users found.')
+    
+    if thisUser:
+        print('The current time for {uname} in the {tzone} timezone is {now}.'.format(thisUser.goesby(), thisUser.tz, getTime(thisUser)))
 
 def findF():
     return None
@@ -822,90 +890,8 @@ def backup():
 
     return backupFile
 
-def backupF():
-    DB = config.database
-    if DB.exists():
-        oFile = backup()
-        print('Database backed up to \'{backupname}\'.'.format(backupname=oFile.name))
-
-    else:
-        print('Database not found!')
-
 def cleanup():
-    backupF()
-
-if __name__ == "__main__":
-    print("No main.")
-else:
-    init()
-
-
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-def timeforF(userinput=''):
-    if len(userinput) > 1:
-        timeUser = getUser(userinput[0], userinput[1])
-        print(timeUser.now())
-
-    else:
-        print('Please specify at least a user ID and a database name.')
-
-def timezonelistF():
-    for value in pytz.all_timezones:
-        print(value)
-
-#def userCF(message):
-#    if len(message) > 0:
-#        print(user.paramError(message))
-#    else:
-#        print(user.help())
-
-
-def buildF(*userinput):
-    newUser = user()
-    userdata = []
-
-    for p in range(0, len(userinput)):
-        print(p)
-        userdata.append(userinput[p].split('='))
-
-    userDict = {}
-
-    for q in userdata:
-        userDict.update({q[0] : q[1]})
-
-    if 'id' in userDict.keys():
-        newUser.id = userDict['id']
-
-    if 'name' in userDict.keys():
-        newUser.name = userDict['name']
-
-    if 'nick' in userDict.keys():
-        newUser.nick = userDict['nick']
-
-    if 'tz' in userDict.keys():
-        newUser.tz = userDict['tz']
-
-    if 'rank' in userDict.keys():
-        newUser.rank = userDict['rank']
-
-    if 'color' in userDict.keys():
-        newUser.color = userDict['color']
-
-    if 'bday' in userDict.keys():
-        newUser.bday = userDict['bday']
-
-    if 'country' in userDict.keys():
-        newUser.country = userDict['country']
-
-    if 'points' in userDict.keys():
-        newUser.points = userDict['points']
-
-    if 'database' in userDict.keys():
-        addUser(newUser, userDict['database'])
-
-    return newUser
-
-def dbinit(DB):
+    databaseBackupF()
 
 if __name__ == "__main__":
     print("No main.")
