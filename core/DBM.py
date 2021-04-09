@@ -69,7 +69,7 @@ class user:
 def getUser(userid, serverid=None):
     DB = config.database
 
-    if DB.exists():
+    if checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -79,6 +79,7 @@ def getUser(userid, serverid=None):
                 (userid,)
                 )
         result = cursor.fetchone()
+        conn.close()
 
         if result:
             thisUser = user(userid)
@@ -114,12 +115,12 @@ def tryGetOneUser(userstring):
 
 def addUser(profile):
     DB = config.database
-    if DB.exists():
+    if checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
-                "INSERT INTO users( "
-                "id, name, botrank, country, tz, bday, points) "
+                "INSERT INTO users"
+                "(id, name, botrank, country, tz, bday, points) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?)",
                 (profile.id, profile.name, profile.botrank,
                     profile.country, profile.tz, profile.bday, profile.points)
@@ -131,7 +132,7 @@ def addUser(profile):
 
 def removeUser(profile):
     DB = config.database
-    if DB.exists():
+    if checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -160,7 +161,7 @@ def updateUser(profile):
             thisUser.points = profile.points
         
         DB = config.database
-        if DB.exists():
+        if checkDB():
             conn = sqlite3.connect(DB)
             cursor = conn.cursor()
             cursor.execute(
@@ -174,7 +175,7 @@ def updateUser(profile):
 
 def searchUserbyName(searchstring, serverid=None):
     DB = config.database
-    if DB.exists():
+    if checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
 
@@ -209,7 +210,7 @@ def searchUserbyName(searchstring, serverid=None):
 
 def searchUserbyCountry(searchstring, serverid=None):
     DB = config.database
-    if DB.exists():
+    if checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -234,7 +235,7 @@ def searchUserbyCountry(searchstring, serverid=None):
 
 def searchUserbyTimezone(searchstring, serverid=None):
     DB = config.database
-    if DB.exists():
+    if checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -259,7 +260,7 @@ def searchUserbyTimezone(searchstring, serverid=None):
 
 def searchUserbyBirthday(searchstring, serverid=None):
     DB = config.database
-    if DB.exists():
+    if checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -284,7 +285,7 @@ def searchUserbyBirthday(searchstring, serverid=None):
 
 def searchUserbyColor(searchColor, searchServer):
     DB = config.database
-    if DB.exists():
+    if checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -308,7 +309,7 @@ def searchUserbyColor(searchColor, searchServer):
             return None
 
 class server:
-    def __init__(self, ID, NAME=None, TRIGGER='!', TZ='US/Eastern'):
+    def __init__(self, ID, NAME=None, TRIGGER='!', TZ=None):
         self.id = ID
         self.name = NAME
         self.trigger = TRIGGER
@@ -316,7 +317,7 @@ class server:
 
 def getServer(serverid):
     DB = config.database
-    if DB.exists():
+    if checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -354,7 +355,7 @@ def tryGetOneServer(serverstring):
 
 def addServer(profile):
     DB = config.database
-    if DB.exists():
+    if checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -368,7 +369,7 @@ def addServer(profile):
 
 def removeServer(profile):
     DB = config.database
-    if DB.exists():
+    if checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -391,7 +392,7 @@ def updateServer(profile):
             thisServer.tz = profile.tz
         
         DB = config.database
-        if DB.exists():
+        if checkDB():
             conn = sqlite3.connect(DB)
             cursor = conn.cursor()
             cursor.execute(
@@ -405,7 +406,7 @@ def updateServer(profile):
 
 def searchServerbyName(searchstring):
     DB = config.database
-    if DB.exists():
+    if checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -430,7 +431,7 @@ def searchServerbyName(searchstring):
 
 def searchServerbyTimezone(searchstring):
     DB = config.database
-    if DB.exists():
+    if checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -456,7 +457,7 @@ def searchServerbyTimezone(searchstring):
 def getUserAlias(userprofile, serverprofile):
     DB = config.database
 
-    if DB.exists():
+    if checkDB():
         thisUser = user(userprofile.id)
         thisUser.decorate(serverprofile.id)
 
@@ -470,7 +471,7 @@ def addUserAlias(profile):
     if profile.serverid:
         if getServer(profile.serverid):
             DB = config.database
-            if DB.exists():
+            if checkDB():
                 conn = sqlite3.connect(DB)
                 cursor = conn.cursor()
                 cursor.execute(
@@ -484,7 +485,7 @@ def addUserAlias(profile):
 
 def removeUserAlias(userprofile, serverprofile):
     DB = config.database
-    if DB.exists():
+    if checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -509,7 +510,7 @@ def updateUserAlias(profile):
             thisAlias.localrank = profile.localrank
 
         DB = config.database
-        if DB.exists():
+        if checkDB():
             conn = sqlite3.connect(DB)
             cursor = conn.cursor()
             cursor.execute(
@@ -562,7 +563,7 @@ class color:
 
 def getColor(colorid):
     DB = config.database
-    if DB.exists():
+    if checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -599,7 +600,7 @@ def tryGetOneColor(colorstring):
 
 def addColor(profile):
     DB = config.database
-    if DB.exists():
+    if checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -613,7 +614,7 @@ def addColor(profile):
 
 def removeColor(profile):
     DB = config.database
-    if DB.exists():
+    if checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -634,7 +635,7 @@ def updateColor(profile):
             thisColor.code = profile.code
         
         DB = config.database
-        if DB.exists():
+        if checkDB():
             conn = sqlite3.connect(DB)
             cursor = conn.cursor()
             cursor.execute(
@@ -648,7 +649,7 @@ def updateColor(profile):
 
 def searchColorbyName(searchstring):
     DB = config.database
-    if DB.exists():
+    if checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -671,7 +672,99 @@ def searchColorbyName(searchstring):
         else:
             return None
 
-def init():
+def initializeDB():
+    if not config.dataPath.exists():
+        config.dataPath.mkdir()
+
+    DB = config.database
+
+    if True:
+    #try:
+        doInit = False
+        if DB.exists():
+            response = input('Database already exists. Re-initialize? This will empty the database. <y/N> ')
+            if response.lower() == 'y':
+                DB.unlink()
+                doInit = True
+            else:
+                print('Canceled.')
+        else:
+            doInit = True
+        
+        if doInit:
+            conn = sqlite3.connect(DB)
+            cursor = conn.cursor()
+            cursor.execute(
+                    "CREATE TABLE info("
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, key TEXT, value TEXT)"
+                    )
+            cursor.execute("INSERT INTO info(key, value) VALUES (?, ?)",
+                    ('dbversion', config.settings['dbversion']))
+            print('Configuring for multiple users...')
+            cursor.execute(
+                    "CREATE TABLE users("
+                    "id INTEGER PRIMARY KEY, name TEXT, botrank INTEGER DEFAULT '0', country TEXT, "
+                    "tz TEXT DEFAULT 'US/Eastern', bday TEXT, points INTEGER DEFAULT '0')"
+                    )
+            print('Configuring for multiple servers...')
+            cursor.execute(
+                    "CREATE TABLE servers("
+                    "id INTEGER PRIMARY KEY, name TEXT, tz TEXT, trigger TEXT)"
+                    )
+            print('Configuring for color management...')
+            cursor.execute(
+                    "CREATE TABLE colors("
+                    "id INTEGER PRIMARY KEY, name TEXT, code TEXT)"
+                    )
+            print('Configuring for user aliases...')
+            cursor.execute(
+                    "CREATE TABLE serverusers("
+                    "userid INTEGER NOT NULL, serverid INTEGER NOT NULL, color INTEGER, nick TEXT, localrank TEXT, "
+                    "PRIMARY KEY(userid, serverid), "
+                    "FOREIGN KEY(userid) REFERENCES users(id) ON DELETE CASCADE ON UPDATE NO ACTION, "
+                    "FOREIGN KEY(serverid) REFERENCES servers(id) ON DELETE CASCADE ON UPDATE NO ACTION, "
+                    "FOREIGN KEY(color) REFERENCES colors(id) ON DELETE SET NULL ON UPDATE NO ACTION)" 
+                    )
+            conn.commit()
+            conn.close()
+
+            for module in config.imports:
+                if hasattr(sys.modules[module], 'dbinit'):
+                    sys.modules[module].dbinit(DB)
+
+            print('Database initialized.')
+
+    #except:
+        #print(sys.exc_info()[0])
+        #print('Error.')
+
+def checkDB():
+    DB = config.database
+
+    if DB.exists():
+        return True
+
+    else:
+        print('Database not found.')
+        return False
+
+def backupDB():
+    if checkDB():
+        timestamp = (datetime.now()).strftime("%Y%m%d%H%M%S%f")
+    
+        if not config.backupPath.exists():
+            config.backupPath.mkdir()
+
+        backupFile = config.backupPath / ('{dbname}_backup_{code}.db'.format(dbname=config.database.stem, code=timestamp))
+    
+        shutil.copy2(config.database, backupFile)
+
+        return backupFile
+
+def cleanup():
+    databaseBackupF()
+
+def registerCommands():
     global databaseC
     databaseC = command('database', mSelf)
     databaseC.description = 'Commands for managing the bot\'s database. Alone, displays information about the database\'s current state.'
@@ -857,7 +950,7 @@ def databaseF():
     print(databaseC.help())
 
 def databaseSetupF():
-    initialize()
+    initializeDB()
 
 def databaseDeleteF():
     response = input('Are you sure you want to delete the current database? <y/N> ')
@@ -870,13 +963,9 @@ def databaseDeleteF():
         print('Cancelled.')
 
 def databaseBackupF():
-    DB = config.database
-    if DB.exists():
-        oFile = backup()
+    if checkDB():
+        oFile = backupDB()
         print('Database backed up to \'{backupname}\'.'.format(backupname=oFile.name))
-
-    else:
-        print('Database not found!')
 
 def addF():
     return None
@@ -938,58 +1027,47 @@ def addUserF(userinput):
         print('Added user {}.'.format(newUser.name))
 
 def addUserAliasF(userinput):
-    aliasData = []
+    aliasdata = []
 
-    for p in range(0, len(userinput)):
-        aliasData.append(userinput[p].split('='))
+    userString = userinput[0]
+    serverString = userinput[1]
+    aliasDetails = userinput[2:]
 
-    aliasDict = {}
+    thisUser = tryGetOneUser(userString)
+    thisServer = tryGetOneServer(serverString)
 
-    for q in aliasData:
-        aliasDict.update({q[0] : q[1]})
+    if thisUser and thisServer:
+        newAlias = user(thisUser.id)
+        newAlias.serverid = thisServer.id
+
+        for p in range(0, len(aliasDetails)):
+            aliasdata.append(aliasDetails[p].split('='))
+
+        aliasDict = {}
+
+        for q in aliasdata:
+            aliasDict.update({q[0] : q[1]})
     
-    if 'user' in aliasDict.keys():
-        thisUser = tryGetOneUser(aliasDict['user'])
-        
-        if thisUser:
-            if 'server' in aliasDict.keys():
-                thisServer = tryGetOneServer(aliasDict['server'])
+        if 'nick' in aliasDict.keys():
+            newAlias.nick = aliasDict['nick']
+            print(newAlias.nick)
 
-                if thisServer:
-                    thisAlias = getUserAlias(thisUser, thisServer)
-
-                    if thisAlias:
-                        print('Alias already exists.')
-
-                    else:
-                        thisAlias = thisUser
-                        thisAlias.serverid = thisServer.id
-
-                        if 'nick' in aliasDict.keys():
-                            thisAlias.nick = aliasDict['nick']
-
-                        if 'color' in aliasDict.keys():
-                            thisColor = tryGetOneColor(aliasDict['color'])
-                            if thisColor:
-                                thisAlias.color = thisColor.id
-                            else:
-                                print('Color not found.')
-
-                        if 'localrank' in aliasDict.keys():
-                            thisAlias.localrank = aliasDict['localrank']
-
-                        addUserAlias(thisAlias)
-
-                        print('Added user alias for {aname} to server {sname}.'.format(aname=thisAlias.name, sname=thisServer.name))
-
-                else:
-                    print('Server not found.')
+        if 'color' in aliasDict.keys():
+            thisColor = tryGetOneColor(aliasDict['color'])
+            if thisColor:
+                newAlias.color = thisColor.name
             else:
-                print('Please specify a server.')
-        else:
-            print('User not found.')
+                print('Unknown color.')
+
+        if 'localrank' in aliasDict.keys():
+            newAlias.localrank = aliasDict['localrank']
+
+        addUserAlias(newAlias)
+
+        print('Added user alias for {uname} in server {sname}.'.format(uname=thisUser.name, sname=thisServer.name))
+
     else:
-        print('Please specify a user and server.')
+        print('User and/or server not found.')
 
 def addServerF(userinput):
     serverdata = []
@@ -1216,7 +1294,7 @@ def editUserAliasF(userinput):
                 aliasDict.update({q[0] : q[1]})
     
             if 'nick' in aliasDict.keys():
-                editAlias.name = aliasDict['nick']
+                editAlias.nick = aliasDict['nick']
 
             if 'color' in aliasDict.keys():
                 thisColor = tryGetOneColor(aliasDict['color'])
@@ -1349,7 +1427,7 @@ def listF():
 
 def listUserF():
     DB = config.database
-    if DB.exists():
+    if checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -1368,7 +1446,7 @@ def listUserAliasF(userinput):
 
     if thisUser:
         DB = config.database
-        if DB.exists():
+        if checkDB():
             conn = sqlite3.connect(DB)
             cursor = conn.cursor()
             cursor.execute(
@@ -1388,7 +1466,7 @@ def listUserAliasF(userinput):
 
 def listServerF():
     DB = config.database
-    if DB.exists():
+    if checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -1403,7 +1481,7 @@ def listServerF():
 
 def listColorF():
     DB = config.database
-    if DB.exists():
+    if checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -1600,88 +1678,7 @@ def findColorF(userinput):
     else:
         print('No colors found!')
 
-def initialize():
-    if not config.dataPath.exists():
-        config.dataPath.mkdir()
-
-    DB = config.database
-
-    if True:
-    #try:
-        doInit = False
-        if DB.exists():
-            response = input('Database already exists. Re-initialize? This will empty the database. <y/N> ')
-            if response.lower() == 'y':
-                DB.unlink()
-                doInit = True
-            else:
-                print('Canceled.')
-        else:
-            doInit = True
-        
-        if doInit:
-            conn = sqlite3.connect(DB)
-            cursor = conn.cursor()
-            cursor.execute(
-                    "CREATE TABLE info("
-                    "id INTEGER PRIMARY KEY AUTOINCREMENT, key TEXT, value TEXT)"
-                    )
-            cursor.execute("INSERT INTO info(key, value) VALUES (?, ?)",
-                    ('dbversion', config.settings['dbversion']))
-            print('Configuring for multiple users...')
-            cursor.execute(
-                    "CREATE TABLE users("
-                    "id INTEGER PRIMARY KEY, name TEXT, botrank INTEGER DEFAULT '0', country TEXT, "
-                    "tz TEXT DEFAULT 'US/Eastern', bday TEXT, points INTEGER DEFAULT '0')"
-                    )
-            print('Configuring for multiple servers...')
-            cursor.execute(
-                    "CREATE TABLE servers("
-                    "id INTEGER PRIMARY KEY, name TEXT, tz TEXT, trigger TEXT)"
-                    )
-            print('Configuring for color management...')
-            cursor.execute(
-                    "CREATE TABLE colors("
-                    "id INTEGER PRIMARY KEY, name TEXT, code TEXT)"
-                    )
-            print('Configuring for user aliases...')
-            cursor.execute(
-                    "CREATE TABLE serverusers("
-                    "userid INTEGER NOT NULL, serverid INTEGER NOT NULL, color INTEGER, nick TEXT, localrank TEXT, "
-                    "PRIMARY KEY(userid, serverid), "
-                    "FOREIGN KEY(userid) REFERENCES users(id) ON DELETE CASCADE ON UPDATE NO ACTION, "
-                    "FOREIGN KEY(serverid) REFERENCES servers(id) ON DELETE CASCADE ON UPDATE NO ACTION, "
-                    "FOREIGN KEY(color) REFERENCES colors(id) ON DELETE SET NULL ON UPDATE NO ACTION)" 
-                    )
-            conn.commit()
-            conn.close()
-
-            for module in config.imports:
-                if hasattr(sys.modules[module], 'dbinit'):
-                    sys.modules[module].dbinit(DB)
-
-            print('Database initialized.')
-
-    #except:
-        #print(sys.exc_info()[0])
-        #print('Error.')
-
-def backup():
-    timestamp = (datetime.now()).strftime("%Y%m%d%H%M%S%f")
-    
-    if not config.backupPath.exists():
-        config.backupPath.mkdir()
-
-    backupFile = config.backupPath / ('{dbname}_backup_{code}.db'.format(dbname=config.database.stem, code=timestamp))
-    
-    shutil.copy2(config.database, backupFile)
-
-    return backupFile
-
-def cleanup():
-    databaseBackupF()
-
 if __name__ == "__main__":
     print("No main.")
 else:
-    init()
+    registerCommands()
