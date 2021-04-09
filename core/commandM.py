@@ -69,6 +69,9 @@ class command:
 #        except Exception:
 #            print(sys.exc_info()[0])
 
+#class commandFunction:
+    #def __init__(self,) 
+
 # Utility function for reading incoming text and parsing it for both a valid trigger and valid commands across all imported botParts modules. If a valid command is found, its associated function is executed and passed the remainder of the input text as arguments.
 def read(userinput):
     if userinput.startswith(config.settings['trigger']):
