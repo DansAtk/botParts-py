@@ -903,7 +903,11 @@ def addUserF(userinput):
                 newUser.nick = userDict['nick']
 
             if 'color' in userDict.keys():
-                newUser.color = userDict['color']
+                thisColor = tryGetOneColor(userDict['color'])
+                if thisColor:
+                    newUser.color = thisColor.id
+                else:
+                    print('Color not found.')
 
             if 'localrank' in userDict.keys():
                 newUser.localrank = userDict['localrank']
@@ -944,7 +948,11 @@ def addUserAliasF(userinput):
                             thisAlias.nick = aliasDict['nick']
 
                         if 'color' in aliasDict.keys():
-                            thisAlias.color = aliasDict['color']
+                            thisColor = tryGetOneColor(aliasDict['color'])
+                            if thisColor:
+                                thisAlias.color = thisColor.id
+                            else:
+                                print('Color not found.')
 
                         if 'localrank' in aliasDict.keys():
                             thisAlias.localrank = aliasDict['localrank']
