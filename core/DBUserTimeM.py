@@ -16,7 +16,7 @@ includes = {}
 config.imports.append(__name__)
 
 class user:
-    def __init__(self, ID, NAME=None, TZ='US/Eastern', BOTRANK=None, BDAY=None, COUNTRY=None, POINTS=None):
+    def __init__(self, ID, NAME=None, TZ=None, BOTRANK=None, BDAY=None, COUNTRY=None, POINTS=None):
         self.id = ID 
         self.name = NAME
         self.tz = TZ
@@ -497,15 +497,16 @@ def removeUserAlias(userprofile, serverprofile):
 
 
 def updateUserAlias(profile):
-    thisUser = getUserAlias(profile.id, profile.serverid)
+    thisServer = tryGetOneServer(profile.serverid)
+    thisAlias = getUserAlias(profile, thisServer)
 
-    if thisUser:
+    if thisAlias:
         if profile.nick:
-            thisUser.nick = profile.nick
+            thisAlias.nick = profile.nick
         if profile.color:
-            thisUser.color = profile.color
+            thisAlias.color = profile.color
         if profile.localrank:
-            thisUser.localrank = profile.localrank
+            thisAlias.localrank = profile.localrank
 
         DB = config.database
         if DB.exists():
@@ -515,7 +516,7 @@ def updateUserAlias(profile):
                     "UPDATE serverusers SET "
                     "nick = ?, color = ?, localrank = ? "
                     "WHERE userid = ? AND serverid = ?",
-                    (thisUser.nick, thisUser.color, thisUser.localrank, thisUser.id, thisUser.serverid)
+                    (thisAlias.nick, thisAlias.color, thisAlias.localrank, thisAlias.id, thisAlias.serverid)
                     )
             conn.commit()
             conn.close()
@@ -640,7 +641,7 @@ def updateColor(profile):
                     "UPDATE colors SET "
                     "name = ?, code = ? "
                     "WHERE id = ?",
-                    (thisColor.name, thisColor.trigger, thisColor.id)
+                    (thisColor.name, thisColor.code, thisColor.id)
                     )
             conn.commit()
             conn.close()
@@ -1103,17 +1104,172 @@ def editF():
     return None
 
 def editUserF(userinput):
-    return None
- 
+    userdata = []
+
+    userString = userinput[0]
+    userDetails = userinput[1:]
+
+    thisUser = tryGetOneUser(userString)
+    
+    if thisUser:
+        editUser = user(thisUser.id)
+
+        for p in range(0, len(userDetails)):
+            userdata.append(userDetails[p].split('='))
+
+        userDict = {}
+
+        for q in userdata:
+            userDict.update({q[0] : q[1]})
+    
+        if 'name' in userDict.keys():
+            editUser.name = userDict['name']
+
+        if 'tz' in userDict.keys():
+            thisTZ = tryGetOneTimezone(userDict['tz'])
+            if thisTZ:
+                editUser.tz = thisTZ
+            else:
+                print('Unknown timezone.')
+
+        if 'botrank' in userDict.keys():
+            editUser.botrank = userDict['botrank']
+
+        if 'bday' in userDict.keys():
+            editUser.bday = userDict['bday']
+
+        if 'country' in userDict.keys():
+            editUser.country = userDict['country']
+
+        if 'points' in userDict.keys():
+            editUser.points = userDict['points']
+
+        updateUser(editUser)
+
+        print('Updated user {}.'.format(thisUser.name))
+
+    else:
+        print('User not found.')
+
 def editServerF(userinput):
-    return None
+    serverdata = []
+
+    serverString = userinput[0]
+    serverDetails = userinput[1:]
+
+    thisServer = tryGetOneServer(serverString)
+    
+    if thisServer:
+        editServer = server(thisServer.id)
+
+        for p in range(0, len(serverDetails)):
+            serverdata.append(serverDetails[p].split('='))
+
+        serverDict = {}
+
+        for q in serverdata:
+            serverDict.update({q[0] : q[1]})
+    
+        if 'name' in serverDict.keys():
+            editServer.name = serverDict['name']
+
+        if 'tz' in serverDict.keys():
+            thisTZ = tryGetOneTimezone(serverDict['tz'])
+            if thisTZ:
+                editServer.tz = thisTZ
+            else:
+                print('Unknown timezone.')
+
+        if 'trigger' in serverDict.keys():
+            editServer.trigger = serverDict['trigger']
+
+        updateServer(editServer)
+
+        print('Updated server {}.'.format(thisServer.name))
+
+    else:
+        print('Server not found.')
 
 def editUserAliasF(userinput):
-    return None
- 
-def editUserColorF(userinput):
-    return None
- 
+    aliasdata = []
+
+    userString = userinput[0]
+    serverString = userinput[1]
+    aliasDetails = userinput[2:]
+
+    thisUser = tryGetOneUser(userString)
+    thisServer = tryGetOneServer(serverString)
+
+    if thisUser and thisServer:
+        thisAlias = getUserAlias(thisUser, thisServer)
+
+        if thisAlias:
+            editAlias = user(thisUser.id)
+            editAlias.serverid = thisServer.id
+
+            for p in range(0, len(aliasDetails)):
+                aliasdata.append(aliasDetails[p].split('='))
+
+            aliasDict = {}
+
+            for q in aliasdata:
+                aliasDict.update({q[0] : q[1]})
+    
+            if 'nick' in aliasDict.keys():
+                editAlias.name = aliasDict['nick']
+
+            if 'color' in aliasDict.keys():
+                thisColor = tryGetOneColor(aliasDict['color'])
+                if thisColor:
+                    editAlias.color = thisColor.name
+                else:
+                    print('Unknown color.')
+
+            if 'localrank' in aliasDict.keys():
+                editAlias.localrank = aliasDict['localrank']
+
+            updateUserAlias(editAlias)
+
+            print('Updated user alias for {uname} in server {sname}.'.format(uname=thisUser.name, sname=thisServer.name))
+
+        else:
+            print('Existing alias not found.')
+
+    else:
+        print('User and/or server not found.')
+
+def editColorF(userinput):
+    colordata = []
+
+    colorString = userinput[0]
+    colorDetails = userinput[1:]
+
+    thisColor = tryGetOneColor(colorString)
+    
+    if thisColor:
+        editColor = color(thisColor.id)
+
+        for p in range(0, len(colorDetails)):
+            colordata.append(colorDetails[p].split('='))
+
+        colorDict = {}
+
+        for q in colordata:
+            colorDict.update({q[0] : q[1]})
+    
+        if 'name' in colorDict.keys():
+            editColor.name = colorDict['name']
+
+        if 'code' in colorDict.keys():
+            editColor.code = colorDict['code']
+
+        updateColor(editColor)
+
+        print('Updated color {}.'.format(thisColor.name))
+
+    else:
+        print('Color not found.')
+
 def showF():
     return None
 
