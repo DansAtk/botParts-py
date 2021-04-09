@@ -52,8 +52,6 @@ class user:
             self.nick = result[0]
             self.color = result[1]
             self.localrank = result[2]
-        else:
-            print('No record found.')
     
     def goesby(self, serverid=None):
         useName = ''
@@ -97,19 +95,16 @@ def getUser(userid, serverid=None):
             return thisUser
 
         else:
-            print('user not found')
-
             return None
 
 def tryGetOneUser(userstring):
     thisUser = None
-    refInput = ' '.join(userstring)
 
     try:
-        thisUser = getUser(int(refInput))
+        thisUser = getUser(int(userstring))
 
     except ValueError:
-        searchResults = searchUserbyName(refInput)
+        searchResults = searchUserbyName(userstring)
         
         if searchResults:
             if len(searchResults) == 1:
@@ -133,6 +128,19 @@ def addUser(profile):
         conn.close()
 
         addUserAlias(profile)
+
+def removeUser(profile):
+    DB = config.database
+    if DB.exists():
+        conn = sqlite3.connect(DB)
+        cursor = conn.cursor()
+        cursor.execute(
+                "DELETE FROM users "
+                "WHERE id = ?",
+                (profile.id,)
+                )
+        conn.commit()
+        conn.close()
 
 def updateUser(profile):
     thisUser = getUser(profile.id)
@@ -327,19 +335,16 @@ def getServer(serverid):
             return thisServer
         
         else:
-            print('Server not found!')
-            
             return None
 
 def tryGetOneServer(serverstring):
     thisServer = None
-    refInput = ' '.join(serverstring)
 
     try:
-        thisServer = getServer(int(refInput))
+        thisServer = getServer(int(serverstring))
 
     except ValueError:
-        searchResults = searchServerbyName(refInput)
+        searchResults = searchServerbyName(serverstring)
         
         if searchResults:
             if len(searchResults) == 1:
@@ -357,6 +362,19 @@ def addServer(profile):
                 "(id, name, trigger, tz) "
                 "VALUES (?, ?, ?, ?)",
                 (profile.id, profile.name, profile.trigger, profile.tz)
+                )
+        conn.commit()
+        conn.close()
+
+def removeServer(profile):
+    DB = config.database
+    if DB.exists():
+        conn = sqlite3.connect(DB)
+        cursor = conn.cursor()
+        cursor.execute(
+                "DELETE FROM servers "
+                "WHERE id = ?",
+                (profile.id,)
                 )
         conn.commit()
         conn.close()
@@ -435,20 +453,17 @@ def searchServerbyTimezone(searchstring):
         else:
             return None
 
-def getUserAlias(userid, serverid):
+def getUserAlias(userprofile, serverprofile):
     DB = config.database
 
     if DB.exists():
-        thisUser = user(userid)
-        thisUser.decorate(serverid)
+        thisUser = user(userprofile.id)
+        thisUser.decorate(serverprofile.id)
 
         if thisUser.serverid:
-
             return thisUser
 
         else:
-            print('User alias not found')
-
             return None
 
 def addUserAlias(profile):
@@ -466,6 +481,20 @@ def addUserAlias(profile):
                         )
                 conn.commit()
                 conn.close()
+
+def removeUserAlias(userprofile, serverprofile):
+    DB = config.database
+    if DB.exists():
+        conn = sqlite3.connect(DB)
+        cursor = conn.cursor()
+        cursor.execute(
+                "DELETE FROM serverusers "
+                "WHERE userid = ? AND serverid = ?",
+                (userprofile.id, serverprofile.id)
+                )
+        conn.commit()
+        conn.close()
+
 
 def updateUserAlias(profile):
     thisUser = getUserAlias(profile.id, profile.serverid)
@@ -493,7 +522,6 @@ def updateUserAlias(profile):
 
 def getTime(reference=None):
     if reference:
-        print(reference.tz)
         return datetime.now(pytz.timezone(reference.tz))
     else:
         return datetime.now(pytz.timezone('US/Eastern'))
@@ -503,7 +531,6 @@ def getTimezone(tzname):
 
 def tryGetOneTimezone(timezonestring):
     thisTimezone = None
-    refInput = ' '.join(timezonestring)
 
     searchResults = searchTimezonebyName(timezonestring)
 
@@ -552,19 +579,16 @@ def getColor(colorid):
             return thisColor
         
         else:
-            print('Color not found!')
-            
             return None
 
 def tryGetOneColor(colorstring):
     thisColor = None
-    refInput = ' '.join(colorstring)
 
     try:
-        thisColor = getColor(int(refInput))
+        thisColor = getColor(int(colorstring))
 
     except ValueError:
-        searchResults = searchColorbyName(refInput)
+        searchResults = searchColorbyName(colorstring)
         
         if searchResults:
             if len(searchResults) == 1:
@@ -582,6 +606,19 @@ def addColor(profile):
                 "(id, name, code) "
                 "VALUES (?, ?, ?)",
                 (profile.id, profile.name, profile.code)
+                )
+        conn.commit()
+        conn.close()
+
+def removeColor(profile):
+    DB = config.database
+    if DB.exists():
+        conn = sqlite3.connect(DB)
+        cursor = conn.cursor()
+        cursor.execute(
+                "DELETE FROM colors "
+                "WHERE id = ?",
+                (profile.id,)
                 )
         conn.commit()
         conn.close()
@@ -658,6 +695,10 @@ def init():
     addUserC = command('user', addC)
     addUserC.description = 'Builds a user from parameters, then adds it to the database.'
     addUserC.function = 'addUserF'
+    global addUserAliasC
+    addUserAliasC = command('alias', addUserC)
+    addUserAliasC.description = 'Builds a user alias from parameters, then adds it to the database.'
+    addUserAliasC.function = 'addUserAliasF'
     global addServerC
     addServerC = command('server', addC)
     addServerC.description = 'Builds a server from parameters, then adds it to the database.'
@@ -674,6 +715,10 @@ def init():
     removeUserC = command('user', removeC)
     removeUserC.description = 'Removes a user from the database.'
     removeUserC.function = 'removeUserF'
+    global removeUserAliasC
+    removeUserAliasC = command('alias', removeUserC)
+    removeUserAliasC.description = 'Removes a user alias from the database.'
+    removeUserAliasC.function = 'removeUserAliasF'
     global removeServerC
     removeServerC = command('server', removeC)
     removeServerC.description = 'Removes a server from the database.'
@@ -690,6 +735,10 @@ def init():
     showUserC = command('user', showC)
     showUserC.description = 'Displays detailed information about the user with the given ID. Usage: \'show user ID#\''
     showUserC.function = 'showUserF'
+    global showUserAliasC
+    showUserAliasC = command('alias', showUserC)
+    showUserAliasC.description = 'Displays detailed information about the user alias specified by user and server.'
+    showUserAliasC.function = 'showUserAliasF'
     global showServerC
     showServerC = command('server', showC)
     showServerC.description = 'Displays detailed information about the server with the given ID. Usage: \'show server ID#\''
@@ -703,7 +752,7 @@ def init():
     listC.description = 'Lists all objects of the given type currently in the database.'
     listC.function = 'listF'
     global listUserC
-    listUserC = command('user', listC)
+    listUserC = command('users', listC)
     listUserC.description = 'Lists all users in the database.'
     listUserC.function = 'listUserF'
     global listUserAliasC
@@ -711,15 +760,15 @@ def init():
     listUserAliasC.description = 'Lists all of a user\'s aliases across all servers. Specify a user ID.'
     listUserAliasC.function = 'listUserAliasF'
     global listServerC
-    listServerC = command('server', listC)
+    listServerC = command('servers', listC)
     listServerC.description = 'Lists all servers in the database.'
     listServerC.function = 'listServerF'
     global listColorC
-    listColorC = command('color', listC)
+    listColorC = command('colors', listC)
     listColorC.description = 'Lists all colors in the database.'
     listColorC.function = 'listColorF'
     global listTimezoneC
-    listTimezoneC = command('timezone', listC)
+    listTimezoneC = command('timezones', listC)
     listTimezoneC.description = 'Lists all available time zones.'
     listTimezoneC.function = 'listTimezoneF'
     global timeC
@@ -790,7 +839,14 @@ def databaseSetupF():
     initialize()
 
 def databaseDeleteF():
-    return None
+    response = input('Are you sure you want to delete the current database? <y/N> ')
+
+    if response.lower() == 'y':
+        config.database.unlink()
+        print('Database deleted.')
+
+    else:
+        print('Cancelled.')
 
 def databaseBackupF():
     DB = config.database
@@ -856,6 +912,56 @@ def addUserF(userinput):
 
         print('Added user {}.'.format(newUser.name))
 
+def addUserAliasF(userinput):
+    aliasData = []
+
+    for p in range(0, len(userinput)):
+        aliasData.append(userinput[p].split('='))
+
+    aliasDict = {}
+
+    for q in aliasData:
+        aliasDict.update({q[0] : q[1]})
+    
+    if 'user' in aliasDict.keys():
+        thisUser = tryGetOneUser(aliasDict['user'])
+        
+        if thisUser:
+            if 'server' in aliasDict.keys():
+                thisServer = tryGetOneServer(aliasDict['server'])
+
+                if thisServer:
+                    thisAlias = getUserAlias(thisUser, thisServer)
+
+                    if thisAlias:
+                        print('Alias already exists.')
+
+                    else:
+                        thisAlias = thisUser
+                        thisAlias.serverid = thisServer.id
+
+                        if 'nick' in aliasDict.keys():
+                            thisAlias.nick = aliasDict['nick']
+
+                        if 'color' in aliasDict.keys():
+                            thisAlias.color = aliasDict['color']
+
+                        if 'localrank' in aliasDict.keys():
+                            thisAlias.localrank = aliasDict['localrank']
+
+                        addUserAlias(thisAlias)
+
+                        print('Added user alias for {aname} to server {sname}.'.format(aname=thisAlias.name, sname=thisServer.name))
+
+                else:
+                    print('Server not found.')
+            else:
+                print('Please specify a server.')
+        else:
+            print('User not found.')
+    else:
+        print('Please specify a user and server.')
+
 def addServerF(userinput):
     serverdata = []
 
@@ -914,20 +1020,63 @@ def addColorF(userinput):
 def removeF():
     return None
 
-def removeUserF():
-    return None
+def removeUserF(userinput):
+    userString = ' '.join(userinput)
+    thisUser = tryGetOneUser(userString)
 
-def removeServerF():
-    return None
+    if thisUser:
+        response = input('Remove user {uname}({uid})? <y/N> '.format(uname=thisUser.name, uid=thisUser.id))
 
-def removeColorF():
-    return None
+        if response.lower() == 'y':
+            removeUser(thisUser)
+            print('User removed.')
 
+        else:
+            print('Cancelled.')
+
+    else:
+        print('User not found.')
+        
+def removeServerF(userinput):
+    serverString = ' '.join(userinput)
+    thisServer = tryGetOneServer(serverString)
+
+    if thisServer:
+        response = input('Remove server {sname}({sid})? <y/N> '.format(sname=thisServer.name, sid=thisServer.id))
+
+        if response.lower() == 'y':
+            removeServer(thisServer)
+            print('Server removed.')
+
+        else:
+            print('Cancelled.')
+
+    else:
+        print('Server not found.')
+ 
+def removeColorF(userinput):
+    colorString = ' '.join(userinput)
+    thisColor = tryGetOneColor(colorString)
+
+    if thisColor:
+        response = input('Remove color {cname}({cid})? <y/N> '.format(cname=thisColor.name, cid=thisColor.id))
+
+        if response.lower() == 'y':
+            removeColor(thisColor)
+            print('Color removed.')
+
+        else:
+            print('Cancelled.')
+
+    else:
+        print('Color not found.')
+ 
 def showF():
     return None
 
 def showUserF(userinput):
-    thisUser = tryGetOneUser(userinput)
+    userString = ' '.join(userinput)
+    thisUser = tryGetOneUser(userString)
 
     if thisUser:
         print('Name = {}'.format(thisUser.name))
@@ -936,12 +1085,44 @@ def showUserF(userinput):
         print('Timezone = {}'.format(thisUser.tz))
         print('Birthday = {}'.format(thisUser.bday))
         print('Bot Rank = {}'.format(thisUser.botrank))
+        print('')
+        print('User aliases:')
+        listUserAliasF(userinput)
 
     else:
         print('User not found.')
 
+def showUserAliasF(inputstring):
+    if len(inputstring) > 1:
+        userString = inputstring[0]
+        serverString = ' '.join(inputstring[1:])
+
+        thisUser = tryGetOneUser(userString)
+        thisServer = tryGetOneServer(serverString)
+
+        if thisUser and thisServer:
+            thisAlias = getUserAlias(thisUser, thisServer)
+
+            if thisAlias:
+                print('User = {}'.format(thisUser.name))
+                print('Server = {}'.format(thisServer.name))
+                print('Nickname = {}'.format(thisAlias.nick))
+                print('Color = {}'.format(thisAlias.color))
+                print('Local Rank = {}'.format(thisAlias.localrank))
+
+            else:
+                print('No alias found.')
+
+        else:
+            print('User and/or server not found.')
+
+    else:
+        print('Please specify a user and server, in that order.')
+
+
 def showServerF(userinput):
-    thisServer = tryGetOneServer(userinput)
+    serverString = ' '.join(userinput)
+    thisServer = tryGetOneServer(serverString)
 
     if thisServer:
         print('Name = {}'.format(thisServer.name))
@@ -953,7 +1134,8 @@ def showServerF(userinput):
         print('Server not found.')
 
 def showColorF(userinput):
-    thisColor = tryGetOneColor(userinput)
+    colorString = ' '.join(userinput)
+    thisColor = tryGetOneColor(colorString)
 
     if thisColor:
         print('Name = {}'.format(thisColor.name))
@@ -981,8 +1163,29 @@ def listUserF():
             thisUser = getUser(each[0])
             print(thisUser.name)
 
-def listUserAliasF():
-    return None
+def listUserAliasF(userinput):
+    userString = ' '.join(userinput)
+    thisUser = tryGetOneUser(userString)
+
+    if thisUser:
+        DB = config.database
+        if DB.exists():
+            conn = sqlite3.connect(DB)
+            cursor = conn.cursor()
+            cursor.execute(
+                    "SELECT serverid FROM serverusers "
+                    "WHERE userid = ?",
+                    (thisUser.id,)
+                    )
+            results = cursor.fetchall()
+            conn.close()
+
+            for each in results:
+                thisServer = getServer(each[0])
+                print(thisServer.name)
+
+    else:
+        print('User not found.')
 
 def listServerF():
     DB = config.database
@@ -1019,29 +1222,17 @@ def listTimezoneF():
         print(value)
 
 def timeF():
-    return None
+    print('The current time is {}.'.format(getTime()))
 
 def timeForF(userinput):
-# Check if user inputted a valid ID
-    refInput = ' '.join(userinput)
-    thisUser = None
+    userString = ' '.join(userinput)
+    thisUser = tryGetOneUser(userString)
 
-    try:
-        thisUser = getUser(int(refInput))
-    except ValueError:
-# If not, check if it is a name
-        searchResults = searchUserbyName(refInput)
-        
-        if searchResults:
-            if len(searchResults) == 1:
-                thisUser = searchResults[0]
-            else:
-                print('Multiple matching users found. Be more specific.')
-        else:
-            print('No matching users found.')
-    
     if thisUser:
         print('The current time for {uname} in the {tzone} timezone is {now}.'.format(uname=thisUser.goesby(), tzone=thisUser.tz, now=getTime(thisUser)))
+
+    else:
+        print('Unknown user.')
 
 def findF():
     return None
@@ -1050,67 +1241,68 @@ def findUserF():
     return None
 
 def findUserNameF(userinput):
-    results = searchUserbyName(' '.join(userinput))
+    userString = ' '.join(userinput)
+    results = searchUserbyName(userString)
     if results:
-        if len(results) > 0:
-            if len(results) == 1:
-                print('One user found:')
-
-            else:
-                print('{} users found:'.format(len(results)))
-
-            for each in results:
-                print(each.name)
-        
-        else:
-            print('No users found!')
-
-def findUserCountryF(userinput):
-    results = searchUserbyCountry(' '.join(userinput))
-    if results:
-        if len(results) > 0:
-            if len(results) == 1:
-                print('One user found:')
-
-            else:
-                print('{} users found:'.format(len(results)))
-
-            for each in results:
-                print(each.name)
-        
-        else:
-            print('No users found!')
-
-def findUserTimezoneF(userinput):
-    results = searchUserbyTimezone(' '.join(userinput))
-    if results:
-        if len(results) > 0:
-            if len(results) == 1:
-                print('One user found:')
-
-            else:
-                print('{} users found:'.format(len(results)))
-
-            for each in results:
-                print(each.name)
-        
-        else:
-            print('No users found!')
-
-def findUserBirthdayF(userinput):
-    results = searchUserbyBirthday(' '.join(userinput))
-    if results:
-        if len(results) > 1:
-            print('{} users found:'.format(len(results)))
-        
-        else:
+        if len(results) == 1:
             print('One user found:')
+
+        else:
+            print('{} users found:'.format(len(results)))
 
         for each in results:
             print(each.name)
         
     else:
-        print('No users found.')
+        print('No users found!')
+
+def findUserCountryF(userinput):
+    countryString = ' '.join(userinput)
+    results = searchUserbyCountry(countryString)
+    if results:
+        if len(results) == 1:
+            print('One user found:')
+
+        else:
+            print('{} users found:'.format(len(results)))
+
+        for each in results:
+            print(each.name)
+        
+    else:
+        print('No users found!')
+
+def findUserTimezoneF(userinput):
+    timezoneString = ' '.join(userinput)
+    results = searchUserbyTimezone(timezoneString)
+    if results:
+        if len(results) == 1:
+            print('One user found:')
+
+        else:
+            print('{} users found:'.format(len(results)))
+
+        for each in results:
+            print(each.name)
+        
+    else:
+        print('No users found!')
+
+def findUserBirthdayF(userinput):
+    birthdayString = ' '.join(userinput)
+    results = searchUserbyBirthday(birthdayString)
+    if results:
+        if len(results) == 1:
+            print('One user found:')
+
+        else:
+            print('{} users found:'.format(len(results)))
+
+        for each in results:
+            print(each.name)
+        
+    else:
+        print('No users found!')
 
 def findUserColorF(userinput):
     if len(userinput) > 1:
@@ -1145,43 +1337,69 @@ def findUserColorF(userinput):
 def findServerF():
     return None
 
-def findServerNameF():
-    return None
+def findServerNameF(userinput):
+    serverString = ' '.join(userinput)
+    results = searchServerbyName(serverString)
+    if results:
+        if len(results) == 1:
+            print('One server found:')
+
+        else:
+            print('{} servers found:'.format(len(results)))
+
+        for each in results:
+            print(each.name)
+        
+    else:
+        print('No servers found!')
 
 def findServerTimezoneF():
-    return None
+    timezoneString = ' '.join(userinput)
+    results = searchServerbyTimezone(timezoneString)
+    if results:
+        if len(results) == 1:
+            print('One server found:')
+
+        else:
+            print('{} servers found:'.format(len(results)))
+
+        for each in results:
+            print(each.name)
+        
+    else:
+        print('No servers found!')
 
 def findTimezoneF(userinput):
-    results = searchTimezonebyName(' '.join(userinput))
+    timezoneString = ' '.join(userinput)
+    results = searchTimezonebyName(timezoneString)
     if results:
-        if len(results) > 0:
-            if len(results) == 1:
-                print('One timezone found:')
+        if len(results) == 1:
+            print('One timezone found:')
 
-            else:
-                print('{} timezones found:'.format(len(results)))
-
-            for each in results:
-                print(each)
-        
         else:
-            print('No timezones found!')
+            print('{} timezones found:'.format(len(results)))
+
+        for each in results:
+            print(each)
+        
+    else:
+        print('No timezones found!')
 
 def findColorF(userinput):
-    results = searchColorbyName(' '.join(userinput))
+    colorString = ' '.join(userinput)
+    results = searchColorbyName(colorString)
     if results:
-        if len(results) > 0:
-            if len(results) == 1:
-                print('One color found:')
+        if len(results) == 1:
+            print('One color found:')
 
-            else:
-                print('{} colors found:'.format(len(results)))
-
-            for each in results:
-                print(each.name)
-        
         else:
-            print('No colors found!')
+            print('{} colors found:'.format(len(results)))
+
+        for each in results:
+            print(each.name)
+        
+    else:
+        print('No colors found!')
 
 def initialize():
     if not config.dataPath.exists():
