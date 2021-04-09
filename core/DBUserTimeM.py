@@ -727,6 +727,26 @@ def init():
     removeColorC = command('color', removeC)
     removeColorC.description = 'Removes a color from the database.'
     removeColorC.function = 'removeColorF'
+    global editC
+    editC = command('edit', mSelf)
+    editC.description = 'Updates existing objects with new attributes.'
+    editC.function = 'editF'
+    global editUserC
+    editUserC = command('user', editC)
+    editUserC.description = 'Updates an existing user with new attributes.'
+    editUserC.function = 'editUserF'
+    global editUserAliasC
+    editUserAliasC = command('alias', editUserC)
+    editUserAliasC.description = 'Updates an existing user alias with new attributes.'
+    editUserAliasC.function = 'editUserAliasF'
+    global editServerC
+    editServerC = command('server', editC)
+    editServerC.description = 'Updates an existing server with new attributes.'
+    editServerC.function = 'editServerF'
+    global editColorC
+    editColorC = command('color', editC)
+    editColorC.description = 'Updates an existing color with new attributes.'
+    editColorC.function = 'editColorF'
     global showC
     showC = command('show', mSelf)
     showC.description = 'Displays detailed information about database objects.'
@@ -1078,6 +1098,21 @@ def removeColorF(userinput):
 
     else:
         print('Color not found.')
+
+def editF():
+    return None
+
+def editUserF(userinput):
+    return None
+ 
+def editServerF(userinput):
+    return None
+
+def editUserAliasF(userinput):
+    return None
+ 
+def editUserColorF(userinput):
+    return None
  
 def showF():
     return None
