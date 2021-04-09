@@ -498,19 +498,26 @@ def getTime(reference=None):
     else:
         return datetime.now(pytz.timezone('US/Eastern'))
 
+def getTimezone(tzname):
+    return tryGetOneTimezone(tzname)
+
 def tryGetOneTimezone(timezonestring):
     thisTimezone = None
+    refInput = ' '.join(timezonestring)
 
-    
-    
-    return thisServer
+    searchResults = searchTimezonebyName(timezonestring)
 
+    if searchResults:
+        if len(searchResults) == 1:
+            thisTimezone = searchResults[0]
+
+    return thisTimezone
 
 def searchTimezonebyName(userinput):
     foundTZ = []
     
     for timezone in pytz.all_timezones:
-        if userinput in timezone:
+        if userinput.lower() in timezone.lower():
             foundTZ.append(timezone)
 
     if len(foundTZ) > 0:
@@ -688,7 +695,7 @@ def init():
     showServerC.description = 'Displays detailed information about the server with the given ID. Usage: \'show server ID#\''
     showServerC.function = 'showServerF'
     global showColorC
-    showColorC = command('server', showC)
+    showColorC = command('color', showC)
     showColorC.description = 'Displays detailed information about the color with the given name or code. Usage: \'show color NAME/#CODE\''
     showColorC.function = 'showColorF'
     global listC
@@ -815,7 +822,11 @@ def addUserF(userinput):
             newUser.name = userDict['name']
 
         if 'tz' in userDict.keys():
-            newUser.tz = userDict['tz']
+            thisTZ = tryGetOneTimezone(userDict['tz'])
+            if thisTZ:
+                newUser.tz = thisTZ
+            else:
+                print('Unknown timezone.')
 
         if 'botrank' in userDict.keys():
             newUser.botrank = userDict['botrank']
@@ -843,6 +854,8 @@ def addUserF(userinput):
 
         addUser(newUser)
 
+        print('Added user {}.'.format(newUser.name))
+
 def addServerF(userinput):
     serverdata = []
 
@@ -861,12 +874,18 @@ def addServerF(userinput):
             newServer.name = serverDict['name']
 
         if 'tz' in serverDict.keys():
-            newServer.tz = serverDict['tz']
+            thisTZ = tryGetOneTimezone(serverDict['tz'])
+            if thisTZ:
+                newServer.tz = thisTZ
+            else:
+                print('Unknown timezone.')
 
         if 'trigger' in serverDict.keys():
             newServer.trigger = serverDict['trigger']
 
         addServer(newServer)
+
+        print('Added server {}.'.format(newServer.name))
 
 def addColorF(userinput):
     colordata = []
@@ -889,6 +908,8 @@ def addColorF(userinput):
             newColor.code = colorDict['code']
 
         addColor(newColor)
+
+        print('Added color {}.'.format(newColor.name))
 
 def removeF():
     return None
@@ -1079,18 +1100,17 @@ def findUserTimezoneF(userinput):
 def findUserBirthdayF(userinput):
     results = searchUserbyBirthday(' '.join(userinput))
     if results:
-        if len(results) > 0:
-            if len(results) == 1:
-                print('One user found:')
-
-            else:
-                print('{} users found:'.format(len(results)))
-
-            for each in results:
-                print(each.name)
+        if len(results) > 1:
+            print('{} users found:'.format(len(results)))
         
         else:
-            print('No users found!')
+            print('One user found:')
+
+        for each in results:
+            print(each.name)
+        
+    else:
+        print('No users found.')
 
 def findUserColorF(userinput):
     if len(userinput) > 1:
@@ -1101,7 +1121,20 @@ def findUserColorF(userinput):
 
         if thisServer:
             if thisColor:
+                results = searchUserbyColor(thisColor, thisServer)
 
+                if results:
+                    if len(results) > 1:
+                        print('{} users found:'.format(len(results)))
+
+                    else:
+                        print('One user found:')
+
+                    for each in results:
+                        print(each.name)
+                    
+                else:
+                    print('No users found.')
 
             else:
                 print('Unknown color.')
@@ -1203,7 +1236,6 @@ def initialize():
                     "FOREIGN KEY(serverid) REFERENCES servers(id) ON DELETE CASCADE ON UPDATE NO ACTION, "
                     "FOREIGN KEY(color) REFERENCES colors(id) ON DELETE SET NULL ON UPDATE NO ACTION)" 
                     )
-            print('No prob yet.')
             conn.commit()
             conn.close()
 
