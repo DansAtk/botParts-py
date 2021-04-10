@@ -574,7 +574,12 @@ def updateUserAlias(profile):
 
 def getTime(reference=None):
     if reference:
-        return datetime.now(pytz.timezone(reference.tz))
+        if reference.tz:
+            return datetime.now(pytz.timezone(reference.tz))
+
+        else:
+            return datetime.now(pytz.timezone('US/Eastern'))
+
     else:
         return datetime.now(pytz.timezone('US/Eastern'))
 
