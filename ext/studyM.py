@@ -311,8 +311,7 @@ def markF(userinput):
     thisUser = DBM.tryGetOneUser(userString)
 
     if thisUser:
-        logDate = DBM.getTime(thisUser).strftime("%d-%m-%Y")
-        print(logDate)
+        logDate = thisUser.now().strftime("%d-%m-%Y")
 
         thisLog = studyLog()
         thisLog.user = thisUser.id
@@ -338,7 +337,7 @@ def unmarkF(userinput):
                 dateString = ' '.join(userinput[1:])
 
             else:
-                dateString = DBM.getTime(thisUser).strftime("%d-%m-%Y")
+                dateString = thisUser.now().strftime("%d-%m-%Y")
 
             foundLog = None
 
@@ -372,7 +371,7 @@ def checkF(userinput):
                 dateString = ' '.join(userinput[1:])
 
             else:
-                dateString = DBM.getTime(thisUser).strftime("%d-%m-%Y")
+                dateString = thisUser.now().strftime("%d-%m-%Y")
 
             foundLog = None
 
