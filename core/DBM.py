@@ -65,6 +65,13 @@ class user:
             useName = self.name
 
         return useName
+
+    def now(self):
+        if self.tz:
+            return datetime.now(pytz.timezone(self.tz))
+        
+        else:
+            return getTime()
             
 def getUser(userid, serverid=None):
     DB = config.database
@@ -340,6 +347,13 @@ class server:
         self.trigger = TRIGGER
         self.tz = TZ
 
+    def now(self):
+        if self.tz:
+            return datetime.now(pytz.timezone(self.tz))
+        
+        else:
+            return getTime()
+
 def getServer(serverid):
     DB = config.database
     if checkDB():
@@ -572,16 +586,8 @@ def updateUserAlias(profile):
             conn.commit()
             conn.close()
 
-def getTime(reference=None):
-    if reference:
-        if reference.tz:
-            return datetime.now(pytz.timezone(reference.tz))
-
-        else:
-            return datetime.now(pytz.timezone('US/Eastern'))
-
-    else:
-        return datetime.now(pytz.timezone('US/Eastern'))
+def getTime():
+    return datetime.now(pytz.timezone('US/Eastern'))
 
 def getTimezone(tzname):
     return tryGetOneTimezone(tzname)
@@ -1561,7 +1567,7 @@ def timeForF(userinput):
     thisUser = tryGetOneUser(userString)
 
     if thisUser:
-        print('The current time for {uname} in the {tzone} timezone is {now}.'.format(uname=thisUser.goesby(), tzone=thisUser.tz, now=getTime(thisUser)))
+        print('The current time for {uname} in the {tzone} timezone is {now}.'.format(uname=thisUser.goesby(), tzone=thisUser.tz, now=thisUser.now()))
 
     else:
         print('Unknown user.')
