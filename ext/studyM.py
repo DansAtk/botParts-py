@@ -54,6 +54,20 @@ def getStudyUser(userid):
     else:
         return None
 
+def tryGetOneStudyUser(studyuserstring):
+    thisStudyUser = None
+
+    try:
+        thisStudyUser = getStudyUser(int(studyuserstring))
+
+    except ValueError:
+        thisUser = DBM.tryGetOneUser(studyuserstring)
+
+        if thisUser:
+            thisStudyUser = getStudyUser(thisUser.id)
+
+    return thisStudyUser
+
 def addStudyUser(profile):
     DB = config.database
 
@@ -107,6 +121,48 @@ def updateStudyUser(profile):
                     )
             conn.commit()
             conn.close()
+
+def searchStudyUserbyName(searchstring):
+    search = DBM.searchUserbyName(searchstring)
+
+    if search:
+        foundStudyUsers = []
+
+        for result in search:
+            thisStudyUser = getStudyUser(result.id)
+
+            if thisStudyUser:
+                foundStudyUsers.append(thisStudyUser)
+
+        if len(foundStudyUsers) > 0:
+            return foundStudyUsers
+
+        else:
+            return None
+
+    else:
+        return None
+
+def searchStudyUserbyServer(serverprofile):
+    search = DBM.searchUserbyServer(serverprofile)
+
+    if search:
+        foundStudyUsers = []
+        
+        for result in search:
+            thisStudyUser = getStudyUser(result.id)
+
+            if thisStudyUser:
+                foundStudyUsers.append(thisStudyUser)
+
+        if len(foundStudyUsers) > 0:
+            return foundStudyUsers
+
+        else:
+            return None
+
+    else:
+        return None
         
 class studyLog:
     def __init__(self, ID, USER=None, DATE=None, NOTE=None):
@@ -194,7 +250,32 @@ def updateStudyLog(profile):
                     )
             conn.commit()
             conn.close()
-        
+
+def searchStudyLogbyUser(profile):
+    DB = config.database
+    if DBM.checkDB():
+        conn = sqlite3.connect(DB)
+        cursor = conn.cursor()
+        cursor.execute(
+                "SELECT id "
+                "FROM studysessions "
+                "WHERE user = ?",
+                (profile.id,)
+                )
+        search = cursor.fetchall()
+        conn.close()
+
+        if len(search) > 0:
+            foundStudyLogs = []
+            for result in search:
+                thisStudyLog = getStudyLog(result[0])
+                foundStudyLogs.append(thisStudyLog)
+
+            return foundStudyLogs
+
+        else:
+            return None
+
 def init():
     global studyC
     studyC = command('study', mSelf)
