@@ -308,6 +308,31 @@ def searchUserbyColor(searchColor, searchServer):
         else:
             return None
 
+def searchUserbyServer(searchServer):
+    DB = config.database
+    if checkDB():
+        conn = sqlite3.connect(DB)
+        cursor = conn.cursor()
+        cursor.execute(
+                "SELECT userid "
+                "FROM serverusers "
+                "WHERE serverid = ?",
+                (searchServer.id,)
+                )
+        search = cursor.fetchall()
+        conn.close()
+
+        if len(search) > 0:
+            foundUsers = []
+            for result in search:
+                thisUser = getUser(result[0], searchServer.id)
+                foundUsers.append(thisUser)
+
+            return foundUsers
+
+        else:
+            return None
+
 class server:
     def __init__(self, ID, NAME=None, TRIGGER='!', TZ=None):
         self.id = ID
@@ -439,6 +464,31 @@ def searchServerbyTimezone(searchstring):
                 "FROM servers "
                 "WHERE tz LIKE ?",
                 ('%{}%'.format(searchstring),)
+                )
+        search = cursor.fetchall()
+        conn.close()
+
+        if len(search) > 0:
+            foundServers = []
+            for result in search:
+                thisServer = getServer(result[0])
+                foundServers.append(thisServer)
+
+            return foundServers
+
+        else:
+            return None
+
+def searchServerbyUser(searchUser):
+    DB = config.database
+    if checkDB():
+        conn = sqlite3.connect(DB)
+        cursor = conn.cursor()
+        cursor.execute(
+                "SELECT serverid "
+                "FROM serverusers "
+                "WHERE userid = ?",
+                (searchUser.id,)
                 )
         search = cursor.fetchall()
         conn.close()
