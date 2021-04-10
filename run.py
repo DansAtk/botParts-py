@@ -10,7 +10,7 @@ def main():
 
             commandM.read(input_text)
     finally:
-        controlM.moduleCleanup()
+        contrigM.moduleCleanup()
 
 if __name__ == "__main__":
     main()
