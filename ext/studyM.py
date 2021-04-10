@@ -280,29 +280,32 @@ def registerCommands():
     global studyC
     studyC = command('study', mSelf)
     studyC.description = 'Commands for tracking and monitoring study habits.'
-    studyC.function = 'studyF'
+    studyC.instruction = 'Specify a parameter.'
     global logC
     logC = command('log', studyC)
     logC.description = 'For managing tracked study sessions.'
-    logC.function = 'logF'
+    logC.instruction = 'Specify a parameter.'
     global markC 
     markC= command('mark', logC)
-    markC.description = 'Marks you as having studied for the day.'
+    markC.description = 'Marks a user as having studied for the current day.'
+    markC.instruction = 'Provide a user followed (optionally) by a note.'
     markC.function = 'markF'
     global unmarkC
     unmarkC = command('unmark', logC)
-    unmarkC.description = 'Unmarks you as having studied for the day.'
+    unmarkC.description = 'Unmarks a user\'s previously logged day of study.'
+    unmarkC.instruction = 'Specify a user and (optionally) the date of study to be removed, in format DD-MM-YYYY. Removes from the current day by default.'
     unmarkC.function = 'unmarkF'
     global checkC
     checkC = command('check', logC)
-    checkC.description = 'Returns whether study has been logged for the current day.'
+    checkC.description = 'Checks for a user\'s logged study.'
+    checkC.instruction = 'Specify a user and (optionally) the date of study, in format DD-MM-YYYY. Checks the current day by default.'
     checkC.function = 'checkF'
 
-def logF():
-    print(logC.help())
+#def logF():
+#    print(logC.help())
 
-def studyF():
-    print(studyC.help())
+#def studyF():
+#    print(studyC.help())
 
 def markF(userinput):
     userString = userinput[0]
