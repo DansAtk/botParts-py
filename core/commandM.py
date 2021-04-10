@@ -53,7 +53,7 @@ class command:
         return howText
 
     def help(self):
-        helpText = '{dtext} {htext}'.format(self.description, self.howTo())
+        helpText = '{dtext} {htext}'.format(dtext=self.description, htext=self.howTo())
 
         return helpText
 
@@ -78,7 +78,8 @@ class command:
         
         except AttributeError:
             # Often raised when a command does not have an associated function.
-            print(self.help())
+            print(self.howTo())
+            #print(self.help())
 
 #        except Exception:
 #            print(sys.exc_info()[0])
@@ -114,9 +115,9 @@ def read(userinput):
 # Use registerCommands() to declare and set up commands, and register them with the module's dictionary so they can be found by the bot. Command objects can be denoted with a C at the end as a naming convention.
 def registerCommands():
     commandsC = command('commands', mSelf)
-    commandsC.description = 'Lists all currently supported commands, across all active modules using the botParts commands module.'
-    commandsC.function = 'commandsF'
+    commandsC.description = 'Lists all currently supported commands, across all active modules.'
     commandsC.instruction = 'Use the command by itself.'
+    commandsC.function = 'commandsF'
 
 # Functions associated with commands declared in registerCommands() can be defined here. These functions can be denoted with an F at the end as a naming convention.
 def commandsF():

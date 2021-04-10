@@ -828,11 +828,12 @@ def cleanup():
 def registerCommands():
     global databaseC
     databaseC = command('database', mSelf)
-    databaseC.description = 'Commands for managing the bot\'s database. Alone, displays information about the database\'s current state.'
+    databaseC.description = 'Commands for managing the bot\'s database.'
+    databaseC.instruction = 'Specify a parameter. Alone, displays information about the database\'s current state.'
     databaseC.function = 'databaseF'
     global databaseSetupC
     databaseSetupC = command('setup', databaseC)
-    databaseSetupC.description = 'Initializes the database. If the database already exists, it can be reinitialized or reconfigured, based on imported modules.'
+    databaseSetupC.description = 'Initializes the database. If the database already exists, it can be reinitialized.'
     databaseSetupC.function = 'databaseSetupF'
     global databaseDeleteC
     databaseDeleteC = command('delete', databaseC)
@@ -845,106 +846,123 @@ def registerCommands():
     global addC
     addC = command('add', mSelf)
     addC.description = 'Used to create new objects in the database.'
-    addC.function = 'addF'
+    addC.instruction = 'Specify a parameter.'
     global addUserC
     addUserC = command('user', addC)
     addUserC.description = 'Builds a user from parameters, then adds it to the database.'
+    addUserC.instruction = 'Specify user attributes using \'Attribute=Value\' with each separated by a space. \'id\' is required.'
     addUserC.function = 'addUserF'
     global addUserAliasC
     addUserAliasC = command('alias', addUserC)
     addUserAliasC.description = 'Builds a user alias from parameters, then adds it to the database.'
+    addUserAliasC.instruction = 'First specify a user and server. Then, specify alias attributes using \'Attribute=Value\' with each separated by a space.'
     addUserAliasC.function = 'addUserAliasF'
     global addServerC
     addServerC = command('server', addC)
     addServerC.description = 'Builds a server from parameters, then adds it to the database.'
+    addServerC.instruction = 'Specify server attributes using \'Attribute=Value\' with each separated by a space. \'id\' is required.'
     addServerC.function = 'addServerF'
     global addColorC
     addColorC = command('color', addC)
     addColorC.description = 'Adds a color with the given name and code to the database.'
+    addColorC.instruction = 'Specify color attributes using \'Attribute=Value\' with each separated by a space.'
     addColorC.function = 'addColorF'
     global removeC
     removeC = command('remove', mSelf)
     removeC.description = 'Used to remove existing objects from the database.'
-    removeC.function = 'removeF'
+    removeC.instruction = 'Specify a parameter.'
     global removeUserC
     removeUserC = command('user', removeC)
     removeUserC.description = 'Removes a user from the database.'
+    removeUserC.instruction = 'Specify a user.'
     removeUserC.function = 'removeUserF'
     global removeUserAliasC
     removeUserAliasC = command('alias', removeUserC)
     removeUserAliasC.description = 'Removes a user alias from the database.'
+    removeUserAliasC.instruction = 'Specify a user and server.'
     removeUserAliasC.function = 'removeUserAliasF'
     global removeServerC
     removeServerC = command('server', removeC)
     removeServerC.description = 'Removes a server from the database.'
+    removeServerC.instruction = 'Specify a server.'
     removeServerC.function = 'removeServerF'
     global removeColorC
     removeColorC = command('color', removeC)
     removeColorC.description = 'Removes a color from the database.'
+    removeColorC.instruction = 'Specify a color.'
     removeColorC.function = 'removeColorF'
     global editC
     editC = command('edit', mSelf)
     editC.description = 'Updates existing objects with new attributes.'
-    editC.function = 'editF'
+    editC.instruction = 'Specify a parameter.'
     global editUserC
     editUserC = command('user', editC)
     editUserC.description = 'Updates an existing user with new attributes.'
+    editUserC.instruction = 'First specify a user. Then, specify new attributes using \'Attribute=Value\' with each separated by a space.'
     editUserC.function = 'editUserF'
     global editUserAliasC
     editUserAliasC = command('alias', editUserC)
     editUserAliasC.description = 'Updates an existing user alias with new attributes.'
+    editUserAliasC.instruction = 'First specify a user and server. Then, specify new attributes using \'Attribute=Value\' with each separated by a space.'
     editUserAliasC.function = 'editUserAliasF'
     global editServerC
     editServerC = command('server', editC)
     editServerC.description = 'Updates an existing server with new attributes.'
+    editServerC.instruction = 'First specify a server. Then, specify new attributes using \'Attribute=Value\' with each separated by a space.'
     editServerC.function = 'editServerF'
     global editColorC
     editColorC = command('color', editC)
     editColorC.description = 'Updates an existing color with new attributes.'
+    editColorC.instruction = 'First specify a color. Then, specify new attributes using \'Attribute=Value\' with each separated by a space.'
     editColorC.function = 'editColorF'
     global showC
     showC = command('show', mSelf)
     showC.description = 'Displays detailed information about database objects.'
-    showC.function = 'showF'
+    showC.instruction = 'Specify a parameter.'
     global showUserC
     showUserC = command('user', showC)
-    showUserC.description = 'Displays detailed information about the user with the given ID. Usage: \'show user ID#\''
+    showUserC.description = 'Displays detailed information about a single user.'
+    showUserC.instruction = 'Specify a user.'
     showUserC.function = 'showUserF'
     global showUserAliasC
     showUserAliasC = command('alias', showUserC)
-    showUserAliasC.description = 'Displays detailed information about the user alias specified by user and server.'
+    showUserAliasC.description = 'Displays detailed information about a user\'s specific alias on a server.'
+    showUserAliasC.instruction = 'Specify a user and server.'
     showUserAliasC.function = 'showUserAliasF'
     global showServerC
     showServerC = command('server', showC)
-    showServerC.description = 'Displays detailed information about the server with the given ID. Usage: \'show server ID#\''
+    showServerC.description = 'Displays detailed information about a single server.'
+    showServerC.instruction = 'Specify a server.'
     showServerC.function = 'showServerF'
     global showColorC
     showColorC = command('color', showC)
-    showColorC.description = 'Displays detailed information about the color with the given name or code. Usage: \'show color NAME/#CODE\''
+    showColorC.description = 'Displays detailed information about a single color.'
+    showColorC.instruction = 'Specify a color.'
     showColorC.function = 'showColorF'
     global listC
     listC = command('list', mSelf)
     listC.description = 'Lists all objects of the given type currently in the database.'
-    listC.function = 'listF'
+    listC.instruction = 'Specify a parameter.'
     global listUserC
-    listUserC = command('users', listC)
+    listUserC = command('user', listC)
     listUserC.description = 'Lists all users in the database.'
     listUserC.function = 'listUserF'
     global listUserAliasC
     listUserAliasC = command('alias', listUserC)
-    listUserAliasC.description = 'Lists all of a user\'s aliases across all servers. Specify a user ID.'
+    listUserAliasC.description = 'Lists all of a user\'s aliases across all servers in the database.'
+    listUserAliasC.instruction = 'Specify a user.'
     listUserAliasC.function = 'listUserAliasF'
     global listServerC
-    listServerC = command('servers', listC)
+    listServerC = command('server', listC)
     listServerC.description = 'Lists all servers in the database.'
     listServerC.function = 'listServerF'
     global listColorC
-    listColorC = command('colors', listC)
+    listColorC = command('color', listC)
     listColorC.description = 'Lists all colors in the database.'
     listColorC.function = 'listColorF'
     global listTimezoneC
-    listTimezoneC = command('timezones', listC)
-    listTimezoneC.description = 'Lists all available time zones.'
+    listTimezoneC = command('timezone', listC)
+    listTimezoneC.description = 'Lists all available timezones.'
     listTimezoneC.function = 'listTimezoneF'
     global timeC
     timeC = command('time', mSelf)
@@ -952,59 +970,69 @@ def registerCommands():
     timeC.function = 'timeF'
     global timeForC
     timeForC = command('for', timeC)
-    timeForC.description = 'Displays the time in a specific user\'s time zone.'
+    timeForC.description = 'Displays the time in a specific user\'s timezone.'
+    timeForC.instruction = 'Specify a user.'
     timeForC.function = 'timeForF'
     global timeZonesC
     timeZonesC = command('zones', timeC)
-    timeZonesC.description = 'Lists all available time zones.'
+    timeZonesC.description = 'Lists all available timezones.'
     timeZonesC.function = 'listTimezoneF'
     global findC
     findC = command('find', mSelf)
     findC.description = 'Searches for objects meeting the given criteria.'
-    findC.function = 'findF'
+    findC.instruction = 'Specify a parameter.'
     global findUserC
     findUserC = command('user', findC)
     findUserC.description = 'Searches for users meeting the given criteria.'
-    findUserC.function = 'findUserF'
+    findUserC.instruction = 'Specify a parameter.'
     global findUserNameC
     findUserNameC = command('name', findUserC)
     findUserNameC.description = 'Searches for users with names and/or nicknames matching the given query.'
+    findUserNameC.instruction = 'Specify a name or nickname.'
     findUserNameC.function = 'findUserNameF'
     global findUserCountryC
     findUserCountryC = command('country', findUserC)
     findUserCountryC.description = 'Searches for users with countries matching the given query.'
+    findUserCountryC.instruction = 'Specify a country.'
     findUserCountryC.function = 'findUserCountryF'
     global findUserTimezoneC
     findUserTimezoneC = command('timezone', findUserC)
     findUserTimezoneC.description = 'Searches for users with timezones matching the given query.'
+    findUserTimezoneC.instruction = 'Specify a timezone.'
     findUserTimezoneC.function = 'findUserTimezoneF'
     global findUserBirthdayC
     findUserBirthdayC = command('birthday', findUserC)
     findUserBirthdayC.description = 'Searches for users with birthdays matching the given query.'
+    findUserBirthdayC.instruction = 'Specify a birthday in format DD-MM.'
     findUserBirthdayC.function = 'findUserBirthdayF'
     global findUserColorC
     findUserColorC = command('color', findUserC)
     findUserColorC.description = 'Searches for users with colors matching the given query.'
+    findUserColorC.instruction = 'Specify a color.'
     findUserColorC.function = 'findUserColorF'
     global findServerC
     findServerC = command('server', findC)
     findServerC.description = 'Searches for servers meeting the given criteria.'
-    findServerC.function = 'findServerF'
+    findServerC.instruction = 'Specify a parameter.'
     global findServerNameC
     findServerNameC = command('name', findServerC)
     findServerNameC.description = 'Searches for servers with names matching the given query.'
+    findServerNameC.instruction = 'Specify a name or nickname.'
     findServerNameC.function = 'findServerNameF'
     global findServerTimezoneC
     findServerTimezoneC = command('timezone', findServerC)
     findServerTimezoneC.description = 'Searches for servers with timezones matching the given query.'
+    findServerTimezoneC.instruction = 'Specify a timezone.'
     findServerTimezoneC.function = 'findServerTimezoneF'
     global findTimezoneC
     findTimezoneC = command('timezone', findC)
     findTimezoneC.description = 'Searches for timezones with names matching the given query.'
+    findTimezoneC.instruction = 'Specify the name of a timezone.'
     findTimezoneC.function = 'findTimezoneF'
     global findColorC
     findColorC = command('color', findC)
     findColorC.description = 'Searches for colors with names matching the given query.'
+    findColorC.instruction = 'Specify the name of a color.'
     findColorC.function = 'findColorF'
 
 def databaseF():
@@ -1027,9 +1055,6 @@ def databaseBackupF():
     if checkDB():
         oFile = backupDB()
         print('Database backed up to \'{backupname}\'.'.format(backupname=oFile.name))
-
-def addF():
-    return None
 
 def addUserF(userinput):
     userdata = []
@@ -1185,9 +1210,6 @@ def addColorF(userinput):
 
         print('Added color {}.'.format(newColor.name))
 
-def removeF():
-    return None
-
 def removeUserF(userinput):
     userString = ' '.join(userinput)
     thisUser = tryGetOneUser(userString)
@@ -1238,9 +1260,6 @@ def removeColorF(userinput):
 
     else:
         print('Color not found.')
-
-def editF():
-    return None
 
 def editUserF(userinput):
     userdata = []
