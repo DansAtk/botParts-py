@@ -165,7 +165,7 @@ def searchStudyUserbyServer(serverprofile):
         return None
         
 class studyLog:
-    def __init__(self, ID, USER=None, DATE=None, NOTE=None):
+    def __init__(self, ID=None, USER=None, DATE=None, NOTE=None):
         self.id = ID
         self.user = USER
         self.date = DATE
@@ -304,25 +304,96 @@ def logF():
 def studyF():
     print(studyC.help())
 
-def markF():
-    print(markC.help())
+def markF(userinput):
+    userString = userinput[0]
+    logNote = ' '.join(userinput[1:])
 
-def unmarkF():
-    print(unmarkC.help())
+    thisUser = DBM.tryGetOneUser(userString)
 
-def logPull(DB):
-    conn = sqlite3.connect(DB)
-    cursor = conn.cursor()
-    conn.commit()
-    conn.close()
-    return
-    
-def logPush(DB):
-    conn = sqlite3.connect(DB)
-    cursor = conn.cursor()
-    conn.commit()
-    conn.close()
-    return
+    if thisUser:
+        logDate = DBM.getTime(thisUser).strftime("%d-%m-%Y")
+        print(logDate)
+
+        thisLog = studyLog()
+        thisLog.user = thisUser.id
+        thisLog.date = logDate
+        thisLog.note = logNote
+
+        addStudyLog(thisLog)
+
+        print('Study logged for {uname} on {ldate}.'.format(uname=thisUser.name, ldate=logDate))
+
+    else:
+        print('User not found.')
+        
+def unmarkF(userinput):
+    userString = userinput[0]
+    thisUser = DBM.tryGetOneUser(userString)
+
+    if thisUser:
+        search = searchStudyLogbyUser(thisUser)
+
+        if search:
+            if len(userinput) > 1:
+                dateString = ' '.join(userinput[1:])
+
+            else:
+                dateString = DBM.getTime(thisUser).strftime("%d-%m-%Y")
+
+            foundLog = None
+
+            for result in search:
+                if result.date == dateString:
+                    foundLog = result
+
+            if foundLog:
+                removeStudyLog(foundLog)
+                print('{uname} unmarked for {ldate}.'.format(uname=thisUser.name, ldate=foundLog.date))
+
+            else:
+                print('{uname} did not study on {ldate}.'.format(uname=thisUser.name, ldate=dateString))
+
+        else:
+            print('No logs found.')
+
+    else:
+        print('User not found.')
+
+def checkF(userinput):
+    userString = userinput[0]
+
+    thisUser = DBM.tryGetOneUser(userString)
+
+    if thisUser:
+        search = searchStudyLogbyUser(thisUser)
+
+        if search:
+            if len(userinput) > 1:
+                dateString = ' '.join(userinput[1:])
+
+            else:
+                dateString = DBM.getTime(thisUser).strftime("%d-%m-%Y")
+
+            foundLog = None
+
+            for result in search:
+                if result.date == dateString:
+                    foundLog = result
+
+            if foundLog:
+                if foundLog.note:
+                    print('{uname} studied on {ldate}.\n"{lnote}"'.format(uname=thisUser.name, ldate=foundLog.date, lnote=foundLog.note))
+                else:
+                    print('{uname} studied on {ldate}.'.format(uname=thisUser.name, ldate=foundLog.date))
+
+            else:
+                print('{uname} did not study on {ldate}.'.format(uname=thisUser.name, ldate=dateString))
+
+        else:
+            print('No logs found.')
+
+    else:
+        print('User not found.')
 
 def dbinit(DB):
     print('Configuring for study logging...')
