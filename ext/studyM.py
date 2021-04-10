@@ -301,12 +301,6 @@ def registerCommands():
     checkC.instruction = 'Specify a user and (optionally) the date of study, in format DD-MM-YYYY. Checks the current day by default.'
     checkC.function = 'checkF'
 
-#def logF():
-#    print(logC.help())
-
-#def studyF():
-#    print(studyC.help())
-
 def markF(userinput):
     userString = userinput[0]
     logNote = ' '.join(userinput[1:])
@@ -413,9 +407,6 @@ def dbinit(DB):
             )
     conn.commit()
     conn.close()
-
-def cleanup():
-    print('study cleanup...')
 
 if __name__ == "__main__":
     print('A collection of study tracking commands for a botParts bot. No main.')
