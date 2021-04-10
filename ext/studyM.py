@@ -276,7 +276,7 @@ def searchStudyLogbyUser(profile):
         else:
             return None
 
-def init():
+def registerCommands():
     global studyC
     studyC = command('study', mSelf)
     studyC.description = 'Commands for tracking and monitoring study habits.'
@@ -417,4 +417,4 @@ def cleanup():
 if __name__ == "__main__":
     print('A collection of study tracking commands for a botParts bot. No main.')
 else:
-    init()
+    registerCommands()
