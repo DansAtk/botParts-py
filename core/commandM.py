@@ -14,10 +14,11 @@ config.imports.append(__name__)
 
 # The command class. Can be used to define top level commands and sub-commands/arguments/parameters. Every command must be given at least a name and a parent. All subcommand trees must lead back to a top level command that has the module itself as a parent.
 class command:
-    def __init__(self, NAME, PARENT, DESCRIPTION='', FUNCTION='', ENABLED=True, PERM=0):
+    def __init__(self, NAME, PARENT, DESCRIPTION=None, INSTRUCTION=None, FUNCTION=None, ENABLED=True, PERM=0):
         self.name = NAME
         self.parent = PARENT
         self.description = DESCRIPTION
+        self.instruction = INSTRUCTION
         self.function = FUNCTION
         self.enabled = ENABLED
         self.perm = PERM
@@ -33,38 +34,51 @@ class command:
 
         self.parent.includes.update({self.name : self})
 
-    def help(self):
-        helptext = self.description + " Available parameters: "
-
+    def paramText(self):
+        paramList = ''
         for parameter in self.includes.values():
-            helptext += parameter.name + ", "
+            paramList += parameter.name + ', '
 
-        helptext += "help."
-        return helptext
+        paramList += 'help.'
+
+        return paramList
+
+    def howTo(self):
+        if self.instruction:
+            howText = '{instr} Available parameters: {plist}'.format(instr=self.instruction, plist=self.paramText())
+
+        else:
+            howText = 'Available parameters: {}'.format(self.paramText())
+
+        return howText
+
+    def help(self):
+        helpText = '{dtext} {htext}'.format(self.description, self.howTo())
+
+        return helpText
 
     def paramError(self, userinput):
-        errorText = 'Unknown argument(s) \'{text}\'. Available arguments: {arguments}.'.format(text=userinput, arguments=((', '.join(self.includes)) + (', ' * (len(self.includes) > 0)) + 'help'))
+        errorText = 'Unknown argument(s) \'{itext}\'. {htext}'.format(itext=userinput, htext=self.howTo())
         return errorText
 
     def execute(self, *args):
-        #try:
-        if True:
+        try:
+        #if True:
             if args:
                 getattr(self.parent_module, self.function)(args)
             else:
                 getattr(self.parent_module, self.function)()
 
-        #except TypeError:
-            #if args:
-                #print(self.paramError(' '.join(args)))
-            #else:
-                #print('The associated function requires arguments.')
+        except TypeError:
+            # Often raised when a command is given too many or too few arguments.
+            if args:
+                print(self.paramError(' '.join(args)))
+            else:
+                print(self.howTo())
         
-        #except AttributeError:
-            #if args:
-                #print(self.paramError(' '.join(args)))
-            #else:
-                #print('No associated function found.')
+        except AttributeError:
+            # Often raised when a command does not have an associated function.
+            print(self.help())
 
 #        except Exception:
 #            print(sys.exc_info()[0])
@@ -96,16 +110,15 @@ def read(userinput):
 
         if valid == False:
             print('Invalid command!')
-    else:
-        print('No trigger found!')
 
-# Use init() to declare and set up commands, and register them with the module's dictionary so they can be found by the bot. Command objects can be denoted with a C at the end as a naming convention.
-def init():
+# Use registerCommands() to declare and set up commands, and register them with the module's dictionary so they can be found by the bot. Command objects can be denoted with a C at the end as a naming convention.
+def registerCommands():
     commandsC = command('commands', mSelf)
     commandsC.description = 'Lists all currently supported commands, across all active modules using the botParts commands module.'
     commandsC.function = 'commandsF'
+    commandsC.instruction = 'Use the command by itself.'
 
-# Functions associated with commands declared in init() can be defined here. These functions can be denoted with an F at the end as a naming convention.
+# Functions associated with commands declared in registerCommands() can be defined here. These functions can be denoted with an F at the end as a naming convention.
 def commandsF():
     currentCommands = 'Currently available commands: '
     for i, module in enumerate(config.imports):
@@ -121,4 +134,4 @@ def commandsF():
 if __name__ == "__main__":
     print("A framework for easily implementing and handling branching commands for a chat bot. No main.")
 else:
-    init()
+    registerCommands()
