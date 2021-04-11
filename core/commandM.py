@@ -88,11 +88,11 @@ class command:
     #def __init__(self,) 
 
 # Utility function for reading incoming text and parsing it for both a valid trigger and valid commands across all imported botParts modules. If a valid command is found, its associated function is executed and passed the remainder of the input text as arguments.
-def read(userinput):
+def read(userinput, trigger=None):
     doRead = False
-    if 'trigger' in config.settings and len(config.settings['trigger']) > 0:
-        if userinput.startswith(config.settings['trigger']):
-            fullText = userinput.split(config.settings['trigger'], 1)[1] 
+    if trigger and len(trigger) > 0:
+        if userinput.startswith(trigger):
+            fullText = userinput.split(trigger, 1)[1] 
 
             doRead = True
 
