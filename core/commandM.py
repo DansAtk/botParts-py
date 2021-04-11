@@ -89,25 +89,37 @@ class command:
 
 # Utility function for reading incoming text and parsing it for both a valid trigger and valid commands across all imported botParts modules. If a valid command is found, its associated function is executed and passed the remainder of the input text as arguments.
 def read(userinput):
-    if userinput.startswith(config.settings['trigger']):
-        message = userinput[1:].split(' ')
+    doRead = False
+    if 'trigger' in config.settings and len(config.settings['trigger']) > 0:
+        if userinput.startswith(config.settings['trigger']):
+            fullText = userinput.split(config.settings['trigger'], 1)[1] 
+
+            doRead = True
+
+    else:
+        fullText = userinput
+        
+        doRead = True
+
+    if doRead:
+        fullCommand = fullText.split(' ')
         valid = False
 
         for module in config.imports:
             pack = sys.modules[module]
 
             i = 0
-            while (i < len(message)) and (message[i] in pack.includes.keys()):
-                pack = pack.includes[message[i]]
+            while (i < len(fullCommand)) and (fullCommand[i].lower() in pack.includes.keys()):
+                pack = pack.includes[fullCommand[i].lower()]
                 i += 1
 
             if i > 0:
                 valid = True
 
-                if ' '.join(message[i:]) == 'help':
+                if ' '.join(fullCommand[i:]).lower() == 'help':
                     print(pack.help())
                 else:
-                    pack.execute(*message[i:])
+                    pack.execute(*fullCommand[i:])
 
         if valid == False:
             print('Invalid command!')
