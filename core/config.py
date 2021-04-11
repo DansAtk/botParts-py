@@ -1,6 +1,6 @@
 import pathlib
 
-settings = {'trigger' : '!', 'dbversion' : '0.3'}
+settings = {'dbversion' : '0.3'}
 
 # Tracking imported botParts modules.
 imports = []
