@@ -560,7 +560,6 @@ def removeUserAlias(userprofile, serverprofile):
         conn.commit()
         conn.close()
 
-
 def updateUserAlias(profile):
     thisServer = tryGetOneServer(profile.serverid)
     thisAlias = getUserAlias(profile, thisServer)

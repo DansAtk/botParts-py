@@ -11,22 +11,22 @@ config.imports.append(__name__)
 def registerCommands():
     global pushC
     pushC = command('push', mSelf)
-    pushC.description = 'Pushes the current config to a file to make it persistent.'
+    pushC.description = 'Pushes the current default settings to a file to make it persistent.'
     pushC.function = 'pushF'
     global pullC
     pullC = command('pull', mSelf)
-    pullC.description = 'Pulls the persistent config from a file.'
+    pullC.description = 'Pulls the persistent settings from a file.'
     pullC.function = 'pullF'
-    global changeC
-    changeC = command('change', mSelf)
-    changeC.description = 'Used to alter config variables.'
-    changeC.instruction = 'Specify a parameter.'
-    changeC.function = 'changeF'
-    global changeTriggerC
-    changeTriggerC = command('trigger', changeC)
-    changeTriggerC.description = 'Used to alter the bot\'s default command trigger.'
-    changeTriggerC.instruction = 'Specify a new trigger.'
-    changeTriggerC.function = 'changeTriggerF'
+    global defaultC
+    defaultC = command('default', mSelf)
+    defaultC.description = 'Used to alter default settings.'
+    defaultC.instruction = 'Specify a parameter. By itself displays the current settings.'
+    defaultC.function = 'defaultF'
+    global defaultTriggerC
+    defaultTriggerC = command('trigger', defaultC)
+    defaultTriggerC.description = 'Used to alter the default trigger.'
+    defaultTriggerC.instruction = 'Specify a new trigger.'
+    defaultTriggerC.function = 'defaultTriggerF'
     global shutdownC
     shutdownC = command('shutdown', mSelf)
     shutdownC.description = 'Closes the bot gracefully.'
@@ -52,7 +52,7 @@ def pullF():
     except FileNotFoundError:
         print('No config file found!')
 
-def changeTriggerF(userinput):
+def defaultTriggerF(userinput):
     if len(userinput) == 1:
         if userinput[0].lower() == 'none':
             try:
