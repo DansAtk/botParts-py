@@ -5,16 +5,8 @@ def main():
     try:
         while True:
             input_text = input()
-            
-            trigger = None
 
-            try:
-                trigger = config.settings['trigger']
-
-            except KeyError:
-                pass
-
-            commandM.read(input_text, trigger)
+            commandM.read(trigger, input_text)
     finally:
         contrigM.moduleCleanup()
 
