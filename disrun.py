@@ -6,42 +6,25 @@ def main():
         while True:
             if sesMan.currentAlias:
                 input_text = input()
-                trigger = None
-
-                try:
-                    trigger = config.settings['trigger']
-
-                except KeyError:
-                    pass
+                trigger = sesMan.getTrigger()
 
                 commandM.read(input_text, trigger)
 
             else:
-                print('Welcome to testBot! Please sign in.')
+                print('Welcome to testBot! Please choose login or exit.')
 
-                userText = input('User: ')
+                menuChoice = input()
 
-                sesMan.setUser(userText)
+                if menuChoice.lower() == 'login':
+                    print()
+                    sesMan.login()
 
-                if sesMan.currentUser:
-                    serverText = input('Server: ')
-
-                    sesMan.setServer(serverText)
-
-                    if sesMan.currentServer:
-                        sesMan.setAlias()
-
-                        if sesMan.currentAlias:
-                            print('\nLogged in as {} on server {}.\n'.format(sesMan.currentUser.name, sesMan.currentServer.name))
-
-                        else:
-                            print('\nError: User {} has no alias on server {}.\n'.format(sesMan.currentUser.name, sesMan.currentServer.name))
-
-                    else:
-                        print('\nError: Server not found!\n')
+                elif menuChoice.lower() == 'exit':
+                    print()
+                    contrigM.shutdownF()
 
                 else:
-                    print('\nError: User not found!\n')
+                    print('\nUnknown command!\n')
 
     finally:
         contrigM.moduleCleanup()
