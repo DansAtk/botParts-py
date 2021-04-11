@@ -52,12 +52,27 @@ def pullF():
     except FileNotFoundError:
         print('No config file found!')
 
-def triggerF(userinput):
-    if len(message) == 1:
-        if len(message[0]) < 3:
-            config.settings['trigger'] = message[0]
+def changeTriggerF(userinput):
+    if len(userinput) == 1:
+        if userinput[0].lower() == 'none':
+            try:
+                del config.settings['trigger']
+                print('Trigger has been removed.')
+
+            except KeyError:
+                print('Trigger is already set to \'None\'')
+
         else:
-            print('Try a shorter trigger.')
+            if len(userinput[0]) < 3:
+                if len(userinput[0]) > 0:
+                    config.settings['trigger'] = userinput[0]
+                    print('Trigger has been set to {}'.format(userinput[0]))
+
+                else:
+                    print('Please specify at least one character for a trigger.')
+
+            else:
+                print('Try a shorter trigger.')
     else:
         print('Please limit the trigger to a single character or small group of characters with no whitespace.')
 
