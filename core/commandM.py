@@ -63,7 +63,6 @@ class command:
 
     def execute(self, *args):
         try:
-        #if True:
             if args:
                 getattr(self.parent_module, self.function)(args)
             else:
@@ -79,7 +78,6 @@ class command:
         except AttributeError:
             # Often raised when a command does not have an associated function.
             print(self.howTo())
-            #print(self.help())
 
 #        except Exception:
 #            print(sys.exc_info()[0])
