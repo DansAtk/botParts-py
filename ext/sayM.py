@@ -40,31 +40,31 @@ def registerCommands():
             'from the database.'
     sayRobotC.function = 'sayRobotF'
 
-def sayF(userinput):
-    if userinput[0].startswith('"') and userinput[0].endswith('"'):
-        print(userinput[0][1:-1])
+def sayF(inputData, content):
+    if content[0].startswith('"') and content[0].endswith('"'):
+        print(f'{content[0][1:-1]}\n')
     else:
-        print(sayC.howto())
+        print(f'{sayC.howto()}\n')
 
-def sayQuietlyF(userinput):
-    if userinput[0].startswith('"') and userinput[0].endswith('"'):
-        print(userinput[0][1:-1].lower())
+def sayQuietlyF(inputData, content):
+    if content[0].startswith('"') and content[0].endswith('"'):
+        print(f'{content[0][1:-1].lower()}\n')
     else:
-        print(sayQuietlyC.howto())
+        print(f'{sayQuietlyC.howto()}\n')
 
-def sayLoudlyF(userinput):
-    if userinput[0].startswith('"') and userinput[0].endswith('"'):
-        print(userinput[0][1:-1].upper())
+def sayLoudlyF(inputData, content):
+    if content[0].startswith('"') and content[0].endswith('"'):
+        print(f'{content[0][1:-1].upper()}\n')
     else:
-        print(sayLoudlyC.howto())
+        print(f'{sayLoudlyC.howto()}\n')
 
-def sayRobotF(userinput):
-    if userinput[0].startswith('"') and userinput[0].endswith('"'):
-        inputText = ' '.join(userinput[0][1:-1])
+def sayRobotF(inputData, content):
+    if content[0].startswith('"') and content[0].endswith('"'):
+        inputText = ' '.join(content[0][1:-1])
         roboText = (''.join(format(ord(x), '08b') for x in inputText))
-        print(f'\n{roboText}\n')
+        print(f'{roboText}\n')
     else:
-        print(sayRobotC.howto())
+        print(f'{sayRobotC.howto()}\n')
 
 if __name__ == "__main__":
     print('A module for repeating the user\'s input message in various formats. No main.')

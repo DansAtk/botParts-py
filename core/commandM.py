@@ -61,17 +61,25 @@ class command:
         errorText = f'Unknown argument(s) \'{userinput}\'. {self.howTo()}'
         return errorText
 
-    def execute(self, origUser, origServer, *args):
+    def execute(self, inputData=None, content=None):
         try:
-            if args:
-                getattr(self.parent_module, self.function)(origUser, origServer, args)
+            if inputData:
+                if inputData and content:
+                    getattr(self.parent_module, self.function)(inputData, content)
+                #elif inputData:
+                else:
+                    getattr(self.parent_module, self.function)(inputData)
+                #elif content:
+                #    getattr(self.parent_module, self.function)(content)
+                #else:
+                #    getattr(self.parent_module, self.function)()
             else:
-                getattr(self.parent_module, self.function)(origUser, origServer)
+                getattr(self.parent_module, self.function)()
 
         except TypeError:
             # Often raised when a command is given too many or too few arguments.
-            if args:
-                print(f'{self.paramError(' '.join(args))}\n')
+            if content:
+                print(f'{self.paramError(" ".join(content))}\n')
             else:
                 print(f'{self.howTo()}\n')
         
@@ -80,19 +88,12 @@ class command:
             print(f'{self.howTo()}\n')
 
 class messageData:
-    def __init__(self, USER=None, SERVER=None, CONTENT=None):
+    def __init__(self, USER=None, SERVER=None):
         self.user = USER
         self.server = SERVER
-        self.content = CONTENT
-
-#        except Exception:
-#            print(sys.exc_info()[0])
-
-#class commandFunction:
-    #def __init__(self,) 
 
 # Utility function for reading incoming text and parsing it for both a valid trigger and valid commands across all imported botParts modules. If a valid command is found, its associated function is executed and passed the remainder of the input text as arguments.
-def read(userinput, origUser, origServer):
+def read(origUser, origServer, userinput):
     doRead = False
     if origServer.trigger and len(origServer.trigger) > 0:
         if userinput.startswith(origServer.trigger):
@@ -131,8 +132,6 @@ def read(userinput, origUser, origServer):
         if quoteText:
             fullCommand.append(quoteText)
 
-        print(fullCommand)
-
         valid = False
 
         for module in config.imports:
@@ -149,8 +148,17 @@ def read(userinput, origUser, origServer):
                 if ' '.join(fullCommand[i:]).lower() == 'help':
                     print(f'{pack.help()}\n')
                 else:
-                    inputData = messageData(origUser, origServer, *fullCommand[i:])
-                    pack.execute(origUser, origServer, *fullCommand[i:])
+                    inputData = messageData()
+                    content = None
+
+                    if origUser:
+                        inputData.user = origUser
+                    if origServer:
+                        inputData.server = origServer
+                    if len(fullCommand[i:]) > 0:
+                        content = fullCommand[i:]
+
+                    pack.execute(inputData, content)
 
         if valid == False:
             print('Invalid command!\n')
@@ -163,7 +171,7 @@ def registerCommands():
     commandsC.function = 'commandsF'
 
 # Functions associated with commands declared in registerCommands() can be defined here. These functions can be denoted with an F at the end as a naming convention.
-def commandsF(inputUser, inputServer, inputData=None):
+def commandsF(inputData):
     currentCommands = 'Currently available commands: '
     for i, module in enumerate(config.imports):
         for command in sys.modules[module].includes:
