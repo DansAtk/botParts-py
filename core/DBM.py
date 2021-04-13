@@ -141,6 +141,7 @@ def removeUser(profile):
     DB = config.database
     if checkDB():
         conn = sqlite3.connect(DB)
+        conn.execute("PRAGMA foreign_keys = 1")
         cursor = conn.cursor()
         cursor.execute(
                 "DELETE FROM users "
@@ -410,6 +411,7 @@ def removeServer(profile):
     DB = config.database
     if checkDB():
         conn = sqlite3.connect(DB)
+        conn.execute("PRAGMA foreign_keys = 1")
         cursor = conn.cursor()
         cursor.execute(
                 "DELETE FROM servers "
@@ -551,6 +553,7 @@ def removeUserAlias(userprofile, serverprofile):
     DB = config.database
     if checkDB():
         conn = sqlite3.connect(DB)
+        conn.execute("PRAGMA foreign_keys = 1")
         cursor = conn.cursor()
         cursor.execute(
                 "DELETE FROM serverusers "
@@ -676,6 +679,7 @@ def removeColor(profile):
     DB = config.database
     if checkDB():
         conn = sqlite3.connect(DB)
+        conn.execute("PRAGMA foreign_keys = 1")
         cursor = conn.cursor()
         cursor.execute(
                 "DELETE FROM colors "
@@ -1045,71 +1049,111 @@ def databaseDeleteF():
 
     if response.lower() == 'y':
         config.database.unlink()
-        print('Database deleted.')
+        print('Database deleted.\n')
 
     else:
-        print('Cancelled.')
+        print('Cancelled.\n')
 
 def databaseBackupF():
     if checkDB():
         oFile = backupDB()
-        print('Database backed up to \'{backupname}\'.'.format(backupname=oFile.name))
+        print('Database backed up to \'{backupname}\'.\n'.format(backupname=oFile.name))
 
 def addUserF(userinput):
     userdata = []
 
     for p in range(0, len(userinput)):
-        userdata.append(userinput[p].split('='))
+        if '=' in userinput[p]:
+            userdata.append(userinput[p].split('='))
 
     userDict = {}
 
     for q in userdata:
         userDict.update({q[0] : q[1]})
-    
+
+    goodProfile = False
+   
     if 'id' in userDict.keys():
-        newUser = user(int(userDict['id']))
+        if userDict['id'].startswith('"') and userDict['id'].endswith('"'):
+            newUser = user(int(userDict['id'][1:-1]))
 
-        if 'name' in userDict.keys():
-            newUser.name = userDict['name']
+            goodProfile = True
 
-        if 'tz' in userDict.keys():
-            thisTZ = tryGetOneTimezone(userDict['tz'])
-            if thisTZ:
-                newUser.tz = thisTZ
-            else:
-                print('Unknown timezone.')
-
-        if 'botrank' in userDict.keys():
-            newUser.botrank = userDict['botrank']
-
-        if 'bday' in userDict.keys():
-            newUser.bday = userDict['bday']
-
-        if 'country' in userDict.keys():
-            newUser.country = userDict['country']
-
-        if 'points' in userDict.keys():
-            newUser.points = userDict['points']
-
-        if 'serverid' in userDict.keys():
-            newUser.serverid = userDict['serverid']
-
-            if 'nick' in userDict.keys():
-                newUser.nick = userDict['nick']
-
-            if 'color' in userDict.keys():
-                thisColor = tryGetOneColor(userDict['color'])
-                if thisColor:
-                    newUser.color = thisColor.id
+            if 'name' in userDict.keys():
+                if userDict['name'].startswith('"') and userDict['name'].endswith('"'):
+                    newUser.name = userDict['name'][1:-1]
                 else:
-                    print('Color not found.')
+                    goodProfile = False
 
-            if 'localrank' in userDict.keys():
-                newUser.localrank = userDict['localrank']
+            if 'tz' in userDict.keys():
+                if userDict['tz'].startswith('"') and userDict['tz'].endswith('"'):
+                    thisTZ = tryGetOneTimezone(userDict['tz'][1:-1])
+                    if thisTZ:
+                        newUser.tz = thisTZ
+                    else:
+                        goodProfile = False
+                else:
+                    goodProfile = False
 
+            if 'botrank' in userDict.keys():
+                if userDict['botrank'].startswith('"') and userDict['botrank'].endswith('"'):
+                    newUser.botrank = userDict['botrank'][1:-1]
+                else:
+                    goodProfile = False
+
+            if 'bday' in userDict.keys():
+                if userDict['bday'].startswith('"') and userDict['bday'].endswith('"'):
+                    newUser.bday = userDict['bday'][1:-1]
+                else:
+                    goodProfile = False
+
+            if 'country' in userDict.keys():
+                if userDict['country'].startswith('"') and userDict['country'].endswith('"'):
+                    newUser.country = userDict['country'][1:-1]
+                else:
+                    goodProfile = False
+
+            if 'points' in userDict.keys():
+                if userDict['points'].startswith('"') and userDict['points'].endswith('"'):
+                    newUser.points = userDict['points'][1:-1]
+                else:
+                    goodProfile = False
+
+            if 'serverid' in userDict.keys():
+                if userDict['serverid'].startswith('"') and userDict['serverid'].endswith('"'):
+                    newUser.serverid = userDict['serverid'][1:-1]
+
+                    if 'nick' in userDict.keys():
+                        if userDict['nick'].startswith('"') and userDict['nick'].endswith('"'):
+                            newUser.nick = userDict['nick'][1:-1]
+                        else:
+                            goodProfile = False
+
+                    if 'color' in userDict.keys():
+                        if userDict['color'].startswith('"') and userDict['color'].endswith('"'):
+                            thisColor = tryGetOneColor(userDict['color'][1:-1])
+                            if thisColor:
+                                newUser.color = thisColor.id
+                            else:
+                                goodProfile = False
+                        else:
+                            goodProfile = False
+
+                    if 'localrank' in userDict.keys():
+                        if userDict['localrank'].startswith('"') and userDict['localrank'].endswith('"'):
+                            newUser.localrank = userDict['localrank'][1:-1]
+                        else:
+                            goodProfile = False
+                else:
+                    goodProfile = False
+
+    if goodProfile:
         addUser(newUser)
+        print(f'Added user {newUser.name}.\n')
 
-        print('Added user {}.'.format(newUser.name))
+    else:
+        print('Invalid attribute(s).\n')
+
 
 def addUserAliasF(userinput):
     aliasdata = []
@@ -1122,143 +1166,214 @@ def addUserAliasF(userinput):
     thisServer = tryGetOneServer(serverString)
 
     if thisUser and thisServer:
-        newAlias = user(thisUser.id)
-        newAlias.serverid = thisServer.id
+        thisAlias = getUserAlias(thisUser, thisServer)
 
-        for p in range(0, len(aliasDetails)):
-            aliasdata.append(aliasDetails[p].split('='))
+        if thisAlias == None:
+            newAlias = user(thisUser.id)
+            newAlias.serverid = thisServer.id
 
-        aliasDict = {}
+            goodProfile = True
 
-        for q in aliasdata:
-            aliasDict.update({q[0] : q[1]})
+            for p in range(0, len(aliasDetails)):
+                if '=' in aliasDetails[p]:
+                    aliasdata.append(aliasDetails[p].split('='))
+
+            aliasDict = {}
+
+            for q in aliasdata:
+                aliasDict.update({q[0] : q[1]})
     
-        if 'nick' in aliasDict.keys():
-            newAlias.nick = aliasDict['nick']
-            print(newAlias.nick)
+            if 'nick' in aliasDict.keys():
+                if aliasDict['nick'].startswith('"') and aliasDict['nick'].endswith('"'):
+                    newAlias.nick = aliasDict['nick'][1:-1]
+                else:
+                    goodProfile = False
 
-        if 'color' in aliasDict.keys():
-            thisColor = tryGetOneColor(aliasDict['color'])
-            if thisColor:
-                newAlias.color = thisColor.name
+            if 'color' in aliasDict.keys():
+                if aliasDict['color'].startswith('"') and aliasDict['color'].endswith('"'):
+                    thisColor = tryGetOneColor(aliasDict['color'][1:-1])
+                    if thisColor:
+                        newAlias.color = thisColor.id
+                    else:
+                        goodProfile = False
+                else:
+                    goodProfile = False
+
+            if 'localrank' in aliasDict.keys():
+                if aliasDict['localrank'].startswith('"') and aliasDict['localrank'].endswith('"'):
+                    newAlias.localrank = aliasDict['localrank'][1:-1]
+                else:
+                    goodProfile = False
+
+            if goodProfile:
+                addUserAlias(newAlias)
+                print(f'Added user alias for {thisUser.name} in server {thisServer.name}.\n')
+
             else:
-                print('Unknown color.')
+                print('Invalid attribute(s).\n')
 
-        if 'localrank' in aliasDict.keys():
-            newAlias.localrank = aliasDict['localrank']
-
-        addUserAlias(newAlias)
-
-        print('Added user alias for {uname} in server {sname}.'.format(uname=thisUser.name, sname=thisServer.name))
+        else:
+            print('User alias already exists.\n')
 
     else:
-        print('User and/or server not found.')
+        print('User and/or server not found.\n')
 
 def addServerF(userinput):
     serverdata = []
 
     for p in range(0, len(userinput)):
-        serverdata.append(userinput[p].split('='))
+        if '=' in userinput[p]:
+            serverdata.append(userinput[p].split('='))
 
     serverDict = {}
 
     for q in serverdata:
         serverDict.update({q[0] : q[1]})
+
+    goodProfile = False
     
     if 'id' in serverDict.keys():
-        newServer = server(int(serverDict['id']))
+        if serverDict['id'].startswith('"') and serverDict['id'].endswith('"'):
+            newServer = server(int(serverDict['id'][1:-1]))
+            goodProfile = True
 
-        if 'name' in serverDict.keys():
-            newServer.name = serverDict['name']
+            if 'name' in serverDict.keys():
+                if serverDict['name'].startswith('"') and serverDict['name'].endswith('"'):
+                    newServer.name = serverDict['name'][1:-1]
+                else:
+                    goodProfile = False
 
-        if 'tz' in serverDict.keys():
-            thisTZ = tryGetOneTimezone(serverDict['tz'])
-            if thisTZ:
-                newServer.tz = thisTZ
-            else:
-                print('Unknown timezone.')
+            if 'tz' in serverDict.keys():
+                if serverDict['tz'].startswith('"') and serverDict['tz'].endswith('"'):
+                    thisTZ = tryGetOneTimezone(serverDict['tz'][1:-1])
+                    if thisTZ:
+                        newServer.tz = thisTZ
+                    else:
+                        goodProfile = False
+                else:
+                    goodProfile = False
 
-        if 'trigger' in serverDict.keys():
-            newServer.trigger = serverDict['trigger']
+            if 'trigger' in serverDict.keys():
+                if serverDict['trigger'].startswith('"') and serverDict['trigger'].endswith('"'):
+                    newServer.trigger = serverDict['trigger'][1:-1]
+                else:
+                    goodProfile = False
 
+    if goodProfile:
         addServer(newServer)
+        print(f'Added server {newServer.name}.\n')
 
-        print('Added server {}.'.format(newServer.name))
+    else:
+        print('Invalid attribute(s).\n')
 
 def addColorF(userinput):
     colordata = []
 
     for p in range(0, len(userinput)):
-        colordata.append(userinput[p].split('='))
+        if '=' in userinput[p]:
+            colordata.append(userinput[p].split('='))
 
     colorDict = {}
 
     for q in colordata:
         colorDict.update({q[0] : q[1]})
+
+    goodProfile = False
     
     if 'id' in colorDict.keys():
-        newColor = color(int(colorDict['id']))
+        if colorDict['id'].startswith('"') and colorDict['id'].endswith('"'):
+            newColor = color(int(colorDict['id'][1:-1]))
+            goodProfile = True
 
-        if 'name' in colorDict.keys():
-            newColor.name = colorDict['name']
+            if 'name' in colorDict.keys():
+                if colorDict['name'].startswith('"') and colorDict['name'].endswith('"'):
+                    newColor.name = colorDict['name'][1:-1]
+                else:
+                    goodProfile = False
 
-        if 'code' in colorDict.keys():
-            newColor.code = colorDict['code']
+            if 'code' in colorDict.keys():
+                if colorDict['code'].startswith('"') and colorDict['code'].endswith('"'):
+                    newColor.code = colorDict['code'][1:-1]
+                else:
+                    goodProfile = False
 
+    if goodProfile:
         addColor(newColor)
-
-        print('Added color {}.'.format(newColor.name))
+        print(f'Added color {newColor.name}.\n')
+    else:
+        print('Invalid attribute(s).\n')
 
 def removeUserF(userinput):
-    userString = ' '.join(userinput)
+    userString = userinput[0]
     thisUser = tryGetOneUser(userString)
 
     if thisUser:
-        response = input('Remove user {uname}({uid})? <y/N> '.format(uname=thisUser.name, uid=thisUser.id))
+        response = input(f'Remove user {thisUser.name}({thisUser.id})? <y/N> ')
 
         if response.lower() == 'y':
             removeUser(thisUser)
-            print('User removed.')
+            print('User removed.\n')
 
         else:
-            print('Cancelled.')
+            print('Cancelled.\n')
 
     else:
-        print('User not found.')
+        print('User not found.\n')
         
 def removeServerF(userinput):
-    serverString = ' '.join(userinput)
+    serverString = userinput[0]
     thisServer = tryGetOneServer(serverString)
 
     if thisServer:
-        response = input('Remove server {sname}({sid})? <y/N> '.format(sname=thisServer.name, sid=thisServer.id))
+        response = input(f'Remove server {thisServer.name}({thisServer.id})? <y/N> ')
 
         if response.lower() == 'y':
             removeServer(thisServer)
-            print('Server removed.')
+            print('Server removed.\n')
 
         else:
-            print('Cancelled.')
+            print('Cancelled.\n')
 
     else:
-        print('Server not found.')
+        print('Server not found.\n')
+
+def removeUserAliasF(userinput):
+    userString = userinput[0]
+    serverString = userinput[1]
+
+    thisUser = tryGetOneUser(userString)
+    thisServer = tryGetOneServer(serverString)
+    thisAlias = getUserAlias(thisUser, thisServer)
+
+    if thisAlias:
+        response = input(f'Remove alias for user {thisUser.name}({thisUser.id}) on server {thisServer.name}({thisServer.id})? <y/N> ')
+
+        if response.lower() == 'y':
+            removeUserAlias(thisAlias)
+            print('Alias removed.\n')
+
+        else:
+            print('Cancelled.\n')
+
+    else:
+        print('User alias not found.\n')
  
 def removeColorF(userinput):
-    colorString = ' '.join(userinput)
+    colorString = userinput[0]
     thisColor = tryGetOneColor(colorString)
 
     if thisColor:
-        response = input('Remove color {cname}({cid})? <y/N> '.format(cname=thisColor.name, cid=thisColor.id))
+        response = input(f'Remove color {thisColor.name}({thisColor.id})? <y/N> ')
 
         if response.lower() == 'y':
             removeColor(thisColor)
-            print('Color removed.')
+            print('Color removed.\n')
 
         else:
-            print('Cancelled.')
+            print('Cancelled.\n')
 
     else:
-        print('Color not found.')
+        print('Color not found.\n')
 
 def editUserF(userinput):
     userdata = []
@@ -1267,46 +1382,76 @@ def editUserF(userinput):
     userDetails = userinput[1:]
 
     thisUser = tryGetOneUser(userString)
-    
+
     if thisUser:
         editUser = user(thisUser.id)
 
         for p in range(0, len(userDetails)):
-            userdata.append(userDetails[p].split('='))
+            if '=' in userDetails[p]:
+                userdata.append(userDetails[p].split('='))
 
         userDict = {}
 
         for q in userdata:
             userDict.update({q[0] : q[1]})
-    
+
+        goodProfile = False
+        
         if 'name' in userDict.keys():
-            editUser.name = userDict['name']
+            if userDict['name'].startswith('"') and userDict['name'].endswith('"'):
+                editUser.name = userDict['name'][1:-1]
+                goodProfile = True
+            else:
+                goodProfile = False
 
         if 'tz' in userDict.keys():
-            thisTZ = tryGetOneTimezone(userDict['tz'])
-            if thisTZ:
-                editUser.tz = thisTZ
+            if userDict['tz'].startswith('"') and userDict['tz'].endswith('"'):
+                thisTZ = tryGetOneTimezone(userDict['tz'][1:-1])
+                if thisTZ:
+                    editUser.tz = thisTZ
+                    goodProfile = True
+                else:
+                    goodProfile = False
             else:
-                print('Unknown timezone.')
+                goodProfile = False
 
         if 'botrank' in userDict.keys():
-            editUser.botrank = userDict['botrank']
+            if userDict['botrank'].startswith('"') and userDict['botrank'].endswith('"'):
+                editUser.botrank = userDict['botrank'][1:-1]
+                goodProfile = True
+            else:
+                goodProfile = False
 
         if 'bday' in userDict.keys():
-            editUser.bday = userDict['bday']
+            if userDict['bday'].startswith('"') and userDict['bday'].endswith('"'):
+                editUser.bday = userDict['bday'][1:-1]
+                goodProfile = True
+            else:
+                goodProfile = False
 
         if 'country' in userDict.keys():
-            editUser.country = userDict['country']
+            if userDict['country'].startswith('"') and userDict['country'].endswith('"'):
+                editUser.country = userDict['country'][1:-1]
+                goodProfile = True
+            else:
+                goodProfile = False
 
         if 'points' in userDict.keys():
-            editUser.points = userDict['points']
+            if userDict['points'].startswith('"') and userDict['points'].endswith('"'):
+                editUser.points = userDict['points'][1:-1]
+                goodProfile = True
+            else:
+                goodProfile = False
 
-        updateUser(editUser)
+        if goodProfile:
+            updateUser(editUser)
+            print(f'Updated user {thisUser.name}.\n')
 
-        print('Updated user {}.'.format(thisUser.name))
+        else:
+            print('Invalid attribute(s).\n')
 
     else:
-        print('User not found.')
+        print('User not found.\n')
 
 def editServerF(userinput):
     serverdata = []
@@ -1320,32 +1465,50 @@ def editServerF(userinput):
         editServer = server(thisServer.id)
 
         for p in range(0, len(serverDetails)):
-            serverdata.append(serverDetails[p].split('='))
+            if '=' in serverDetails[p]:
+                serverdata.append(serverDetails[p].split('='))
 
         serverDict = {}
 
         for q in serverdata:
             serverDict.update({q[0] : q[1]})
     
+        goodProfile = False
+            
         if 'name' in serverDict.keys():
-            editServer.name = serverDict['name']
+            if serverDict['name'].startswith('"') and serverDict['name'].endswith('"'):
+                editServer.name = serverDict['name'][1:-1]
+                goodProfile = True
+            else:
+                goodProfile = False
 
         if 'tz' in serverDict.keys():
-            thisTZ = tryGetOneTimezone(serverDict['tz'])
-            if thisTZ:
-                editServer.tz = thisTZ
+            if serverDict['tz'].startswith('"') and serverDict['tz'].endswith('"'):
+                thisTZ = tryGetOneTimezone(serverDict['tz'][1:-1])
+                if thisTZ:
+                    editServer.tz = thisTZ
+                    goodProfile = True
+                else:
+                    goodProfile = False
             else:
-                print('Unknown timezone.')
+                goodProfile = False
 
         if 'trigger' in serverDict.keys():
-            editServer.trigger = serverDict['trigger']
+            if serverDict['trigger'].startswith('"') and serverDict['trigger'].endswith('"'):
+                editServer.trigger = serverDict['trigger'][1:-1]
+                goodProfile = True
+            else:
+                goodProfile = False
 
-        updateServer(editServer)
+        if goodProfile:
+            updateServer(editServer)
+            print(f'Updated server {thisServer.name}.\n')
 
-        print('Updated server {}.'.format(thisServer.name))
+        else:
+            print('Invalid attribute(s).\n')
 
     else:
-        print('Server not found.')
+        print('Server not found.\n')
 
 def editUserAliasF(userinput):
     aliasdata = []
@@ -1365,35 +1528,53 @@ def editUserAliasF(userinput):
             editAlias.serverid = thisServer.id
 
             for p in range(0, len(aliasDetails)):
-                aliasdata.append(aliasDetails[p].split('='))
+                if '=' in aliasDetails[p]:
+                    aliasdata.append(aliasDetails[p].split('='))
 
             aliasDict = {}
 
             for q in aliasdata:
                 aliasDict.update({q[0] : q[1]})
+
+            goodProfile = False
     
             if 'nick' in aliasDict.keys():
-                editAlias.nick = aliasDict['nick']
+                if aliasDict['nick'].startswith('"') and aliasDict['nick'].endswith('"'):
+                    editAlias.nick = aliasDict['nick'][1:-1]
+                    goodProfile = True
+                else:
+                    goodProfile = False
 
             if 'color' in aliasDict.keys():
-                thisColor = tryGetOneColor(aliasDict['color'])
-                if thisColor:
-                    editAlias.color = thisColor.name
+                if aliasDict['color'].startswith('"') and aliasDict['color'].endswith('"'):
+                    thisColor = tryGetOneColor(aliasDict['color'][1:-1])
+                    if thisColor:
+                        editAlias.color = thisColor.name
+                        goodProfile = True
+                    else:
+                        goodProfile = False
                 else:
-                    print('Unknown color.')
+                    goodProfile = False
 
             if 'localrank' in aliasDict.keys():
-                editAlias.localrank = aliasDict['localrank']
+                if aliasDict['localrank'].startswith('"') and aliasDict['localrank'].endswith('"'):
+                    editAlias.localrank = aliasDict['localrank'][1:-1]
+                    goodProfile = True
+                else:
+                    goodProfile = False
 
-            updateUserAlias(editAlias)
+            if goodProfile:
+                updateUserAlias(editAlias)
+                print(f'Updated user alias for {thisUser.name} in server {thisServer.name}.\n')
 
-            print('Updated user alias for {uname} in server {sname}.'.format(uname=thisUser.name, sname=thisServer.name))
+            else:
+                print('Invalid attribute(s).\n')
 
         else:
-            print('Existing alias not found.')
+            print('Existing alias not found.\n')
 
     else:
-        print('User and/or server not found.')
+        print('User and/or server not found.\n')
 
 def editColorF(userinput):
     colordata = []
@@ -1402,34 +1583,45 @@ def editColorF(userinput):
     colorDetails = userinput[1:]
 
     thisColor = tryGetOneColor(colorString)
-    
+
     if thisColor:
         editColor = color(thisColor.id)
 
         for p in range(0, len(colorDetails)):
-            colordata.append(colorDetails[p].split('='))
+            if '=' in colorDetails[p]:
+                colordata.append(colorDetails[p].split('='))
 
         colorDict = {}
 
         for q in colordata:
             colorDict.update({q[0] : q[1]})
     
+        goodProfile = False
+    
         if 'name' in colorDict.keys():
-            editColor.name = colorDict['name']
+            if colorDict['name'].startswith('"') and colorDict['name'].endswith('"'):
+                editColor.name = colorDict['name']
+                goodProfile = True
+            else:
+                goodProfile = False
 
         if 'code' in colorDict.keys():
-            editColor.code = colorDict['code']
+            if colorDict['code'].startswith('"') and colorDict['code'].endswith('"'):
+                editColor.code = colorDict['code']
+                goodProfile = True
+            else:
+                goodProfile = False
 
-        updateColor(editColor)
+        if goodProfile:
+            updateColor(editColor)
+            print(f'Updated color {thisColor.name}.\n')
 
-        print('Updated color {}.'.format(thisColor.name))
+        else:
+            print('Invalid attribute(s).\n')
 
     else:
-        print('Color not found.')
-
-def showF():
-    return None
-
+        print('Color not found.\n')
+>>>>>>>>>>>>>>>>>>>>>>>
 def showUserF(userinput):
     userString = ' '.join(userinput)
     thisUser = tryGetOneUser(userString)
@@ -1535,6 +1727,7 @@ def listUserAliasF(userinput):
                     )
             results = cursor.fetchall()
             conn.close()
+            print(results)
 
             for each in results:
                 thisServer = getServer(each[0])

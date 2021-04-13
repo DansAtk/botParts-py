@@ -41,18 +41,30 @@ def registerCommands():
     sayRobotC.function = 'sayRobotF'
 
 def sayF(userinput):
-    print(' '.join(userinput))
+    if userinput[0].startswith('"') and userinput[0].endswith('"'):
+        print(userinput[0][1:-1])
+    else:
+        print(sayC.howto())
 
 def sayQuietlyF(userinput):
-    print((' '.join(userinput)).lower())
+    if userinput[0].startswith('"') and userinput[0].endswith('"'):
+        print(userinput[0][1:-1].lower())
+    else:
+        print(sayQuietlyC.howto())
 
 def sayLoudlyF(userinput):
-    print((' '.join(userinput)).upper())
+    if userinput[0].startswith('"') and userinput[0].endswith('"'):
+        print(userinput[0][1:-1].upper())
+    else:
+        print(sayLoudlyC.howto())
 
 def sayRobotF(userinput):
-    inputText = ' '.join(userinput)
-    roboText = (''.join(format(ord(x), '08b') for x in inputText))
-    print(f'\n{roboText}\n')
+    if userinput[0].startswith('"') and userinput[0].endswith('"'):
+        inputText = ' '.join(userinput[0][1:-1])
+        roboText = (''.join(format(ord(x), '08b') for x in inputText))
+        print(f'\n{roboText}\n')
+    else:
+        print(sayRobotC.howto())
 
 if __name__ == "__main__":
     print('A module for repeating the user\'s input message in various formats. No main.')
