@@ -100,7 +100,33 @@ def read(userinput, trigger=None):
         doRead = True
 
     if doRead:
-        fullCommand = fullText.split(' ')
+        commandText = fullText.split(' ')
+        fullCommand = []
+        quoteText = None
+        for parameter in commandText:
+            if '"' in parameter and not quoteText:
+                if parameter.endswith('"'):
+                    fullCommand.append(parameter)
+                else:
+                    quoteText = parameter
+
+            elif parameter.endswith('"') and quoteText:
+                quoteText = f'{quoteText} {parameter}'
+                fullCommand.append(quoteText)
+                quoteText = None
+
+            else:
+                if quoteText:
+                    quoteText = f'{quoteText} {parameter}'
+
+                else:
+                    fullCommand.append(parameter)
+
+        if quoteText:
+            fullCommand.append(quoteText)
+
+        print(fullCommand)
+
         valid = False
 
         for module in config.imports:
