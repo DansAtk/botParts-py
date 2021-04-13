@@ -1038,13 +1038,13 @@ def registerCommands():
     findColorC.instruction = 'Specify the name of a color.'
     findColorC.function = 'findColorF'
 
-def databaseF(inputData):
+def databaseF(inputData=None):
     print(databaseC.help())
 
-def databaseSetupF(inputData):
+def databaseSetupF(inputData=None):
     initializeDB()
 
-def databaseDeleteF(inputData):
+def databaseDeleteF(inputData=None):
     response = input('Are you sure you want to delete the current database? <y/N> ')
 
     if response.lower() == 'y':
@@ -1059,8 +1059,8 @@ def databaseBackupF(inputData=None):
         oFile = backupDB()
         print('Database backed up to \'{backupname}\'.\n'.format(backupname=oFile.name))
 
-def addUserF(inputData):
-    userDetails = inputData[2:]
+def addUserF(inputData, content):
+    userDetails = content
     userdata = []
 
     for p in range(0, len(userDetails)):
@@ -1156,12 +1156,12 @@ def addUserF(inputData):
         print('Invalid attribute(s).\n')
 
 
-def addUserAliasF(inputData):
+def addUserAliasF(inputData, content):
     aliasdata = []
 
-    userString = inputData[2]
-    serverString = inputData[3]
-    aliasDetails = inputData[4:]
+    userString = content[0]
+    serverString = content[1]
+    aliasDetails = content[2:]
 
     thisUser = tryGetOneUser(userString)
     thisServer = tryGetOneServer(serverString)
@@ -1219,9 +1219,9 @@ def addUserAliasF(inputData):
     else:
         print('User and/or server not found.\n')
 
-def addServerF(inputData):
+def addServerF(inputData, content):
     serverdata = []
-    serverDetails = inputData[2:]
+    serverDetails = content
 
     for p in range(0, len(serverDetails)):
         if '=' in serverDetails[p]:
@@ -1268,9 +1268,9 @@ def addServerF(inputData):
     else:
         print('Invalid attribute(s).\n')
 
-def addColorF(inputData):
+def addColorF(inputData, content):
     colordata = []
-    colorDetails = inputData[2:]
+    colorDetails = content
 
     for p in range(0, len(colorDetails)):
         if '=' in colorDetails[p]:
@@ -1306,8 +1306,8 @@ def addColorF(inputData):
     else:
         print('Invalid attribute(s).\n')
 
-def removeUserF(inputData):
-    userString = inputData[2]
+def removeUserF(inputData, content):
+    userString = content[0]
     thisUser = tryGetOneUser(userString)
 
     if thisUser:
@@ -1323,8 +1323,8 @@ def removeUserF(inputData):
     else:
         print('User not found.\n')
         
-def removeServerF(inputData):
-    serverString = inputData[2]
+def removeServerF(inputData, content):
+    serverString = content[0]
     thisServer = tryGetOneServer(serverString)
 
     if thisServer:
@@ -1340,9 +1340,9 @@ def removeServerF(inputData):
     else:
         print('Server not found.\n')
 
-def removeUserAliasF(inputData):
-    userString = inputData[2]
-    serverString = inputData[3]
+def removeUserAliasF(inputData, content):
+    userString = content[0]
+    serverString = content[1]
 
     thisUser = tryGetOneUser(userString)
     thisServer = tryGetOneServer(serverString)
@@ -1361,8 +1361,8 @@ def removeUserAliasF(inputData):
     else:
         print('User alias not found.\n')
  
-def removeColorF(inputData):
-    colorString = inputData[2]
+def removeColorF(inputData, content):
+    colorString = content[0]
     thisColor = tryGetOneColor(colorString)
 
     if thisColor:
@@ -1378,11 +1378,11 @@ def removeColorF(inputData):
     else:
         print('Color not found.\n')
 
-def editUserF(inputData):
+def editUserF(inputData, content):
     userdata = []
 
-    userString = inputData[2]
-    userDetails = inputData[3:]
+    userString = content[0]
+    userDetails = content[1:]
 
     thisUser = tryGetOneUser(userString)
 
@@ -1456,11 +1456,11 @@ def editUserF(inputData):
     else:
         print('User not found.\n')
 
-def editServerF(inputData):
+def editServerF(inputData, content):
     serverdata = []
 
-    serverString = inputData[2]
-    serverDetails = inputData[3:]
+    serverString = content[0]
+    serverDetails = content[1:]
 
     thisServer = tryGetOneServer(serverString)
     
@@ -1513,12 +1513,12 @@ def editServerF(inputData):
     else:
         print('Server not found.\n')
 
-def editUserAliasF(inputData):
+def editUserAliasF(inputData, content):
     aliasdata = []
 
-    userString = inputData[2]
-    serverString = inputData[3]
-    aliasDetails = inputData[4:]
+    userString = content[0]
+    serverString = content[1]
+    aliasDetails = content[2:]
 
     thisUser = tryGetOneUser(userString)
     thisServer = tryGetOneServer(serverString)
@@ -1579,11 +1579,11 @@ def editUserAliasF(inputData):
     else:
         print('User and/or server not found.\n')
 
-def editColorF(inputData):
+def editColorF(inputData, content):
     colordata = []
 
-    colorString = inputData[2]
-    colorDetails = inputData[3:]
+    colorString = content[0]
+    colorDetails = content[1:]
 
     thisColor = tryGetOneColor(colorString)
 
@@ -1625,81 +1625,74 @@ def editColorF(inputData):
     else:
         print('Color not found.\n')
 
-def showUserF(userinput):
-    userString = ' '.join(userinput)
+def showUserF(inputData, content):
+    userString = ' '.join(content)
     thisUser = tryGetOneUser(userString)
 
     if thisUser:
-        print('Name = {}'.format(thisUser.name))
-        print('ID = {}'.format(thisUser.id))
-        print('Country = {}'.format(thisUser.country))
-        print('Timezone = {}'.format(thisUser.tz))
-        print('Birthday = {}'.format(thisUser.bday))
-        print('Bot Rank = {}'.format(thisUser.botrank))
+        print(f'Name = {thisUser.name}')
+        print(f'ID = {thisUser.id}')
+        print(f'Country = {thisUser.country}')
+        print(f'Timezone = {thisUser.tz}')
+        print(f'Birthday = {thisUser.bday}')
+        print(f'Bot Rank = {thisUser.botRank}')
         print('')
         print('User aliases:')
-        listUserAliasF(userinput)
+        listUserAliasF(content)
+        print('\n')
 
     else:
-        print('User not found.')
+        print('User not found.\n')
 
-def showUserAliasF(inputstring):
-    if len(inputstring) > 1:
-        userString = inputstring[0]
-        serverString = ' '.join(inputstring[1:])
+def showUserAliasF(inputData, content):
+    userString = content[0]
+    serverString = ' '.join(content[1:])
 
-        thisUser = tryGetOneUser(userString)
-        thisServer = tryGetOneServer(serverString)
+    thisUser = tryGetOneUser(userString)
+    thisServer = tryGetOneServer(serverString)
 
-        if thisUser and thisServer:
-            thisAlias = getUserAlias(thisUser, thisServer)
+    if thisUser and thisServer:
+        thisAlias = getUserAlias(thisUser, thisServer)
 
-            if thisAlias:
-                print('User = {}'.format(thisUser.name))
-                print('Server = {}'.format(thisServer.name))
-                print('Nickname = {}'.format(thisAlias.nick))
-                print('Color = {}'.format(thisAlias.color))
-                print('Local Rank = {}'.format(thisAlias.localrank))
-
-            else:
-                print('No alias found.')
+        if thisAlias:
+            print(f'User = {thisUser.name}')
+            print(f'Server = {thisServer.name}')
+            print(f'Nickname = {thisAlias.nick}')
+            print(f'Color = {thisAlias.color}')
+            print(f'Local Rank = {thisAlias.localrank}')
 
         else:
-            print('User and/or server not found.')
+            print('No alias found.\n')
 
     else:
-        print('Please specify a user and server, in that order.')
+        print('User and/or server not found.\n')
 
-
-def showServerF(userinput):
-    serverString = ' '.join(userinput)
+def showServerF(inputData, content):
+    serverString = ' '.join(content)
     thisServer = tryGetOneServer(serverString)
 
     if thisServer:
-        print('Name = {}'.format(thisServer.name))
-        print('ID = {}'.format(thisServer.id))
-        print('Trigger = {}'.format(thisServer.trigger))
-        print('Timezone = {}'.format(thisServer.tz))
+        print(f'Name = {thisServer.name}')
+        print(f'ID = {thisServer.id}')
+        print(f'Trigger = {thisServer.trigger}')
+        print(f'Timezone = {thisServer.tz}')
     
     else:
-        print('Server not found.')
+        print('Server not found.\n')
 
-def showColorF(userinput):
-    colorString = ' '.join(userinput)
+def showColorF(inputData, content):
+    colorString = ' '.join(content)
     thisColor = tryGetOneColor(colorString)
 
     if thisColor:
-        print('Name = {}'.format(thisColor.name))
-        print('ID = {}'.format(thisColor.id))
-        print('Code = {}'.format(thisColor.code))
+        print(f'Name = {thisColor.name}')
+        print(f'ID = {thisColor.id}')
+        print(f'Code = {thisColor.code}')
     
     else:
-        print('Color not found.')
+        print('Color not found.\n')
 
-def listF():
-    return None
-
-def listUserF():
+def listUserF(inputData):
     DB = config.database
     if checkDB():
         conn = sqlite3.connect(DB)
@@ -1714,8 +1707,10 @@ def listUserF():
             thisUser = getUser(each[0])
             print(thisUser.name)
 
-def listUserAliasF(userinput):
-    userString = ' '.join(userinput)
+        print('')
+
+def listUserAliasF(inputData, content):
+    userString = ' '.join(content)
     thisUser = tryGetOneUser(userString)
 
     if thisUser:
@@ -1730,16 +1725,17 @@ def listUserAliasF(userinput):
                     )
             results = cursor.fetchall()
             conn.close()
-            print(results)
 
             for each in results:
                 thisServer = getServer(each[0])
                 print(thisServer.name)
 
-    else:
-        print('User not found.')
+            print('')
 
-def listServerF():
+    else:
+        print('User not found.\n')
+
+def listServerF(inputData):
     DB = config.database
     if checkDB():
         conn = sqlite3.connect(DB)
@@ -1754,7 +1750,9 @@ def listServerF():
             thisServer = getServer(each[0])
             print(thisServer.name)
 
-def listColorF():
+        print('')
+
+def listColorF(inputData):
     DB = config.database
     if checkDB():
         conn = sqlite3.connect(DB)
@@ -1769,189 +1767,204 @@ def listColorF():
             thisColor = getColor(each[0])
             print(thisColor.name)
 
-def listTimezoneF():
+        print('')
+
+def listTimezoneF(inputData):
     for value in pytz.all_timezones:
         print(value)
 
-def timeF():
-    print('The current time is {}.'.format(getTime()))
+    print('')
 
-def timeForF(userinput):
-    userString = ' '.join(userinput)
+def timeF(inputData):
+    print(f'The current time is {getTime()}.\n')
+
+def timeForF(inputData, content):
+    userString = ' '.join(content)
     thisUser = tryGetOneUser(userString)
 
     if thisUser:
-        print('The current time for {uname} in the {tzone} timezone is {now}.'.format(uname=thisUser.goesby(), tzone=thisUser.tz, now=thisUser.now()))
+        print(f'The current time for {thisUser.goesby()} in the {thisUser.tz} timezone is {thisUser.now()}.\n')
 
     else:
-        print('Unknown user.')
+        print('Unknown user.\n')
 
-def findF():
-    return None
-
-def findUserF():
-    return None
-
-def findUserNameF(userinput):
-    userString = ' '.join(userinput)
+def findUserNameF(inputData, content):
+    userString = ' '.join(content)
     results = searchUserbyName(userString)
     if results:
         if len(results) == 1:
             print('One user found:')
 
         else:
-            print('{} users found:'.format(len(results)))
+            print(f'{len(results)} users found:')
 
         for each in results:
             print(each.name)
+
+        print('')
         
     else:
-        print('No users found!')
+        print('No users found!\n')
 
-def findUserCountryF(userinput):
-    countryString = ' '.join(userinput)
+def findUserCountryF(inputData, content):
+    countryString = ' '.join(content)
     results = searchUserbyCountry(countryString)
     if results:
         if len(results) == 1:
             print('One user found:')
 
         else:
-            print('{} users found:'.format(len(results)))
+            print(f'{len(results)} users found:')
 
         for each in results:
             print(each.name)
+
+        print('')
         
     else:
-        print('No users found!')
+        print('No users found!\n')
 
-def findUserTimezoneF(userinput):
-    timezoneString = ' '.join(userinput)
+def findUserTimezoneF(inputData, content):
+    timezoneString = ' '.join(content)
     results = searchUserbyTimezone(timezoneString)
     if results:
         if len(results) == 1:
             print('One user found:')
 
         else:
-            print('{} users found:'.format(len(results)))
+            print(f'{len(results)} users found:')
 
         for each in results:
             print(each.name)
+
+        print('')
         
     else:
-        print('No users found!')
+        print('No users found!\n')
 
-def findUserBirthdayF(userinput):
-    birthdayString = ' '.join(userinput)
+def findUserBirthdayF(inputData, content):
+    birthdayString = ' '.join(content)
     results = searchUserbyBirthday(birthdayString)
     if results:
         if len(results) == 1:
             print('One user found:')
 
         else:
-            print('{} users found:'.format(len(results)))
+            print(f'{len(results)} users found:')
 
         for each in results:
             print(each.name)
+
+        print('')
         
     else:
-        print('No users found!')
+        print('No users found!\n')
 
-def findUserColorF(userinput):
-    if len(userinput) > 1:
-        serverString = userinput[0]
-        colorString = ' '.join(userinput[1:])
-        thisServer = tryGetOneServer(serverString)
-        thisColor = tryGetOneColor(colorString)
+def findUserColorF(inputData, content):
+    serverString = content[0]
+    colorString = ' '.join(content[1])
+    thisServer = tryGetOneServer(serverString)
+    thisColor = tryGetOneColor(colorString)
 
-        if thisServer:
-            if thisColor:
-                results = searchUserbyColor(thisColor, thisServer)
+    if thisServer:
+        if thisColor:
+            results = searchUserbyColor(thisColor, thisServer)
 
-                if results:
-                    if len(results) > 1:
-                        print('{} users found:'.format(len(results)))
+            if results:
+                if len(results) > 1:
+                    print(f'{len(results)} users found:')
 
-                    else:
-                        print('One user found:')
-
-                    for each in results:
-                        print(each.name)
-                    
                 else:
-                    print('No users found.')
+                    print('One user found:')
 
+                for each in results:
+                    print(each.name)
+
+                print('')
+                
             else:
-                print('Unknown color.')
+                print('No users found.\n')
 
         else:
-            print('Unknown server.')
+            print('Unknown color.\n')
 
-def findServerF():
-    return None
+    else:
+        print('Unknown server.\n')
 
-def findServerNameF(userinput):
-    serverString = ' '.join(userinput)
+def findServerNameF(inputData, content):
+    serverString = ' '.join(content)
     results = searchServerbyName(serverString)
+
     if results:
         if len(results) == 1:
             print('One server found:')
 
         else:
-            print('{} servers found:'.format(len(results)))
+            print(f'{len(results)} servers found:')
 
         for each in results:
             print(each.name)
+
+        print('')
         
     else:
-        print('No servers found!')
+        print('No servers found!\n')
 
-def findServerTimezoneF():
-    timezoneString = ' '.join(userinput)
+def findServerTimezoneF(inputData, content):
+    timezoneString = ' '.join(content)
     results = searchServerbyTimezone(timezoneString)
+
     if results:
         if len(results) == 1:
             print('One server found:')
 
         else:
-            print('{} servers found:'.format(len(results)))
+            print(f'{len(results)} servers found:')
 
         for each in results:
             print(each.name)
+
+        print('')
         
     else:
-        print('No servers found!')
+        print('No servers found!\n')
 
-def findTimezoneF(userinput):
-    timezoneString = ' '.join(userinput)
+def findTimezoneF(inputData, content):
+    timezoneString = ' '.join(content)
     results = searchTimezonebyName(timezoneString)
+
     if results:
         if len(results) == 1:
             print('One timezone found:')
 
         else:
-            print('{} timezones found:'.format(len(results)))
+            print(f'{len(results)} timezones found:')
 
         for each in results:
             print(each)
+
+        print('')
         
     else:
-        print('No timezones found!')
+        print('No timezones found!\n')
 
-def findColorF(userinput):
-    colorString = ' '.join(userinput)
+def findColorF(inputData, content):
+    colorString = ' '.join(content)
     results = searchColorbyName(colorString)
     if results:
         if len(results) == 1:
             print('One color found:')
 
         else:
-            print('{} colors found:'.format(len(results)))
+            print(f'{len(results)} colors found:')
 
         for each in results:
             print(each.name)
+
+        print('')
         
     else:
-        print('No colors found!')
+        print('No colors found!\n')
 
 if __name__ == "__main__":
     print("No main.")

@@ -34,7 +34,7 @@ def registerCommands():
     includes.update({'exit' : shutdownC})
     includes.update({'quit' : shutdownC})
 
-def pushF(userData=None, serverData=None, inputData=None):
+def pushF(inputData=None):
     print('Pushing config to file...')
     try:
         with open(config.conFile, 'w') as conf:
@@ -52,8 +52,9 @@ def pullF(inputData=None):
     except FileNotFoundError:
         print('No config file found!\n')
 
-def defaultTriggerF(inputData):
-    triggerText = inputData[2]
+def defaultTriggerF(inputData, content):
+    triggerText = content[0]
+
     if len(triggerText) == 1:
         if triggerText.lower() == 'none':
             try:
@@ -70,14 +71,14 @@ def defaultTriggerF(inputData):
                     print(f'Trigger has been set to {triggerText}\n')
 
                 else:
-                    print('Please specify at least one character for a trigger.')
+                    print('Please specify at least one character for a trigger.\n')
 
             else:
-                print('Try a shorter trigger.')
+                print('Try a shorter trigger.\n')
     else:
-        print('Please limit the trigger to a single character or small group of characters with no whitespace.')
+        print('Please limit the trigger to a single character or small group of characters with no whitespace.\n')
 
-def shutdownF(userData, serverData, inputData=None):
+def shutdownF(inputData=None):
     sys.exit()
 
 def moduleCleanup():
