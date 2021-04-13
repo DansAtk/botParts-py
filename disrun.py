@@ -8,7 +8,7 @@ def main():
                 input_text = input()
                 trigger = sesMan.getTrigger()
 
-                commandM.read(input_text, trigger)
+                commandM.read(input_text, sesMan.currentUser, sesMan.currentServer)
 
             else:
                 print('Welcome to testBot! Please choose login or exit.')
