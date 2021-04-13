@@ -114,7 +114,7 @@ def registerCommands():
     serverTriggerC.instruction = 'Specify a new trigger.'
     serverTriggerC.function = 'serverTriggerF'
     
-def sessionLogoutF():
+def sessionLogoutF(inputData):
     global currentUser
     global currentServer
     global currentAlias
@@ -125,43 +125,43 @@ def sessionLogoutF():
 
     print('\nLogged out!\n\n\n')
 
-def serverF():
+def serverF(inputData):
     global currentServer
 
     if currentServer:
-        print('Server {}:'.format(currentServer.id))
-        print('Name: {}'.format(currentServer.name))
-        print('Timezone: {}'.format(currentServer.tz))
-        print('Trigger: {}'.format(currentServer.trigger))
+        print(f'Server {currentServer.id}:')
+        print(f'Name: {currentServer.name}')
+        print(f'Timezone: {currentServer.tz}')
+        print(f'Trigger: {currentServer.trigger}\n')
 
-def serverTriggerF(userinput):
+def serverTriggerF(inputData, content):
     global currentServer
     setTrigger = False
 
-    if len(userinput) == 1:
-        if userinput[0].lower() == 'none':
+    if len(content) == 1:
+        if content[0].lower() == 'none':
             if currentServer.trigger:
                 currentServer.trigger = None
                 setTrigger = True
-                print('Server trigger has been removed.')
+                print('Server trigger has been removed.\n')
 
             else:
-                print('Server trigger is already set to \'None\'')
+                print('Server trigger is already set to \'None\'\n')
 
         else:
-            if len(userinput[0]) < 3:
-                if len(userinput[0]) > 0:
-                    currentServer.trigger = userinput[0]
+            if len(content[0]) < 3:
+                if len(content[0]) > 0:
+                    currentServer.trigger = content[0]
                     setTrigger = True
-                    print('Server trigger has been set to {}'.format(userinput[0]))
+                    print(f'Server trigger has been set to {content[0]}\n')
 
                 else:
-                    print('Please specify at least one character for a trigger.')
+                    print('Please specify at least one character for a trigger.\n')
 
             else:
-                print('Try a shorter trigger.')
+                print('Try a shorter trigger.\n')
     else:
-        print('Please limit the trigger to a single character or small group of characters with no whitespace.')
+        print('Please limit the trigger to a single character or small group of characters with no whitespace.\n')
 
     if setTrigger:
         DBM.updateServer(currentServer)
