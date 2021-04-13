@@ -45,39 +45,45 @@ class command:
 
     def howTo(self):
         if self.instruction:
-            howText = '{instr} Available parameters: {plist}'.format(instr=self.instruction, plist=self.paramText())
+            howText = f'{self.instruction} Available parameters: {self.paramText()}'
 
         else:
-            howText = 'Available parameters: {}'.format(self.paramText())
+            howText = f'Available parameters: {self.paramText()}'
 
         return howText
 
     def help(self):
-        helpText = '{dtext} {htext}'.format(dtext=self.description, htext=self.howTo())
+        helpText = f'{self.description} {self.howTo()}'
 
         return helpText
 
     def paramError(self, userinput):
-        errorText = 'Unknown argument(s) \'{itext}\'. {htext}'.format(itext=userinput, htext=self.howTo())
+        errorText = f'Unknown argument(s) \'{userinput}\'. {self.howTo()}'
         return errorText
 
-    def execute(self, *args):
+    def execute(self, origUser, origServer, *args):
         try:
             if args:
-                getattr(self.parent_module, self.function)(args)
+                getattr(self.parent_module, self.function)(origUser, origServer, args)
             else:
-                getattr(self.parent_module, self.function)()
+                getattr(self.parent_module, self.function)(origUser, origServer)
 
         except TypeError:
             # Often raised when a command is given too many or too few arguments.
             if args:
-                print(self.paramError(' '.join(args)))
+                print(f'{self.paramError(' '.join(args))}\n')
             else:
-                print(self.howTo())
+                print(f'{self.howTo()}\n')
         
         except AttributeError:
             # Often raised when a command does not have an associated function.
-            print(self.howTo())
+            print(f'{self.howTo()}\n')
+
+class messageData:
+    def __init__(self, USER=None, SERVER=None, CONTENT=None):
+        self.user = USER
+        self.server = SERVER
+        self.content = CONTENT
 
 #        except Exception:
 #            print(sys.exc_info()[0])
@@ -86,11 +92,11 @@ class command:
     #def __init__(self,) 
 
 # Utility function for reading incoming text and parsing it for both a valid trigger and valid commands across all imported botParts modules. If a valid command is found, its associated function is executed and passed the remainder of the input text as arguments.
-def read(userinput, trigger=None):
+def read(userinput, origUser, origServer):
     doRead = False
-    if trigger and len(trigger) > 0:
-        if userinput.startswith(trigger):
-            fullText = userinput.split(trigger, 1)[1] 
+    if origServer.trigger and len(origServer.trigger) > 0:
+        if userinput.startswith(origServer.trigger):
+            fullText = userinput.split(origServer.trigger, 1)[1] 
 
             doRead = True
 
@@ -141,12 +147,13 @@ def read(userinput, trigger=None):
                 valid = True
 
                 if ' '.join(fullCommand[i:]).lower() == 'help':
-                    print(pack.help())
+                    print(f'{pack.help()}\n')
                 else:
-                    pack.execute(*fullCommand[i:])
+                    inputData = messageData(origUser, origServer, *fullCommand[i:])
+                    pack.execute(origUser, origServer, *fullCommand[i:])
 
         if valid == False:
-            print('Invalid command!')
+            print('Invalid command!\n')
 
 # Use registerCommands() to declare and set up commands, and register them with the module's dictionary so they can be found by the bot. Command objects can be denoted with a C at the end as a naming convention.
 def registerCommands():
@@ -156,7 +163,7 @@ def registerCommands():
     commandsC.function = 'commandsF'
 
 # Functions associated with commands declared in registerCommands() can be defined here. These functions can be denoted with an F at the end as a naming convention.
-def commandsF():
+def commandsF(inputUser, inputServer, inputData=None):
     currentCommands = 'Currently available commands: '
     for i, module in enumerate(config.imports):
         for command in sys.modules[module].includes:
@@ -169,6 +176,6 @@ def commandsF():
 
 # botParts modules are generally designed to be imported by the botParts core modules and not used as mains themselves. If the module is used as main, print an overview of the module's use and then exit. If it is imported, go ahead with registering the module with the bot.
 if __name__ == "__main__":
-    print("A framework for easily implementing and handling branching commands for a chat bot. No main.")
+    print("A framework for easily implementing and handling branching commands for a chat bot. No main.\n")
 else:
     registerCommands()
