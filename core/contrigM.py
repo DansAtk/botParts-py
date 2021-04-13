@@ -34,39 +34,40 @@ def registerCommands():
     includes.update({'exit' : shutdownC})
     includes.update({'quit' : shutdownC})
 
-def pushF():
+def pushF(userData=None, serverData=None, inputData=None):
     print('Pushing config to file...')
     try:
         with open(config.conFile, 'w') as conf:
             json.dump(config.settings, conf)
-        print('Success!')
+        print('Success!\n')
     except:
-        print('Failure!')
+        print('Failure!\n')
 
-def pullF():
+def pullF(inputData=None):
     print('Pulling config from file...')
     try:
         with open(config.conFile, 'r') as conf:
             config.settings = json.load(conf)
-        print('Success!')
+        print('Success!\n')
     except FileNotFoundError:
-        print('No config file found!')
+        print('No config file found!\n')
 
-def defaultTriggerF(userinput):
-    if len(userinput) == 1:
-        if userinput[0].lower() == 'none':
+def defaultTriggerF(inputData):
+    triggerText = inputData[2]
+    if len(triggerText) == 1:
+        if triggerText.lower() == 'none':
             try:
                 del config.settings['trigger']
-                print('Trigger has been removed.')
+                print('Trigger has been removed.\n')
 
             except KeyError:
-                print('Trigger is already set to \'None\'')
+                print('Trigger is already set to \'None\'.\n')
 
         else:
-            if len(userinput[0]) < 3:
-                if len(userinput[0]) > 0:
-                    config.settings['trigger'] = userinput[0]
-                    print('Trigger has been set to {}'.format(userinput[0]))
+            if len(triggerText) < 3:
+                if len(triggerText) > 0:
+                    config.settings['trigger'] = triggerText
+                    print(f'Trigger has been set to {triggerText}\n')
 
                 else:
                     print('Please specify at least one character for a trigger.')
@@ -76,7 +77,7 @@ def defaultTriggerF(userinput):
     else:
         print('Please limit the trigger to a single character or small group of characters with no whitespace.')
 
-def shutdownF():
+def shutdownF(userData, serverData, inputData=None):
     sys.exit()
 
 def moduleCleanup():
