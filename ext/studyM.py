@@ -303,10 +303,12 @@ def registerCommands():
     checkC.instruction = 'Specify a user and (optionally) the date of study, in format DD-MM-YYYY. Checks the current day by default.'
     checkC.function = 'checkF'
 
-def markF(userinput):
-    userString = userinput[0]
+def markF(inputData, content):
+    userString = content[0]
+    logNote = None
 
-    logNote = ' '.join(userinput[1])
+    if content[1].startswith('"') and content[1].endswith('"'):
+        logNote = content[1][1:-1]
 
     thisUser = DBM.tryGetOneUser(userString)
 
@@ -325,16 +327,16 @@ def markF(userinput):
     else:
         print('User not found.\n')
         
-def unmarkF(userinput):
-    userString = userinput[0]
+def unmarkF(inputData, content):
+    userString = content[0]
     thisUser = DBM.tryGetOneUser(userString)
 
     if thisUser:
         search = searchStudyLogbyUser(thisUser)
 
         if search:
-            if len(userinput) > 1:
-                dateString = ' '.join(userinput[1:])
+            if len(content) > 1:
+                dateString = ' '.join(content[1:])
 
             else:
                 dateString = thisUser.now().strftime("%d-%m-%Y")
@@ -358,8 +360,8 @@ def unmarkF(userinput):
     else:
         print('User not found.\n')
 
-def checkF(userinput):
-    userString = userinput[0]
+def checkF(inputData, content):
+    userString = content[0]
 
     thisUser = DBM.tryGetOneUser(userString)
 
@@ -367,8 +369,8 @@ def checkF(userinput):
         search = searchStudyLogbyUser(thisUser)
 
         if search:
-            if len(userinput) > 1:
-                dateString = ' '.join(userinput[1:])
+            if len(content) > 1:
+                dateString = ' '.join(content[1:])
 
             else:
                 dateString = thisUser.now().strftime("%d-%m-%Y")
