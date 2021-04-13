@@ -88,6 +88,7 @@ def removeStudyUser(profile):
 
     if DBM.checkDB():
         conn = sqlite3.connect(DB)
+        conn.execute("PRAGMA foreign_keys = 1")
         cursor = conn.cursor()
         cursor.execute(
                 "DELETE FROM studyusers "
@@ -217,6 +218,7 @@ def removeStudyLog(profile):
 
     if DBM.checkDB():
         conn = sqlite3.connect(DB)
+        conn.execute("PRAGMA foreign_keys = 1")
         cursor = conn.cursor()
         cursor.execute(
                 "DELETE FROM studysessions "
@@ -303,7 +305,8 @@ def registerCommands():
 
 def markF(userinput):
     userString = userinput[0]
-    logNote = ' '.join(userinput[1:])
+
+    logNote = ' '.join(userinput[1])
 
     thisUser = DBM.tryGetOneUser(userString)
 
@@ -317,10 +320,10 @@ def markF(userinput):
 
         addStudyLog(thisLog)
 
-        print('Study logged for {uname} on {ldate}.'.format(uname=thisUser.name, ldate=logDate))
+        print(f'Study logged for {thisUser.name} on {logDate}.\n')
 
     else:
-        print('User not found.')
+        print('User not found.\n')
         
 def unmarkF(userinput):
     userString = userinput[0]
@@ -344,16 +347,16 @@ def unmarkF(userinput):
 
             if foundLog:
                 removeStudyLog(foundLog)
-                print('{uname} unmarked for {ldate}.'.format(uname=thisUser.name, ldate=foundLog.date))
+                print(f'{thisUser.name} unmarked for {foundLog.date}.\n')
 
             else:
-                print('{uname} did not study on {ldate}.'.format(uname=thisUser.name, ldate=dateString))
+                print(f'{thisUser.name} did not study on {dateString}.\n')
 
         else:
-            print('No logs found.')
+            print('No logs found.\n')
 
     else:
-        print('User not found.')
+        print('User not found.\n')
 
 def checkF(userinput):
     userString = userinput[0]
@@ -378,18 +381,18 @@ def checkF(userinput):
 
             if foundLog:
                 if foundLog.note:
-                    print('{uname} studied on {ldate}.\n"{lnote}"'.format(uname=thisUser.name, ldate=foundLog.date, lnote=foundLog.note))
+                    print(f'{thisUser.name} studied on {foundLog.date}.\n"{foundLog.note}"\n')
                 else:
-                    print('{uname} studied on {ldate}.'.format(uname=thisUser.name, ldate=foundLog.date))
+                    print(f'{thisUser.name} studied on {foundLog.date}.\n')
 
             else:
-                print('{uname} did not study on {ldate}.'.format(uname=thisUser.name, ldate=dateString))
+                print(f'{thisUser.name} did not study on {dateString}.\n')
 
         else:
-            print('No logs found.')
+            print('No logs found.\n')
 
     else:
-        print('User not found.')
+        print('User not found.\n')
 
 def dbinit(DB):
     print('Configuring for study logging...')

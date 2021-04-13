@@ -1038,13 +1038,13 @@ def registerCommands():
     findColorC.instruction = 'Specify the name of a color.'
     findColorC.function = 'findColorF'
 
-def databaseF():
+def databaseF(inputData):
     print(databaseC.help())
 
-def databaseSetupF():
+def databaseSetupF(inputData):
     initializeDB()
 
-def databaseDeleteF():
+def databaseDeleteF(inputData):
     response = input('Are you sure you want to delete the current database? <y/N> ')
 
     if response.lower() == 'y':
@@ -1054,17 +1054,18 @@ def databaseDeleteF():
     else:
         print('Cancelled.\n')
 
-def databaseBackupF():
+def databaseBackupF(inputData=None):
     if checkDB():
         oFile = backupDB()
         print('Database backed up to \'{backupname}\'.\n'.format(backupname=oFile.name))
 
-def addUserF(userinput):
+def addUserF(inputData):
+    userDetails = inputData[2:]
     userdata = []
 
-    for p in range(0, len(userinput)):
-        if '=' in userinput[p]:
-            userdata.append(userinput[p].split('='))
+    for p in range(0, len(userDetails)):
+        if '=' in userDetails[p]:
+            userdata.append(userDetails[p].split('='))
 
     userDict = {}
 
@@ -1155,12 +1156,12 @@ def addUserF(userinput):
         print('Invalid attribute(s).\n')
 
 
-def addUserAliasF(userinput):
+def addUserAliasF(inputData):
     aliasdata = []
 
-    userString = userinput[0]
-    serverString = userinput[1]
-    aliasDetails = userinput[2:]
+    userString = inputData[2]
+    serverString = inputData[3]
+    aliasDetails = inputData[4:]
 
     thisUser = tryGetOneUser(userString)
     thisServer = tryGetOneServer(serverString)
@@ -1218,12 +1219,13 @@ def addUserAliasF(userinput):
     else:
         print('User and/or server not found.\n')
 
-def addServerF(userinput):
+def addServerF(inputData):
     serverdata = []
+    serverDetails = inputData[2:]
 
-    for p in range(0, len(userinput)):
-        if '=' in userinput[p]:
-            serverdata.append(userinput[p].split('='))
+    for p in range(0, len(serverDetails)):
+        if '=' in serverDetails[p]:
+            serverdata.append(serverDetails[p].split('='))
 
     serverDict = {}
 
@@ -1266,12 +1268,13 @@ def addServerF(userinput):
     else:
         print('Invalid attribute(s).\n')
 
-def addColorF(userinput):
+def addColorF(inputData):
     colordata = []
+    colorDetails = inputData[2:]
 
-    for p in range(0, len(userinput)):
-        if '=' in userinput[p]:
-            colordata.append(userinput[p].split('='))
+    for p in range(0, len(colorDetails)):
+        if '=' in colorDetails[p]:
+            colordata.append(colorDetails[p].split('='))
 
     colorDict = {}
 
@@ -1303,8 +1306,8 @@ def addColorF(userinput):
     else:
         print('Invalid attribute(s).\n')
 
-def removeUserF(userinput):
-    userString = userinput[0]
+def removeUserF(inputData):
+    userString = inputData[2]
     thisUser = tryGetOneUser(userString)
 
     if thisUser:
@@ -1320,8 +1323,8 @@ def removeUserF(userinput):
     else:
         print('User not found.\n')
         
-def removeServerF(userinput):
-    serverString = userinput[0]
+def removeServerF(inputData):
+    serverString = inputData[2]
     thisServer = tryGetOneServer(serverString)
 
     if thisServer:
@@ -1337,9 +1340,9 @@ def removeServerF(userinput):
     else:
         print('Server not found.\n')
 
-def removeUserAliasF(userinput):
-    userString = userinput[0]
-    serverString = userinput[1]
+def removeUserAliasF(inputData):
+    userString = inputData[2]
+    serverString = inputData[3]
 
     thisUser = tryGetOneUser(userString)
     thisServer = tryGetOneServer(serverString)
@@ -1358,8 +1361,8 @@ def removeUserAliasF(userinput):
     else:
         print('User alias not found.\n')
  
-def removeColorF(userinput):
-    colorString = userinput[0]
+def removeColorF(inputData):
+    colorString = inputData[2]
     thisColor = tryGetOneColor(colorString)
 
     if thisColor:
@@ -1375,11 +1378,11 @@ def removeColorF(userinput):
     else:
         print('Color not found.\n')
 
-def editUserF(userinput):
+def editUserF(inputData):
     userdata = []
 
-    userString = userinput[0]
-    userDetails = userinput[1:]
+    userString = inputData[2]
+    userDetails = inputData[3:]
 
     thisUser = tryGetOneUser(userString)
 
@@ -1453,11 +1456,11 @@ def editUserF(userinput):
     else:
         print('User not found.\n')
 
-def editServerF(userinput):
+def editServerF(inputData):
     serverdata = []
 
-    serverString = userinput[0]
-    serverDetails = userinput[1:]
+    serverString = inputData[2]
+    serverDetails = inputData[3:]
 
     thisServer = tryGetOneServer(serverString)
     
@@ -1510,12 +1513,12 @@ def editServerF(userinput):
     else:
         print('Server not found.\n')
 
-def editUserAliasF(userinput):
+def editUserAliasF(inputData):
     aliasdata = []
 
-    userString = userinput[0]
-    serverString = userinput[1]
-    aliasDetails = userinput[2:]
+    userString = inputData[2]
+    serverString = inputData[3]
+    aliasDetails = inputData[4:]
 
     thisUser = tryGetOneUser(userString)
     thisServer = tryGetOneServer(serverString)
@@ -1576,11 +1579,11 @@ def editUserAliasF(userinput):
     else:
         print('User and/or server not found.\n')
 
-def editColorF(userinput):
+def editColorF(inputData):
     colordata = []
 
-    colorString = userinput[0]
-    colorDetails = userinput[1:]
+    colorString = inputData[2]
+    colorDetails = inputData[3:]
 
     thisColor = tryGetOneColor(colorString)
 
@@ -1621,7 +1624,7 @@ def editColorF(userinput):
 
     else:
         print('Color not found.\n')
->>>>>>>>>>>>>>>>>>>>>>>
+
 def showUserF(userinput):
     userString = ' '.join(userinput)
     thisUser = tryGetOneUser(userString)
