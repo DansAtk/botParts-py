@@ -1,4 +1,5 @@
 import sys
+import multiprocessing
 import json
 
 from core import config
@@ -35,22 +36,22 @@ def registerCommands():
     includes.update({'quit' : shutdownC})
 
 def pushF(inputData=None):
-    print('Pushing config to file...')
+    config.debugQ.put('Pushing config to file...')
     try:
         with open(config.conFile, 'w') as conf:
             json.dump(config.settings, conf)
-        print('Success!\n')
+        config.debugQ.put('Success!')
     except:
-        print('Failure!\n')
+        config.debugQ.put('Failure!')
 
 def pullF(inputData=None):
-    print('Pulling config from file...')
+    config.debugQ.put('Pulling config from file...')
     try:
         with open(config.conFile, 'r') as conf:
             config.settings = json.load(conf)
-        print('Success!\n')
+        config.debugQ.put('Success!')
     except FileNotFoundError:
-        print('No config file found!\n')
+        config.debugQ.put('No config file found!')
 
 def defaultTriggerF(inputData, content):
     triggerText = content[0]
@@ -59,34 +60,34 @@ def defaultTriggerF(inputData, content):
         if triggerText.lower() == 'none':
             try:
                 del config.settings['trigger']
-                print('Trigger has been removed.\n')
+                config.outQ.put('Trigger has been removed.')
 
             except KeyError:
-                print('Trigger is already set to \'None\'.\n')
+                config.outQ.put('Trigger is already set to \'None\'.')
 
         else:
             if len(triggerText) < 3:
                 if len(triggerText) > 0:
                     config.settings['trigger'] = triggerText
-                    print(f'Trigger has been set to {triggerText}\n')
+                    config.outQ.put(f'Trigger has been set to {triggerText}')
 
                 else:
-                    print('Please specify at least one character for a trigger.\n')
+                    config.outQ.put('Please specify at least one character for a trigger.')
 
             else:
-                print('Try a shorter trigger.\n')
+                config.outQ.put('Try a shorter trigger.')
     else:
-        print('Please limit the trigger to a single character or small group of characters with no whitespace.\n')
+        config.outQ.put('Please limit the trigger to a single character or small group of characters with no whitespace.')
 
 def shutdownF(inputData=None):
     sys.exit()
 
 def moduleCleanup():
-    print('Beginning cleanup...')
+    config.debugQ.put('Beginning cleanup...')
     for module in config.imports:
         if hasattr(sys.modules[module], 'cleanup'):
             sys.modules[module].cleanup()
-    print('Done!')
+    config.debugQ.put('Done!')
 
 def cleanup():
     pushF()
@@ -94,5 +95,8 @@ def cleanup():
 if __name__ == "__main__":
     print('For controlling bot state and configuration, and handling graceful startup and shutdown. No main.')
 else:
+    config.inQ = multiprocessing.Queue()
+    config.outQ = multiprocessing.Queue()
+    config.debugQ = multiprocessing.Queue()
     registerCommands()
     pullF()
