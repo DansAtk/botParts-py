@@ -322,10 +322,10 @@ def markF(inputData, content):
 
         addStudyLog(thisLog)
 
-        print(f'Study logged for {thisUser.name} on {logDate}.\n')
+        config.outQ.put(f'Study logged for {thisUser.name} on {logDate}.')
 
     else:
-        print('User not found.\n')
+        config.outQ.put('User not found.')
         
 def unmarkF(inputData, content):
     userString = content[0]
@@ -349,16 +349,16 @@ def unmarkF(inputData, content):
 
             if foundLog:
                 removeStudyLog(foundLog)
-                print(f'{thisUser.name} unmarked for {foundLog.date}.\n')
+                config.outQ.put(f'{thisUser.name} unmarked for {foundLog.date}.')
 
             else:
-                print(f'{thisUser.name} did not study on {dateString}.\n')
+                config.outQ.put(f'{thisUser.name} did not study on {dateString}.')
 
         else:
-            print('No logs found.\n')
+            config.outQ.put('No logs found.')
 
     else:
-        print('User not found.\n')
+        config.outQ.put('User not found.')
 
 def checkF(inputData, content):
     userString = content[0]
@@ -383,21 +383,21 @@ def checkF(inputData, content):
 
             if foundLog:
                 if foundLog.note:
-                    print(f'{thisUser.name} studied on {foundLog.date}.\n"{foundLog.note}"\n')
+                    config.outQ.put(f'{thisUser.name} studied on {foundLog.date}.\n"{foundLog.note}"')
                 else:
-                    print(f'{thisUser.name} studied on {foundLog.date}.\n')
+                    config.outQ.put(f'{thisUser.name} studied on {foundLog.date}.')
 
             else:
-                print(f'{thisUser.name} did not study on {dateString}.\n')
+                config.outQ.put(f'{thisUser.name} did not study on {dateString}.')
 
         else:
-            print('No logs found.\n')
+            config.outQ.put('No logs found.')
 
     else:
-        print('User not found.\n')
+        config.outQ.put('User not found.')
 
 def dbinit(DB):
-    print('Configuring for study logging...')
+    config.debugQ.put('Configuring for study logging...')
     conn = sqlite3.connect(DB)
     cursor = conn.cursor()
     cursor.execute(

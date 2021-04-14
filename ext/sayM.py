@@ -42,29 +42,38 @@ def registerCommands():
 
 def sayF(inputData, content):
     if content[0].startswith('"') and content[0].endswith('"'):
-        print(f'{content[0][1:-1]}\n')
+        #print(f'{content[0][1:-1]}\n')
+        config.outQ.put(f'{content[0][1:-1]}')
     else:
-        print(f'{sayC.howto()}\n')
+        #print(f'{sayC.howto()}\n')
+        config.outQ.put(f'{sayC.howto()}')
 
 def sayQuietlyF(inputData, content):
     if content[0].startswith('"') and content[0].endswith('"'):
-        print(f'{content[0][1:-1].lower()}\n')
+        config.outQ.put(f'{content[0][1:-1].lower()}')
+        #print(f'{content[0][1:-1].lower()}\n')
     else:
-        print(f'{sayQuietlyC.howto()}\n')
+        #print(f'{sayQuietlyC.howto()}\n')
+        config.outQ.put(f'{sayQuietlyC.howto()}')
 
 def sayLoudlyF(inputData, content):
     if content[0].startswith('"') and content[0].endswith('"'):
-        print(f'{content[0][1:-1].upper()}\n')
+        #print(f'{content[0][1:-1].upper()}\n')
+        config.outQ.put(f'{content[0][1:-1].upper()}')
     else:
-        print(f'{sayLoudlyC.howto()}\n')
+        #print(f'{sayLoudlyC.howto()}\n')
+        config.outQ.put(f'{sayLoudlyC.howto()}')
 
 def sayRobotF(inputData, content):
     if content[0].startswith('"') and content[0].endswith('"'):
         inputText = ' '.join(content[0][1:-1])
         roboText = (''.join(format(ord(x), '08b') for x in inputText))
-        print(f'{roboText}\n')
+        #print(f'{roboText}\n')
+        config.outQ.put(f'{roboText}')
+
     else:
-        print(f'{sayRobotC.howto()}\n')
+        #print(f'{sayRobotC.howto()}\n')
+        config.outQ.put(f'{sayRobotC.howto()}')
 
 if __name__ == "__main__":
     print('A module for repeating the user\'s input message in various formats. No main.')

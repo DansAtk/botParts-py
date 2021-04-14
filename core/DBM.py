@@ -743,15 +743,17 @@ def initializeDB():
     DB = config.database
 
     if True:
-    #try:
         doInit = False
         if DB.exists():
-            response = input('Database already exists. Re-initialize? This will empty the database. <y/N> ')
+            config.outQ.put('Database already exists. Re-initialize? This will empty the database. <y/N> ')
+            rawResponse = config.inQ.get()
+            response = rawResponse.content
             if response.lower() == 'y':
                 DB.unlink()
                 doInit = True
+                config.debugQ.put('It works.')
             else:
-                print('Canceled.')
+                config.outQ.put('Canceled.')
         else:
             doInit = True
         
@@ -764,23 +766,23 @@ def initializeDB():
                     )
             cursor.execute("INSERT INTO info(key, value) VALUES (?, ?)",
                     ('dbversion', config.settings['dbversion']))
-            print('Configuring for multiple users...')
+            config.debugQ.put('Configuring for multiple users...')
             cursor.execute(
                     "CREATE TABLE users("
                     "id INTEGER PRIMARY KEY, name TEXT, botrank INTEGER DEFAULT '0', country TEXT, "
                     "tz TEXT DEFAULT 'US/Eastern', bday TEXT, points INTEGER DEFAULT '0')"
                     )
-            print('Configuring for multiple servers...')
+            config.debugQ.put('Configuring for multiple servers...')
             cursor.execute(
                     "CREATE TABLE servers("
                     "id INTEGER PRIMARY KEY, name TEXT, tz TEXT, trigger TEXT)"
                     )
-            print('Configuring for color management...')
+            config.debugQ.put('Configuring for color management...')
             cursor.execute(
                     "CREATE TABLE colors("
                     "id INTEGER PRIMARY KEY, name TEXT, code TEXT)"
                     )
-            print('Configuring for user aliases...')
+            config.debugQ.put('Configuring for user aliases...')
             cursor.execute(
                     "CREATE TABLE serverusers("
                     "userid INTEGER NOT NULL, serverid INTEGER NOT NULL, color INTEGER, nick TEXT, localrank TEXT, "
@@ -796,7 +798,7 @@ def initializeDB():
                 if hasattr(sys.modules[module], 'dbinit'):
                     sys.modules[module].dbinit(DB)
 
-            print('Database initialized.')
+            config.debugQ.put('Database initialized.')
 
     #except:
         #print(sys.exc_info()[0])
@@ -809,7 +811,7 @@ def checkDB():
         return True
 
     else:
-        print('Database not found.')
+        config.debugQ.put('Database not found.')
         return False
 
 def backupDB():
@@ -1039,25 +1041,27 @@ def registerCommands():
     findColorC.function = 'findColorF'
 
 def databaseF(inputData=None):
-    print(databaseC.help())
+    config.outQ.put(databaseC.help())
 
 def databaseSetupF(inputData=None):
     initializeDB()
 
 def databaseDeleteF(inputData=None):
-    response = input('Are you sure you want to delete the current database? <y/N> ')
+    config.outQ.put('Are you sure you want to delete the current database? <y/N> ')
+    rawResponse = config.inQ.get()
+    response = rawResponse.content
 
     if response.lower() == 'y':
         config.database.unlink()
-        print('Database deleted.\n')
+        config.outQ.put('Database deleted.')
 
     else:
-        print('Cancelled.\n')
+        config.outQ.put('Cancelled.')
 
 def databaseBackupF(inputData=None):
     if checkDB():
         oFile = backupDB()
-        print('Database backed up to \'{backupname}\'.\n'.format(backupname=oFile.name))
+        config.debugQ.put(f'Database backed up to \'{oFile.name}\'.')
 
 def addUserF(inputData, content):
     userDetails = content
@@ -1150,10 +1154,10 @@ def addUserF(inputData, content):
 
     if goodProfile:
         addUser(newUser)
-        print(f'Added user {newUser.name}.\n')
+        config.outQ.put(f'Added user {newUser.name}.')
 
     else:
-        print('Invalid attribute(s).\n')
+        config.outQ.put('Invalid attribute(s).')
 
 
 def addUserAliasF(inputData, content):
@@ -1208,16 +1212,16 @@ def addUserAliasF(inputData, content):
 
             if goodProfile:
                 addUserAlias(newAlias)
-                print(f'Added user alias for {thisUser.name} in server {thisServer.name}.\n')
+                config.outQ.put(f'Added user alias for {thisUser.name} in server {thisServer.name}.')
 
             else:
-                print('Invalid attribute(s).\n')
+                config.outQ.put('Invalid attribute(s).')
 
         else:
-            print('User alias already exists.\n')
+            config.outQ.put('User alias already exists.')
 
     else:
-        print('User and/or server not found.\n')
+        config.outQ.put('User and/or server not found.')
 
 def addServerF(inputData, content):
     serverdata = []
@@ -1263,10 +1267,10 @@ def addServerF(inputData, content):
 
     if goodProfile:
         addServer(newServer)
-        print(f'Added server {newServer.name}.\n')
+        config.outQ.put(f'Added server {newServer.name}.')
 
     else:
-        print('Invalid attribute(s).\n')
+        config.outQ.put('Invalid attribute(s).')
 
 def addColorF(inputData, content):
     colordata = []
@@ -1302,43 +1306,47 @@ def addColorF(inputData, content):
 
     if goodProfile:
         addColor(newColor)
-        print(f'Added color {newColor.name}.\n')
+        config.outQ.put(f'Added color {newColor.name}.')
     else:
-        print('Invalid attribute(s).\n')
+        config.outQ.put('Invalid attribute(s).')
 
 def removeUserF(inputData, content):
     userString = content[0]
     thisUser = tryGetOneUser(userString)
 
     if thisUser:
-        response = input(f'Remove user {thisUser.name}({thisUser.id})? <y/N> ')
+        config.outQ.put(f'Remove user {thisUser.name}({thisUser.id})? <y/N> ')
+        rawResponse = config.inQ.get()
+        response = rawResponse.content
 
         if response.lower() == 'y':
             removeUser(thisUser)
-            print('User removed.\n')
+            config.outQ.put('User removed.')
 
         else:
-            print('Cancelled.\n')
+            config.outQ.put('Cancelled.')
 
     else:
-        print('User not found.\n')
+        config.outQ.put('User not found.')
         
 def removeServerF(inputData, content):
     serverString = content[0]
     thisServer = tryGetOneServer(serverString)
 
     if thisServer:
-        response = input(f'Remove server {thisServer.name}({thisServer.id})? <y/N> ')
+        config.outQ.put(f'Remove server {thisServer.name}({thisServer.id})? <y/N> ')
+        rawResponse = config.inQ.get()
+        response = rawResponse.content
 
         if response.lower() == 'y':
             removeServer(thisServer)
-            print('Server removed.\n')
+            config.outQ.put('Server removed.')
 
         else:
-            print('Cancelled.\n')
+            config.outQ.put('Cancelled.')
 
     else:
-        print('Server not found.\n')
+        config.outQ.put('Server not found.')
 
 def removeUserAliasF(inputData, content):
     userString = content[0]
@@ -1349,34 +1357,38 @@ def removeUserAliasF(inputData, content):
     thisAlias = getUserAlias(thisUser, thisServer)
 
     if thisAlias:
-        response = input(f'Remove alias for user {thisUser.name}({thisUser.id}) on server {thisServer.name}({thisServer.id})? <y/N> ')
+        config.outQ.put(f'Remove alias for user {thisUser.name}({thisUser.id}) on server {thisServer.name}({thisServer.id})? <y/N> ')
+        rawResponse = config.inQ.get()
+        response = rawResponse.content
 
         if response.lower() == 'y':
             removeUserAlias(thisAlias)
-            print('Alias removed.\n')
+            config.outQ.put('Alias removed.')
 
         else:
-            print('Cancelled.\n')
+            config.outQ.put('Cancelled.')
 
     else:
-        print('User alias not found.\n')
+        config.outQ.put('User alias not found.')
  
 def removeColorF(inputData, content):
     colorString = content[0]
     thisColor = tryGetOneColor(colorString)
 
     if thisColor:
-        response = input(f'Remove color {thisColor.name}({thisColor.id})? <y/N> ')
+        config.outQ.put(f'Remove color {thisColor.name}({thisColor.id})? <y/N> ')
+        rawResponse = config.inQ.get()
+        response = rawResponse.content
 
         if response.lower() == 'y':
             removeColor(thisColor)
-            print('Color removed.\n')
+            config.outQ.put('Color removed.')
 
         else:
-            print('Cancelled.\n')
+            config.outQ.put('Cancelled.')
 
     else:
-        print('Color not found.\n')
+        config.outQ.put('Color not found.')
 
 def editUserF(inputData, content):
     userdata = []
@@ -1448,13 +1460,13 @@ def editUserF(inputData, content):
 
         if goodProfile:
             updateUser(editUser)
-            print(f'Updated user {thisUser.name}.\n')
+            config.outQ.put(f'Updated user {thisUser.name}.')
 
         else:
-            print('Invalid attribute(s).\n')
+            config.outQ.put('Invalid attribute(s).')
 
     else:
-        print('User not found.\n')
+        config.outQ.put('User not found.')
 
 def editServerF(inputData, content):
     serverdata = []
@@ -1505,13 +1517,13 @@ def editServerF(inputData, content):
 
         if goodProfile:
             updateServer(editServer)
-            print(f'Updated server {thisServer.name}.\n')
+            config.outQ.put(f'Updated server {thisServer.name}.')
 
         else:
-            print('Invalid attribute(s).\n')
+            config.outQ.put('Invalid attribute(s).')
 
     else:
-        print('Server not found.\n')
+        config.outQ.put('Server not found.')
 
 def editUserAliasF(inputData, content):
     aliasdata = []
@@ -1568,16 +1580,16 @@ def editUserAliasF(inputData, content):
 
             if goodProfile:
                 updateUserAlias(editAlias)
-                print(f'Updated user alias for {thisUser.name} in server {thisServer.name}.\n')
+                config.outQ.put(f'Updated user alias for {thisUser.name} in server {thisServer.name}.')
 
             else:
-                print('Invalid attribute(s).\n')
+                config.outQ.put('Invalid attribute(s).')
 
         else:
-            print('Existing alias not found.\n')
+            config.outQ.put('Existing alias not found.')
 
     else:
-        print('User and/or server not found.\n')
+        config.outQ.put('User and/or server not found.')
 
 def editColorF(inputData, content):
     colordata = []
@@ -1617,32 +1629,31 @@ def editColorF(inputData, content):
 
         if goodProfile:
             updateColor(editColor)
-            print(f'Updated color {thisColor.name}.\n')
+            config.outQ.put(f'Updated color {thisColor.name}.')
 
         else:
-            print('Invalid attribute(s).\n')
+            config.outQ.put('Invalid attribute(s).')
 
     else:
-        print('Color not found.\n')
+        config.outQ.put('Color not found.')
 
 def showUserF(inputData, content):
     userString = ' '.join(content)
     thisUser = tryGetOneUser(userString)
 
     if thisUser:
-        print(f'Name = {thisUser.name}')
-        print(f'ID = {thisUser.id}')
-        print(f'Country = {thisUser.country}')
-        print(f'Timezone = {thisUser.tz}')
-        print(f'Birthday = {thisUser.bday}')
-        print(f'Bot Rank = {thisUser.botRank}')
-        print('')
-        print('User aliases:')
+        config.outQ.put(f'Name = {thisUser.name}')
+        config.outQ.put(f'ID = {thisUser.id}')
+        config.outQ.put(f'Country = {thisUser.country}')
+        config.outQ.put(f'Timezone = {thisUser.tz}')
+        config.outQ.put(f'Birthday = {thisUser.bday}')
+        config.outQ.put(f'Bot Rank = {thisUser.botRank}')
+        config.outQ.put('')
+        config.outQ.put('User aliases:')
         listUserAliasF(content)
-        print('\n')
 
     else:
-        print('User not found.\n')
+        config.outQ.put('User not found.')
 
 def showUserAliasF(inputData, content):
     userString = content[0]
@@ -1655,42 +1666,42 @@ def showUserAliasF(inputData, content):
         thisAlias = getUserAlias(thisUser, thisServer)
 
         if thisAlias:
-            print(f'User = {thisUser.name}')
-            print(f'Server = {thisServer.name}')
-            print(f'Nickname = {thisAlias.nick}')
-            print(f'Color = {thisAlias.color}')
-            print(f'Local Rank = {thisAlias.localrank}')
+            config.outQ.put(f'User = {thisUser.name}')
+            config.outQ.put(f'Server = {thisServer.name}')
+            config.outQ.put(f'Nickname = {thisAlias.nick}')
+            config.outQ.put(f'Color = {thisAlias.color}')
+            config.outQ.put(f'Local Rank = {thisAlias.localrank}')
 
         else:
-            print('No alias found.\n')
+            config.outQ.put('No alias found.')
 
     else:
-        print('User and/or server not found.\n')
+        config.outQ.put('User and/or server not found.')
 
 def showServerF(inputData, content):
     serverString = ' '.join(content)
     thisServer = tryGetOneServer(serverString)
 
     if thisServer:
-        print(f'Name = {thisServer.name}')
-        print(f'ID = {thisServer.id}')
-        print(f'Trigger = {thisServer.trigger}')
-        print(f'Timezone = {thisServer.tz}')
+        config.outQ.put(f'Name = {thisServer.name}')
+        config.outQ.put(f'ID = {thisServer.id}')
+        config.outQ.put(f'Trigger = {thisServer.trigger}')
+        config.outQ.put(f'Timezone = {thisServer.tz}')
     
     else:
-        print('Server not found.\n')
+        config.outQ.put('Server not found.')
 
 def showColorF(inputData, content):
     colorString = ' '.join(content)
     thisColor = tryGetOneColor(colorString)
 
     if thisColor:
-        print(f'Name = {thisColor.name}')
-        print(f'ID = {thisColor.id}')
-        print(f'Code = {thisColor.code}')
+        config.outQ.put(f'Name = {thisColor.name}')
+        config.outQ.put(f'ID = {thisColor.id}')
+        config.outQ.put(f'Code = {thisColor.code}')
     
     else:
-        print('Color not found.\n')
+        config.outQ.put('Color not found.')
 
 def listUserF(inputData):
     DB = config.database
@@ -1703,11 +1714,16 @@ def listUserF(inputData):
         results = cursor.fetchall()
         conn.close()
 
-        for each in results:
-            thisUser = getUser(each[0])
-            print(thisUser.name)
+        output_text = ''
 
-        print('')
+        for i, each in enumerate(results):
+            if i:
+                output_text += '\n'
+        
+            thisUser = getUser(each[0])
+            output_text += thisUser.name
+
+        config.outQ.put(output_text)
 
 def listUserAliasF(inputData, content):
     userString = ' '.join(content)
@@ -1726,14 +1742,19 @@ def listUserAliasF(inputData, content):
             results = cursor.fetchall()
             conn.close()
 
-            for each in results:
-                thisServer = getServer(each[0])
-                print(thisServer.name)
+            output_text = ''
 
-            print('')
+            for i, each in enumerate(results):
+                if i:
+                    output_text += '\n'
+        
+                thisServer = getServer(each[0])
+                output_text += thisServer.name
+
+            config.outQ.put(output_text)
 
     else:
-        print('User not found.\n')
+        config.outQ.put('User not found.')
 
 def listServerF(inputData):
     DB = config.database
@@ -1746,11 +1767,16 @@ def listServerF(inputData):
         results = cursor.fetchall()
         conn.close()
 
-        for each in results:
-            thisServer = getServer(each[0])
-            print(thisServer.name)
+        output_text = ''
 
-        print('')
+        for i, each in enumerate(results):
+            if i:
+                output_text += '\n'
+    
+            thisServer = getServer(each[0])
+            output_text += thisServer.name
+
+        config.outQ.put(output_text)
 
 def listColorF(inputData):
     DB = config.database
@@ -1763,103 +1789,131 @@ def listColorF(inputData):
         results = cursor.fetchall()
         conn.close()
 
-        for each in results:
-            thisColor = getColor(each[0])
-            print(thisColor.name)
+        output_text = ''
 
-        print('')
+        for i, each in enumerate(results):
+            if i:
+                output_text += '\n'
+    
+            thisColor = getColor(each[0])
+            output_text += thisColor.name
+
+        config.outQ.put(output_text)
 
 def listTimezoneF(inputData):
-    for value in pytz.all_timezones:
-        print(value)
+    output_text = ''
 
-    print('')
+    for i, each in enumerate(pytz.all_timezones):
+        if i:
+            output_text += '\n'
+
+        output_text += each
+
+    config.outQ.put(output_text)
 
 def timeF(inputData):
-    print(f'The current time is {getTime()}.\n')
+    config.outQ.put(f'The current time is {getTime()}.')
 
 def timeForF(inputData, content):
     userString = ' '.join(content)
     thisUser = tryGetOneUser(userString)
 
     if thisUser:
-        print(f'The current time for {thisUser.goesby()} in the {thisUser.tz} timezone is {thisUser.now()}.\n')
+        config.outQ.put(f'The current time for {thisUser.goesby()} in the {thisUser.tz} timezone is {thisUser.now()}.')
 
     else:
-        print('Unknown user.\n')
+        config.outQ.put('Unknown user.')
 
 def findUserNameF(inputData, content):
     userString = ' '.join(content)
     results = searchUserbyName(userString)
     if results:
+        output_text = ''
         if len(results) == 1:
-            print('One user found:')
+            output_text += 'One user found:\n'
 
         else:
-            print(f'{len(results)} users found:')
+            output_text += f'{len(results)} users found:\n'
 
-        for each in results:
-            print(each.name)
+        for i, each in enumerate(results):
+            if i:
+                output_text += '\n'
+    
+            output_text += each.name
 
-        print('')
-        
+        config.outQ.put(output_text)
+
     else:
-        print('No users found!\n')
+        config.outQ.put('No users found!')
 
 def findUserCountryF(inputData, content):
     countryString = ' '.join(content)
     results = searchUserbyCountry(countryString)
     if results:
+        output_text = ''
         if len(results) == 1:
-            print('One user found:')
+            output_text += 'One user found:\n'
 
         else:
-            print(f'{len(results)} users found:')
+            output_text += f'{len(results)} users found:\n'
 
-        for each in results:
-            print(each.name)
+        for i, each in enumerate(results):
+            if i:
+                output_text += '\n'
+    
+            output_text += each.name
 
-        print('')
-        
+        config.outQ.put(output_text)
+
     else:
-        print('No users found!\n')
-
+        config.outQ.put('No users found!')
+        
 def findUserTimezoneF(inputData, content):
     timezoneString = ' '.join(content)
     results = searchUserbyTimezone(timezoneString)
+
     if results:
+        output_text = ''
         if len(results) == 1:
-            print('One user found:')
+            output_text += 'One user found:\n'
 
         else:
-            print(f'{len(results)} users found:')
+            output_text += f'{len(results)} users found:\n'
 
-        for each in results:
-            print(each.name)
+        for i, each in enumerate(results):
+            if i:
+                output_text += '\n'
+    
+            output_text += each.name
 
-        print('')
-        
+        config.outQ.put(output_text)
+
     else:
-        print('No users found!\n')
-
+        config.outQ.put('No users found!')
+        
 def findUserBirthdayF(inputData, content):
     birthdayString = ' '.join(content)
     results = searchUserbyBirthday(birthdayString)
+
     if results:
+        output_text = ''
         if len(results) == 1:
-            print('One user found:')
+            output_text += 'One user found:\n'
 
         else:
-            print(f'{len(results)} users found:')
+            output_text += f'{len(results)} users found:\n'
 
-        for each in results:
-            print(each.name)
+        for i, each in enumerate(results):
+            if i:
+                output_text += '\n'
+    
+            output_text += each.name
 
-        print('')
-        
+        config.outQ.put(output_text)
+
     else:
-        print('No users found!\n')
-
+        config.outQ.put('No users found!')
+        
 def findUserColorF(inputData, content):
     serverString = content[0]
     colorString = ' '.join(content[1])
@@ -1871,100 +1925,121 @@ def findUserColorF(inputData, content):
             results = searchUserbyColor(thisColor, thisServer)
 
             if results:
-                if len(results) > 1:
-                    print(f'{len(results)} users found:')
+                output_text = ''
+                if len(results) == 1:
+                    output_text += 'One user found:\n'
 
                 else:
-                    print('One user found:')
+                    output_text += f'{len(results)} users found:\n'
 
-                for each in results:
-                    print(each.name)
+                for i, each in enumerate(results):
+                    if i:
+                        output_text += '\n'
+    
+                    output_text += each.name
 
-                print('')
-                
+                config.outQ.put(output_text)
+
             else:
-                print('No users found.\n')
-
+                config.outQ.put('No users found!')
+        
         else:
-            print('Unknown color.\n')
+            config.outQ.put('Unknown color.')
 
     else:
-        print('Unknown server.\n')
+        config.outQ.put('Unknown server.')
 
 def findServerNameF(inputData, content):
     serverString = ' '.join(content)
     results = searchServerbyName(serverString)
 
     if results:
+        output_text = ''
         if len(results) == 1:
-            print('One server found:')
+            output_text += 'One server found:\n'
 
         else:
-            print(f'{len(results)} servers found:')
+            output_text += f'{len(results)} servers found:\n'
 
-        for each in results:
-            print(each.name)
+        for i, each in enumerate(results):
+            if i:
+                output_text += '\n'
+    
+            output_text += each.name
 
-        print('')
-        
+        config.outQ.put(output_text)
+
     else:
-        print('No servers found!\n')
-
+        config.outQ.put('No servers found!')
+        
 def findServerTimezoneF(inputData, content):
     timezoneString = ' '.join(content)
     results = searchServerbyTimezone(timezoneString)
 
     if results:
+        output_text = ''
         if len(results) == 1:
-            print('One server found:')
+            output_text += 'One server found:\n'
 
         else:
-            print(f'{len(results)} servers found:')
+            output_text += f'{len(results)} servers found:\n'
 
-        for each in results:
-            print(each.name)
+        for i, each in enumerate(results):
+            if i:
+                output_text += '\n'
+    
+            output_text += each.name
 
-        print('')
-        
+        config.outQ.put(output_text)
+
     else:
-        print('No servers found!\n')
+        config.outQ.put('No servers found!')
 
 def findTimezoneF(inputData, content):
     timezoneString = ' '.join(content)
     results = searchTimezonebyName(timezoneString)
-
+    
     if results:
+        output_text = ''
         if len(results) == 1:
-            print('One timezone found:')
+            output_text += 'One timezone found:\n'
 
         else:
-            print(f'{len(results)} timezones found:')
+            output_text += f'{len(results)} timezones found:\n'
 
-        for each in results:
-            print(each)
+        for i, each in enumerate(results):
+            if i:
+                output_text += '\n'
+    
+            output_text += each
 
-        print('')
-        
+        config.outQ.put(output_text)
+
     else:
-        print('No timezones found!\n')
+        config.outQ.put('No timezones found!')
 
 def findColorF(inputData, content):
     colorString = ' '.join(content)
     results = searchColorbyName(colorString)
+
     if results:
+        output_text = ''
         if len(results) == 1:
-            print('One color found:')
+            output_text += 'One color found:\n'
 
         else:
-            print(f'{len(results)} colors found:')
+            output_text += f'{len(results)} colors found:\n'
 
-        for each in results:
-            print(each.name)
+        for i, each in enumerate(results):
+            if i:
+                output_text += '\n'
+    
+            output_text += each.name
 
-        print('')
-        
+        config.outQ.put(output_text)
+
     else:
-        print('No colors found!\n')
+        config.outQ.put('No colors found!')
 
 if __name__ == "__main__":
     print("No main.")
