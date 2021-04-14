@@ -1,5 +1,4 @@
 import sys
-
 from core import config
 from core.commandM import command
 from core import DBM
@@ -60,11 +59,15 @@ def setAlias():
         return None
 
 def login():
+    #outQ.put('User: ')
+    #userText = inQ.get()
     userText = input('User: ')
 
     setUser(userText)
 
     if currentUser:
+        #outQ.put('Server: ')
+        #serverText = inQ.get()
         serverText = input('Server: ')
 
         setServer(serverText)
@@ -73,6 +76,7 @@ def login():
             setAlias()
 
             if currentAlias:
+                #outQ.put('\nLogged in as {} on server {}.\n'.format(currentUser.name, currentServer.name))
                 print('\nLogged in as {} on server {}.\n'.format(currentUser.name, currentServer.name))
 
             else:
