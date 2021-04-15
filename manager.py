@@ -1,55 +1,56 @@
 import multiprocessing
 import threading
-import time
 
 from core import *
 from ext import *
 
 def inM():
-    while True:
+    while config.running.is_set():
         input_text = input()
         thisMessage = commandM.fullMessageData(sesMan.currentUser, sesMan.currentServer, input_text)
         config.inQ.put(thisMessage)
 
 def outM():
-    while True:
+    while config.running.is_set():
         if not config.outQ.empty():
             output_text = config.outQ.get()
             if output_text:
                 print(f'\n{output_text}\n')
 
 def debugM():
-    while True:
+    while config.running.is_set():
         if not config.debugQ.empty():
             debug_text = config.debugQ.get()
-            print(f'\n>>>>>>>>>>>>>>>>>>\n{debug_text}\n<<<<<<<<<<<<<<<<<<\n')
+            if debug_text:
+                print(f'\n>>>>>>>>>>>>>>>>>>\n{debug_text}\n<<<<<<<<<<<<<<<<<<\n')
 
 def terminal():
     try:
         mProcesses = []
+        config.running = multiprocessing.Event() 
+        config.running.set()
         inThread = threading.Thread(target=inM, daemon=True)
-        outThread = threading.Thread(target=outM, daemon=True)
-        debugThread = threading.Thread(target=debugM, daemon=True)
-        debugThread.start()
+        outThread = threading.Thread(target=outM)
+        debugThread = threading.Thread(target=debugM)
         mailroom = multiprocessing.Process(target=commandM.readM)
+        debugThread.start()
 
-        ready = False
+        loggedin = False
 
-        while True:
-
+        while config.running.is_set():
             if sesMan.currentAlias:
-                if not ready:
+                if not loggedin:
                     inThread.start()
                     outThread.start()
                     mailroom.start()
-                    ready = True
+                    loggedin = True
 
             else:
-                if ready:
+                if loggedin:
                     inThread.join()
                     outThread.join()
                     debugThread.join()
-                    ready = False
+                    loggedin = False
 
                 print('Welcome to testBot! Please choose login or exit.')
 
@@ -67,18 +68,13 @@ def terminal():
                 else:
                     print('\nUnknown command!\n')
 
+
     finally:
-        inThread.join()
+        if config.running.is_set():
+            contrigM.moduleCleanup()
+        mailroom.join()
         outThread.join()
         debugThread.join()
-        mailroom.join()
-        contrigM.moduleCleanup()
-        config.inQ.close()
-        config.inQ.join_thread()
-        config.outQ.close()
-        config.outQ.join_thread()
-        config.debugQ.close()
-        config.debugQ.join_thread()
 
 if __name__ == "__main__":
     terminal()

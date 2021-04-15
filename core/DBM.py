@@ -1642,15 +1642,18 @@ def showUserF(inputData, content):
     thisUser = tryGetOneUser(userString)
 
     if thisUser:
-        config.outQ.put(f'Name = {thisUser.name}')
-        config.outQ.put(f'ID = {thisUser.id}')
-        config.outQ.put(f'Country = {thisUser.country}')
-        config.outQ.put(f'Timezone = {thisUser.tz}')
-        config.outQ.put(f'Birthday = {thisUser.bday}')
-        config.outQ.put(f'Bot Rank = {thisUser.botRank}')
-        config.outQ.put('')
-        config.outQ.put('User aliases:')
-        listUserAliasF(content)
+        output_text = ''
+        output_text += (f'Name = {thisUser.name}\n')
+        output_text += (f'ID = {thisUser.id}\n')
+        output_text += (f'Country = {thisUser.country}\n')
+        output_text += (f'Timezone = {thisUser.tz}\n')
+        output_text += (f'Birthday = {thisUser.bday}\n')
+        output_text += (f'Bot Rank = {thisUser.botrank}\n')
+        output_text += ('\n')
+        output_text += ('User aliases:')
+
+        config.outQ.put(output_text)
+        listUserAliasF(inputData, content)
 
     else:
         config.outQ.put('User not found.')
@@ -1666,11 +1669,14 @@ def showUserAliasF(inputData, content):
         thisAlias = getUserAlias(thisUser, thisServer)
 
         if thisAlias:
-            config.outQ.put(f'User = {thisUser.name}')
-            config.outQ.put(f'Server = {thisServer.name}')
-            config.outQ.put(f'Nickname = {thisAlias.nick}')
-            config.outQ.put(f'Color = {thisAlias.color}')
-            config.outQ.put(f'Local Rank = {thisAlias.localrank}')
+            output_text = ''
+            output_text += (f'User = {thisUser.name}\n')
+            output_text += (f'Server = {thisServer.name}\n')
+            output_text += (f'Nickname = {thisAlias.nick}\n')
+            output_text += (f'Color = {thisAlias.color}\n')
+            output_text += (f'Local Rank = {thisAlias.localrank}')
+
+            config.outQ.put(output_text)
 
         else:
             config.outQ.put('No alias found.')
@@ -1683,11 +1689,14 @@ def showServerF(inputData, content):
     thisServer = tryGetOneServer(serverString)
 
     if thisServer:
-        config.outQ.put(f'Name = {thisServer.name}')
-        config.outQ.put(f'ID = {thisServer.id}')
-        config.outQ.put(f'Trigger = {thisServer.trigger}')
-        config.outQ.put(f'Timezone = {thisServer.tz}')
-    
+        output_text = ''
+        output_text += (f'Name = {thisServer.name}\n')
+        output_text += (f'ID = {thisServer.id}\n')
+        output_text += (f'Trigger = {thisServer.trigger}\n')
+        output_text += (f'Timezone = {thisServer.tz}')
+
+        config.outQ.put(output_text)
+
     else:
         config.outQ.put('Server not found.')
 
@@ -1696,10 +1705,11 @@ def showColorF(inputData, content):
     thisColor = tryGetOneColor(colorString)
 
     if thisColor:
-        config.outQ.put(f'Name = {thisColor.name}')
-        config.outQ.put(f'ID = {thisColor.id}')
-        config.outQ.put(f'Code = {thisColor.code}')
-    
+        output_text = ''
+        output_text += (f'Name = {thisColor.name}\n')
+        output_text += (f'ID = {thisColor.id}\n')
+        output_text += (f'Code = {thisColor.code}')
+
     else:
         config.outQ.put('Color not found.')
 

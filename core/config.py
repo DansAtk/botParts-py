@@ -1,16 +1,12 @@
 import pathlib
 import multiprocessing
-
-#class interface:
-    #def __init__(self, IN=None, OUT=None, DEBUG=None):
-        #self.inQ = IN
-        #self.outQ = OUT
-        #self.debugQ = DEBUG
+import time
 
 inQ = None
 outQ = None
 debugQ = None
-#mainInterface = (inQ, outQ, debugQ)
+
+running = None
 
 settings = {'dbversion' : '0.3'}
 
