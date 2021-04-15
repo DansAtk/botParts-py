@@ -97,78 +97,79 @@ class fullMessageData(messageData):
 
 # Utility function for reading incoming text and parsing it for both a valid trigger and valid commands across all imported botParts modules. If a valid command is found, its associated function is executed and passed the remainder of the input text as arguments.
 def readM():
-    while True:
-        if not config.inQ.empty():
-            thisMessage = config.inQ.get()
+    while config.running:
+        if config.inQ:
+            if not config.inQ.empty():
+                thisMessage = config.inQ.get(block=True, timeout=0.01)
 
-            doRead = False
-            if thisMessage.server.trigger and len(thisMessage.server.trigger) > 0:
-                if thisMessage.content.startswith(thisMessage.server.trigger):
-                    fullText = thisMessage.content.split(thisMessage.server.trigger, 1)[1] 
+                doRead = False
+                if thisMessage.server.trigger and len(thisMessage.server.trigger) > 0:
+                    if thisMessage.content.startswith(thisMessage.server.trigger):
+                        fullText = thisMessage.content.split(thisMessage.server.trigger, 1)[1] 
 
+                        doRead = True
+
+                else:
+                    fullText = thisMessage.content
+                    
                     doRead = True
 
-            else:
-                fullText = thisMessage.content
-                
-                doRead = True
+                if doRead:
+                    commandText = fullText.split(' ')
+                    fullCommand = []
+                    quoteText = None
+                    for parameter in commandText:
+                        if '"' in parameter and not quoteText:
+                            if parameter.endswith('"'):
+                                fullCommand.append(parameter)
+                            else:
+                                quoteText = parameter
 
-            if doRead:
-                commandText = fullText.split(' ')
-                fullCommand = []
-                quoteText = None
-                for parameter in commandText:
-                    if '"' in parameter and not quoteText:
-                        if parameter.endswith('"'):
-                            fullCommand.append(parameter)
-                        else:
-                            quoteText = parameter
-
-                    elif parameter.endswith('"') and quoteText:
-                        quoteText = f'{quoteText} {parameter}'
-                        fullCommand.append(quoteText)
-                        quoteText = None
-
-                    else:
-                        if quoteText:
+                        elif parameter.endswith('"') and quoteText:
                             quoteText = f'{quoteText} {parameter}'
+                            fullCommand.append(quoteText)
+                            quoteText = None
 
                         else:
-                            fullCommand.append(parameter)
+                            if quoteText:
+                                quoteText = f'{quoteText} {parameter}'
 
-                if quoteText:
-                    fullCommand.append(quoteText)
+                            else:
+                                fullCommand.append(parameter)
 
-                valid = False
+                    if quoteText:
+                        fullCommand.append(quoteText)
 
-                for module in config.imports:
-                    pack = sys.modules[module]
+                    valid = False
 
-                    i = 0
-                    while (i < len(fullCommand)) and (fullCommand[i].lower() in pack.includes.keys()):
-                        pack = pack.includes[fullCommand[i].lower()]
-                        i += 1
+                    for module in config.imports:
+                        pack = sys.modules[module]
 
-                    if i > 0:
-                        valid = True
+                        i = 0
+                        while (i < len(fullCommand)) and (fullCommand[i].lower() in pack.includes.keys()):
+                            pack = pack.includes[fullCommand[i].lower()]
+                            i += 1
 
-                        if ' '.join(fullCommand[i:]).lower() == 'help':
-                            config.debugQ.put(f'{pack.help()}')
-                        else:
-                            inputData = messageData()
-                            content = None
+                        if i > 0:
+                            valid = True
 
-                            if thisMessage.user:
-                                inputData.user = thisMessage.user
-                            if thisMessage.server:
-                                inputData.server = thisMessage.server
-                            if len(fullCommand[i:]) > 0:
-                                content = fullCommand[i:]
+                            if ' '.join(fullCommand[i:]).lower() == 'help':
+                                config.debugQ.put(f'{pack.help()}')
+                            else:
+                                inputData = messageData()
+                                content = None
 
-                            pack.execute(inputData, content)
+                                if thisMessage.user:
+                                    inputData.user = thisMessage.user
+                                if thisMessage.server:
+                                    inputData.server = thisMessage.server
+                                if len(fullCommand[i:]) > 0:
+                                    content = fullCommand[i:]
 
-                if valid == False:
-                    config.debugQ.put('Invalid command!')
+                                pack.execute(inputData, content)
+
+                    if valid == False:
+                        config.debugQ.put('Invalid command!')
 
 # Use registerCommands() to declare and set up commands, and register them with the module's dictionary so they can be found by the bot. Command objects can be denoted with a C at the end as a naming convention.
 def registerCommands():
