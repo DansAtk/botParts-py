@@ -1,5 +1,6 @@
 import sys
 import multiprocessing
+import time
 import json
 
 from core import config
@@ -83,23 +84,13 @@ def shutdownF(inputData=None):
     moduleCleanup()
 
 def moduleCleanup():
-    config.running.clear()
-    config.debugQ.put('Beginning cleanup...')
+    config.debugQ.put('Cleaning up modules...')
 
     for module in config.imports:
         if hasattr(sys.modules[module], 'cleanup'):
             sys.modules[module].cleanup()
-    config.debugQ.put('Done!')
 
-    config.inQ.close()
-    config.inQ.join_thread()
-    config.outQ.close()
-    config.outQ.join_thread()
-    config.debugQ.close()
-    config.debugQ.join_thread()
-
-    print('Queues closed!')
-    sys.exit()
+    config.running.clear()
 
 def cleanup():
     pushF()
@@ -107,8 +98,5 @@ def cleanup():
 if __name__ == "__main__":
     print('For controlling bot state and configuration, and handling graceful startup and shutdown. No main.')
 else:
-    config.inQ = multiprocessing.Queue()
-    config.outQ = multiprocessing.Queue()
-    config.debugQ = multiprocessing.Queue()
     registerCommands()
     pullF()
