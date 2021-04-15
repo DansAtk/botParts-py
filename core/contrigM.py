@@ -80,14 +80,26 @@ def defaultTriggerF(inputData, content):
         config.outQ.put('Please limit the trigger to a single character or small group of characters with no whitespace.')
 
 def shutdownF(inputData=None):
-    sys.exit()
+    moduleCleanup()
 
 def moduleCleanup():
+    config.running.clear()
     config.debugQ.put('Beginning cleanup...')
+
     for module in config.imports:
         if hasattr(sys.modules[module], 'cleanup'):
             sys.modules[module].cleanup()
     config.debugQ.put('Done!')
+
+    config.inQ.close()
+    config.inQ.join_thread()
+    config.outQ.close()
+    config.outQ.join_thread()
+    config.debugQ.close()
+    config.debugQ.join_thread()
+
+    print('Queues closed!')
+    sys.exit()
 
 def cleanup():
     pushF()
