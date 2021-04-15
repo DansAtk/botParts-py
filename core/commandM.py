@@ -97,10 +97,10 @@ class fullMessageData(messageData):
 
 # Utility function for reading incoming text and parsing it for both a valid trigger and valid commands across all imported botParts modules. If a valid command is found, its associated function is executed and passed the remainder of the input text as arguments.
 def readM():
-    while config.running:
-        if config.inQ:
+    while config.running.is_set():
+        if config.login.is_set():
             if not config.inQ.empty():
-                thisMessage = config.inQ.get(block=True, timeout=0.01)
+                thisMessage = config.inQ.get()
 
                 doRead = False
                 if thisMessage.server.trigger and len(thisMessage.server.trigger) > 0:

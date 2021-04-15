@@ -1,4 +1,5 @@
 import sys
+import time
 from core import config
 from core.commandM import command
 from core import DBM
@@ -58,17 +59,25 @@ def setAlias():
     else:
         return None
 
+def clearAll():
+    global currentUser
+    global currentServer
+    global currentAlias
+
+    currentUser = None
+    currentServer = None
+    currentAlias = None
+
 def login():
-    #outQ.put('User: ')
-    #userText = inQ.get()
-    userText = input('User: ')
+    config.outQ.put('User: ')
+    time.sleep(0.5)
+    userText = config.promptQ.get()
 
     setUser(userText)
 
     if currentUser:
-        #outQ.put('Server: ')
-        #serverText = inQ.get()
-        serverText = input('Server: ')
+        config.outQ.put('Server: ')
+        serverText = config.promptQ.get()
 
         setServer(serverText)
 
@@ -76,17 +85,19 @@ def login():
             setAlias()
 
             if currentAlias:
-                #outQ.put('\nLogged in as {} on server {}.\n'.format(currentUser.name, currentServer.name))
-                print('\nLogged in as {} on server {}.\n'.format(currentUser.name, currentServer.name))
+                config.outQ.put(f'Logged in as {currentUser.name} on server {currentServer.name}.')
 
             else:
-                print('\nError: User {} has no alias on server {}.\n'.format(currentUser.name, currentServer.name))
+                config.outQ.put(f'Error: User {currentUser.name} has no alias on server {currentServer.name}.')
+                config.login.clear()
 
         else:
-            print('\nError: Server not found!\n')
+            config.outQ.put('Error: Server not found!')
+            config.login.clear()
 
     else:
-        print('\nError: User not found!\n')
+        config.outQ.put('Error: User not found!')
+        config.login.clear()
 
 def registerCommands():
     global sessionC
@@ -119,24 +130,22 @@ def registerCommands():
     serverTriggerC.function = 'serverTriggerF'
     
 def sessionLogoutF(inputData):
-    global currentUser
-    global currentServer
-    global currentAlias
+    config.login.clear()
 
-    currentUser = None
-    currentServer = None
-    currentAlias = None
-
-    print('\nLogged out!\n\n\n')
+    config.outQ.put('Logged out!')
 
 def serverF(inputData):
     global currentServer
 
     if currentServer:
-        print(f'Server {currentServer.id}:')
-        print(f'Name: {currentServer.name}')
-        print(f'Timezone: {currentServer.tz}')
-        print(f'Trigger: {currentServer.trigger}\n')
+        out_text = ''
+
+        out_text += (f'Server {currentServer.id}:\n')
+        out_text += (f'Name: {currentServer.name}\n')
+        out_text += (f'Timezone: {currentServer.tz}\n')
+        out_text += (f'Trigger: {currentServer.trigger}')
+
+        config.outQ.put(out_text)
 
 def serverTriggerF(inputData, content):
     global currentServer
@@ -147,25 +156,25 @@ def serverTriggerF(inputData, content):
             if currentServer.trigger:
                 currentServer.trigger = None
                 setTrigger = True
-                print('Server trigger has been removed.\n')
+                config.outQ.put('Server trigger has been removed.')
 
             else:
-                print('Server trigger is already set to \'None\'\n')
+                config.outQ.put('Server trigger is already set to \'None\'')
 
         else:
             if len(content[0]) < 3:
                 if len(content[0]) > 0:
                     currentServer.trigger = content[0]
                     setTrigger = True
-                    print(f'Server trigger has been set to {content[0]}\n')
+                    config.outQ.put(f'Server trigger has been set to {content[0]}')
 
                 else:
-                    print('Please specify at least one character for a trigger.\n')
+                    config.outQ.put('Please specify at least one character for a trigger.')
 
             else:
-                print('Try a shorter trigger.\n')
+                config.outQ.put('Try a shorter trigger.')
     else:
-        print('Please limit the trigger to a single character or small group of characters with no whitespace.\n')
+        config.outQ.put('Please limit the trigger to a single character or small group of characters with no whitespace.')
 
     if setTrigger:
         DBM.updateServer(currentServer)
