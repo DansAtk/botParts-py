@@ -5,8 +5,10 @@ import time
 inQ = None
 outQ = None
 debugQ = None
+promptQ = None
 
 running = None
+login = None
 
 settings = {'dbversion' : '0.3'}
 
