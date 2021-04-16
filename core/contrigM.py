@@ -11,32 +11,36 @@ includes = {}
 config.imports.append(__name__)
 
 def registerCommands():
-    global pushC
-    pushC = command('push', mSelf)
-    pushC.description = 'Pushes the current default settings to a file to make it persistent.'
-    pushC.function = 'pushF'
-    global pullC
-    pullC = command('pull', mSelf)
-    pullC.description = 'Pulls the persistent settings from a file.'
-    pullC.function = 'pullF'
-    global defaultC
-    defaultC = command('default', mSelf)
-    defaultC.description = 'Used to alter default settings.'
-    defaultC.instruction = 'Specify a parameter. By itself displays the current settings.'
-    defaultC.function = 'defaultF'
-    global defaultTriggerC
-    defaultTriggerC = command('trigger', defaultC)
-    defaultTriggerC.description = 'Used to alter the default trigger.'
-    defaultTriggerC.instruction = 'Specify a new trigger.'
-    defaultTriggerC.function = 'defaultTriggerF'
-    global shutdownC
-    shutdownC = command('shutdown', mSelf)
-    shutdownC.description = 'Closes the bot gracefully.'
-    shutdownC.function = 'shutdownF'
-    includes.update({'exit' : shutdownC})
-    includes.update({'quit' : shutdownC})
+    global botC
+    botC = command('bot', mSelf)
+    botC.description = 'Bot controls and monitoring. Usable by bot owner only.'
+    botC.function = 'botF'
+    global botConfigC
+    botConfigC = command('config', botC)
+    botConfigC.description = 'Used to manage the bot\'s default configuration.'
+    botConfigC.instruction = 'Specify a parameter. By itself displays the current config.'
+    botConfigC.function = 'botConfigF'
+    global botConfigPushC
+    botConfigPushC = command('push', botConfigC)
+    botConfigPushC.description = 'Pushes the current default config to a file.'
+    botConfigPushC.function = 'botConfigPushF'
+    global botConfigPullC
+    botConfigPullC = command('pull', botConfigC)
+    botConfigPullC.description = 'Imports default config from a file.'
+    botConfigPullC.function = 'botConfigPullF'
+    global botConfigTriggerC
+    botConfigTriggerC = command('trigger', botConfigC)
+    botConfigTriggerC.description = 'Used to alter the default trigger.'
+    botConfigTriggerC.instruction = 'Specify a new trigger.'
+    botConfigTriggerC.function = 'botConfigTriggerF'
+    global botShutdownC
+    botShutdownC = command('shutdown', botC)
+    botShutdownC.description = 'Closes the bot gracefully.'
+    botShutdownC.function = 'botShutdownF'
+    includes.update({'exit' : botShutdownC})
+    includes.update({'quit' : botShutdownC})
 
-def pushF(inputData=None):
+def botConfigPushF(inputData=None):
     config.debugQ.put('Pushing config to file...')
     try:
         with open(config.conFile, 'w') as conf:
@@ -45,7 +49,7 @@ def pushF(inputData=None):
     except:
         config.debugQ.put('Failure!')
 
-def pullF(inputData=None):
+def botConfigPullF(inputData=None):
     config.debugQ.put('Pulling config from file...')
     try:
         with open(config.conFile, 'r') as conf:
@@ -54,7 +58,7 @@ def pullF(inputData=None):
     except FileNotFoundError:
         config.debugQ.put('No config file found!')
 
-def defaultTriggerF(inputData, content):
+def botConfigTriggerF(inputData, content):
     triggerText = content[0]
 
     if len(triggerText) == 1:
@@ -80,7 +84,7 @@ def defaultTriggerF(inputData, content):
     else:
         config.outQ.put('Please limit the trigger to a single character or small group of characters with no whitespace.')
 
-def shutdownF(inputData=None):
+def botShutdownF(inputData=None):
     moduleCleanup()
 
 def moduleCleanup():
@@ -93,10 +97,10 @@ def moduleCleanup():
     config.running.clear()
 
 def cleanup():
-    pushF()
+    botConfigPushF()
 
 if __name__ == "__main__":
     print('For controlling bot state and configuration, and handling graceful startup and shutdown. No main.')
 else:
     registerCommands()
-    pullF()
+    botConfigPullF()
