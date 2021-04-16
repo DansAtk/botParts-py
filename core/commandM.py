@@ -3,7 +3,18 @@
 # botParts requires sys, commandM and config to be imported by all modules.
 import sys
 import inspect
+import concurrent.futures
+
 from core import config
+
+if not config.inQ:
+    config.inQ = Queue()
+
+if not config.outQ:
+    config.outQ = Queue()
+
+if not config.debugQ:
+    config.debugQ = Queue()
 
 # These lines are also required by all botParts modules for the module to register itself with the bot and set up its own dictionary of commands. Defining mSelf as the current module makes it easier to define top-level module commands.
 
@@ -12,6 +23,31 @@ includes = {}
 config.imports.append(__name__)
 
 # The command class. Can be used to define top level commands and sub-commands/arguments/parameters. Every command must be given at least a name and a parent. All subcommand trees must lead back to a top level command that has the module itself as a parent.
+
+def manage_read_pool():
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        messageReaders = {}
+
+        while config.running.is_set():
+            done, not_done = concurrent.futures.wait(messageReaders, timeout=0.1, return_when=concurrent.futures.FIRST_COMPLETED)
+
+            while not config.inQ.empty():
+                inMessage = config.inQ.get()
+
+                messageReaders[executor.submit(readM, inMessage)] = inMessage
+
+            for future in done:
+                inMessage = messageReaders[future]
+
+                try:
+                    response = future.result()
+                except:
+                    print('F exception')
+                else:
+                    pass
+
+                del messageReaders[future]
+
 class command:
     def __init__(self, NAME, PARENT, DESCRIPTION=None, INSTRUCTION=None, FUNCTION=None, ENABLED=True, PERM=0):
         self.name = NAME
@@ -96,80 +132,76 @@ class fullMessageData(messageData):
 
 
 # Utility function for reading incoming text and parsing it for both a valid trigger and valid commands across all imported botParts modules. If a valid command is found, its associated function is executed and passed the remainder of the input text as arguments.
-def readM():
-    while config.running.is_set():
-        if config.login.is_set():
-            if not config.inQ.empty():
-                thisMessage = config.inQ.get()
+def readM(thisMessage):
+    doRead = False
+    if thisMessage.server.trigger and len(thisMessage.server.trigger) > 0:
+        if thisMessage.content.startswith(thisMessage.server.trigger):
+            fullText = thisMessage.content.split(thisMessage.server.trigger, 1)[1] 
 
-                doRead = False
-                if thisMessage.server.trigger and len(thisMessage.server.trigger) > 0:
-                    if thisMessage.content.startswith(thisMessage.server.trigger):
-                        fullText = thisMessage.content.split(thisMessage.server.trigger, 1)[1] 
+            doRead = True
 
-                        doRead = True
+    else:
+        fullText = thisMessage.content
+        
+        doRead = True
+
+    if doRead:
+        commandText = fullText.split(' ')
+        fullCommand = []
+        quoteText = None
+        for parameter in commandText:
+            if '"' in parameter and not quoteText:
+                if parameter.endswith('"'):
+                    fullCommand.append(parameter)
+                else:
+                    quoteText = parameter
+
+            elif parameter.endswith('"') and quoteText:
+                quoteText = f'{quoteText} {parameter}'
+                fullCommand.append(quoteText)
+                quoteText = None
+
+            else:
+                if quoteText:
+                    quoteText = f'{quoteText} {parameter}'
 
                 else:
-                    fullText = thisMessage.content
-                    
-                    doRead = True
+                    fullCommand.append(parameter)
 
-                if doRead:
-                    commandText = fullText.split(' ')
-                    fullCommand = []
-                    quoteText = None
-                    for parameter in commandText:
-                        if '"' in parameter and not quoteText:
-                            if parameter.endswith('"'):
-                                fullCommand.append(parameter)
-                            else:
-                                quoteText = parameter
+        if quoteText:
+            fullCommand.append(quoteText)
 
-                        elif parameter.endswith('"') and quoteText:
-                            quoteText = f'{quoteText} {parameter}'
-                            fullCommand.append(quoteText)
-                            quoteText = None
+        valid = False
 
-                        else:
-                            if quoteText:
-                                quoteText = f'{quoteText} {parameter}'
+        for module in config.imports:
+            pack = sys.modules[module]
 
-                            else:
-                                fullCommand.append(parameter)
+            i = 0
+            while (i < len(fullCommand)) and (fullCommand[i].lower() in pack.includes.keys()):
+                pack = pack.includes[fullCommand[i].lower()]
+                i += 1
 
-                    if quoteText:
-                        fullCommand.append(quoteText)
+            if i > 0:
+                valid = True
 
-                    valid = False
+                if ' '.join(fullCommand[i:]).lower() == 'help':
+                    config.debugQ.put(f'{pack.help()}')
+                else:
+                    inputData = messageData()
+                    content = None
 
-                    for module in config.imports:
-                        pack = sys.modules[module]
+                    if thisMessage.user:
+                        inputData.user = thisMessage.user
+                    if thisMessage.server:
+                        inputData.server = thisMessage.server
+                    if len(fullCommand[i:]) > 0:
+                        content = fullCommand[i:]
 
-                        i = 0
-                        while (i < len(fullCommand)) and (fullCommand[i].lower() in pack.includes.keys()):
-                            pack = pack.includes[fullCommand[i].lower()]
-                            i += 1
+                    pack.execute(inputData, content)
 
-                        if i > 0:
-                            valid = True
+        if valid == False:
+            config.debugQ.put('Invalid command!')
 
-                            if ' '.join(fullCommand[i:]).lower() == 'help':
-                                config.debugQ.put(f'{pack.help()}')
-                            else:
-                                inputData = messageData()
-                                content = None
-
-                                if thisMessage.user:
-                                    inputData.user = thisMessage.user
-                                if thisMessage.server:
-                                    inputData.server = thisMessage.server
-                                if len(fullCommand[i:]) > 0:
-                                    content = fullCommand[i:]
-
-                                pack.execute(inputData, content)
-
-                    if valid == False:
-                        config.debugQ.put('Invalid command!')
 
 # Use registerCommands() to declare and set up commands, and register them with the module's dictionary so they can be found by the bot. Command objects can be denoted with a C at the end as a naming convention.
 def registerCommands():
@@ -190,7 +222,6 @@ def commandsF(inputData):
 
 
     config.outQ.put(currentCommands)
-    #print(currentCommands)
 
 # botParts modules are generally designed to be imported by the botParts core modules and not used as mains themselves. If the module is used as main, print an overview of the module's use and then exit. If it is imported, go ahead with registering the module with the bot.
 if __name__ == "__main__":
