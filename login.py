@@ -40,7 +40,6 @@ def debugM():
 
 def terminal():
     try:  
-        mProcesses = []
         config.running = multiprocessing.Event() 
         config.running.set()
         config.login = multiprocessing.Event() 
@@ -51,7 +50,7 @@ def terminal():
         outThread.start()
         debugThread = threading.Thread(target=debugM)
         debugThread.start()
-        mailroom = multiprocessing.Process(target=commandM.readM)
+        mailroom = multiprocessing.Process(target=commandM.manage_read_pool)
         mailroom.start()
 
         while config.running.is_set():
