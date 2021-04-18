@@ -3,6 +3,8 @@
 # botParts requires sys, commandM and config to be imported by all modules.
 import sys
 import inspect
+import multiprocessing
+import queue
 import concurrent.futures
 
 from core import config
@@ -22,6 +24,8 @@ mSelf = sys.modules[__name__]
 includes = {}
 config.imports.append(__name__)
 
+ongoing = {}
+
 # The command class. Can be used to define top level commands and sub-commands/arguments/parameters. Every command must be given at least a name and a parent. All subcommand trees must lead back to a top level command that has the module itself as a parent.
 
 def manage_read_pool():
@@ -34,6 +38,16 @@ def manage_read_pool():
             while not config.inQ.empty():
                 inMessage = config.inQ.get()
 
+                testFilter = messageData()
+                testFilter.server = inMessage.server
+                testFilter.channel = inMessage.channel
+                testFilter.user = inMessage.user
+
+                #results = findFilters(testFilter)
+
+                #if results:
+                    #ongoing[results].put(inMessage)
+                #else:
                 messageReaders[executor.submit(readM, inMessage)] = inMessage
 
             for future in done:
@@ -46,7 +60,67 @@ def manage_read_pool():
                 else:
                     pass
 
+                #if ongoing[inMessage]:
+                    #del ongoing[inMessage.id]
                 del messageReaders[future]
+
+def findFilters(findMessage):
+    foundServerFilters = []
+    foundChannelFilters = []
+    foundUserFilters = []
+
+    for each in ongoing.keys():
+        if findMessage.server.id == each.server.id:
+            foundServerFilters.append(each)
+
+    if len(foundServerFilters) == 1:
+        return foundServerFilters[0]
+
+    elif len(foundServerFilters) > 1:
+        for each in ongoing.keys():
+            if each.channel == None or findMessage.channel == None:
+                foundChannelFilters.append(each)
+            else:
+                if findMessage.channel.id == each.channel.id:
+                    foundChannelFilters.append(each)
+        
+        if len(foundChannelFilters) == 1:
+            return foundChannelFilters[0]
+
+        elif len(foundChannelFilters) > 1:
+            for each in ongoing.keys():
+                if each.user == None or findMessage.user == None:
+                    foundUserFilters.append(each)
+                else:
+                    if findMessage.user.id == each.user.id:
+                        foundUserFilters.append(each)
+
+            if len(foundUserFilters) == 1:
+                return foundUserFilters[0]
+            
+            else:
+                return None
+        else:
+            return None
+    else:
+        return None
+
+def request_queue(filter_message, filter_user=False, filter_channel=False):
+    print('entered request')
+    newQ = Queue.Queue()
+    thisFilter = filter_message
+
+    thisFilter.id = None
+    if filter_user == False:
+        thisFilter.user = None
+    if filter_channel == False:
+        thisFilter.channel = None
+
+    ongoing.update({filter_message : newQ})
+
+    print('got queue')
+
+    return ongoing[filter_message]
 
 class command:
     def __init__(self, NAME, PARENT, DESCRIPTION=None, INSTRUCTION=None, FUNCTION=None, ENABLED=True, PERM=0):
@@ -121,14 +195,45 @@ class command:
             config.debugQ.put(f'{self.howTo()}')
 
 class messageData:
-    def __init__(self, USER=None, SERVER=None):
+    def __init__(self, ID=None, USER=None, SERVER=None, CHANNEL=None):
+        self.id = ID
         self.user = USER
         self.server = SERVER
+        self.channel = CHANNEL
+
+    def fits(other):
+        likeness = 0
+
+        if other.server == None or self.server == None:
+            likeness += 1
+        else:
+            if self.server.id == other.server.id:
+                likeness += 1
+            else:
+                return 0
+
+        if other.channel == None or self.channel == None:
+            likeness += 1
+        else:
+            if self.channel.id == other.channel.id:
+                likeness += 1
+            else:
+                return 0
+
+        if other.user == None or self.user == None:
+            likeness += 1
+        else:
+            if self.user.id == other.user.id:
+                likeness += 1
+            else:
+                return 0
+
+        return likeness
 
 class fullMessageData(messageData):
-    def __init__(self, USER=None, SERVER=None, CONTENT=None):
+    def __init__(self, ID=None, USER=None, SERVER=None, CONTENT=None, CHANNEL=None):
         self.content = CONTENT
-        super().__init__(USER, SERVER)
+        super().__init__(ID, USER, SERVER, CHANNEL)
 
 
 # Utility function for reading incoming text and parsing it for both a valid trigger and valid commands across all imported botParts modules. If a valid command is found, its associated function is executed and passed the remainder of the input text as arguments.
@@ -190,6 +295,8 @@ def readM(thisMessage):
                     inputData = messageData()
                     content = None
 
+                    if thisMessage.id:
+                        inputData.id = thisMessage.id
                     if thisMessage.user:
                         inputData.user = thisMessage.user
                     if thisMessage.server:
