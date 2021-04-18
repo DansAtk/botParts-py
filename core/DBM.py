@@ -9,7 +9,7 @@ import calendar
 from datetime import *
 
 from core import config
-from core.commandM import command
+from core.commandM import command, request_queue
 
 mSelf = sys.modules[__name__]
 includes = {}
@@ -1372,12 +1372,14 @@ def removeUserAliasF(inputData, content):
         config.outQ.put('User alias not found.')
  
 def removeColorF(inputData, content):
+    print('entered')
+    thisQ = commandM.request_queue(inputData, filter_user=True)
     colorString = content[0]
     thisColor = tryGetOneColor(colorString)
 
     if thisColor:
         config.outQ.put(f'Remove color {thisColor.name}({thisColor.id})? <y/N> ')
-        rawResponse = config.inQ.get()
+        rawResponse = thisQ.get()
         response = rawResponse.content
 
         if response.lower() == 'y':
