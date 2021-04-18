@@ -736,74 +736,6 @@ def searchColorbyName(searchstring):
         else:
             return None
 
-def initializeDB():
-    if not config.dataPath.exists():
-        config.dataPath.mkdir()
-
-    DB = config.database
-
-    if True:
-        doInit = False
-        if DB.exists():
-            config.outQ.put('Database already exists. Re-initialize? This will empty the database. <y/N> ')
-            rawResponse = config.inQ.get()
-            response = rawResponse.content
-            if response.lower() == 'y':
-                DB.unlink()
-                doInit = True
-                config.debugQ.put('It works.')
-            else:
-                config.outQ.put('Canceled.')
-        else:
-            doInit = True
-        
-        if doInit:
-            conn = sqlite3.connect(DB)
-            cursor = conn.cursor()
-            cursor.execute(
-                    "CREATE TABLE info("
-                    "id INTEGER PRIMARY KEY AUTOINCREMENT, key TEXT, value TEXT)"
-                    )
-            cursor.execute("INSERT INTO info(key, value) VALUES (?, ?)",
-                    ('dbversion', config.settings['dbversion']))
-            config.debugQ.put('Configuring for multiple users...')
-            cursor.execute(
-                    "CREATE TABLE users("
-                    "id INTEGER PRIMARY KEY, name TEXT, botrank INTEGER DEFAULT '0', country TEXT, "
-                    "tz TEXT DEFAULT 'US/Eastern', bday TEXT, points INTEGER DEFAULT '0')"
-                    )
-            config.debugQ.put('Configuring for multiple servers...')
-            cursor.execute(
-                    "CREATE TABLE servers("
-                    "id INTEGER PRIMARY KEY, name TEXT, tz TEXT, trigger TEXT)"
-                    )
-            config.debugQ.put('Configuring for color management...')
-            cursor.execute(
-                    "CREATE TABLE colors("
-                    "id INTEGER PRIMARY KEY, name TEXT, code TEXT)"
-                    )
-            config.debugQ.put('Configuring for user aliases...')
-            cursor.execute(
-                    "CREATE TABLE serverusers("
-                    "userid INTEGER NOT NULL, serverid INTEGER NOT NULL, color INTEGER, nick TEXT, localrank TEXT, "
-                    "PRIMARY KEY(userid, serverid), "
-                    "FOREIGN KEY(userid) REFERENCES users(id) ON DELETE CASCADE ON UPDATE NO ACTION, "
-                    "FOREIGN KEY(serverid) REFERENCES servers(id) ON DELETE CASCADE ON UPDATE NO ACTION, "
-                    "FOREIGN KEY(color) REFERENCES colors(id) ON DELETE SET NULL ON UPDATE NO ACTION)" 
-                    )
-            conn.commit()
-            conn.close()
-
-            for module in config.imports:
-                if hasattr(sys.modules[module], 'dbinit'):
-                    sys.modules[module].dbinit(DB)
-
-            config.debugQ.put('Database initialized.')
-
-    #except:
-        #print(sys.exc_info()[0])
-        #print('Error.')
-
 def checkDB():
     DB = config.database
 
@@ -1043,12 +975,77 @@ def registerCommands():
 def databaseF(inputData=None):
     config.outQ.put(databaseC.help())
 
-def databaseSetupF(inputData=None):
-    initializeDB()
+def databaseSetupF(inputData):
+    if not config.dataPath.exists():
+        config.dataPath.mkdir()
 
-def databaseDeleteF(inputData=None):
+    DB = config.database
+
+    try:
+        doInit = False
+        if DB.exists():
+            thisQ = request_queue(inputData, filter_channel=True, filter_user=True)
+            config.outQ.put('Database already exists. Re-initialize? This will empty the database. <y/N> ')
+            rawResponse = thisQ.get()
+            response = rawResponse.content
+            if response.lower() == 'y':
+                DB.unlink()
+                doInit = True
+            else:
+                config.outQ.put('Canceled.')
+        else:
+            doInit = True
+        
+        if doInit:
+            conn = sqlite3.connect(DB)
+            cursor = conn.cursor()
+            cursor.execute(
+                    "CREATE TABLE info("
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, key TEXT, value TEXT)"
+                    )
+            cursor.execute("INSERT INTO info(key, value) VALUES (?, ?)",
+                    ('dbversion', config.settings['dbversion']))
+            config.debugQ.put('Configuring for multiple users...')
+            cursor.execute(
+                    "CREATE TABLE users("
+                    "id INTEGER PRIMARY KEY, name TEXT, botrank INTEGER DEFAULT '0', country TEXT, "
+                    "tz TEXT DEFAULT 'US/Eastern', bday TEXT, points INTEGER DEFAULT '0')"
+                    )
+            config.debugQ.put('Configuring for multiple servers...')
+            cursor.execute(
+                    "CREATE TABLE servers("
+                    "id INTEGER PRIMARY KEY, name TEXT, tz TEXT, trigger TEXT)"
+                    )
+            config.debugQ.put('Configuring for color management...')
+            cursor.execute(
+                    "CREATE TABLE colors("
+                    "id INTEGER PRIMARY KEY, name TEXT, code TEXT)"
+                    )
+            config.debugQ.put('Configuring for user aliases...')
+            cursor.execute(
+                    "CREATE TABLE serverusers("
+                    "userid INTEGER NOT NULL, serverid INTEGER NOT NULL, color INTEGER, nick TEXT, localrank TEXT, "
+                    "PRIMARY KEY(userid, serverid), "
+                    "FOREIGN KEY(userid) REFERENCES users(id) ON DELETE CASCADE ON UPDATE NO ACTION, "
+                    "FOREIGN KEY(serverid) REFERENCES servers(id) ON DELETE CASCADE ON UPDATE NO ACTION, "
+                    "FOREIGN KEY(color) REFERENCES colors(id) ON DELETE SET NULL ON UPDATE NO ACTION)" 
+                    )
+            conn.commit()
+            conn.close()
+
+            for module in config.imports:
+                if hasattr(sys.modules[module], 'dbinit'):
+                    sys.modules[module].dbinit(DB)
+
+            config.debugQ.put('Database initialized.')
+    
+    except:
+        config.outQ.
+
+def databaseDeleteF(inputData):
+    thisQ = request_queue(inputData, filter_channel=True, filter_user=True)
     config.outQ.put('Are you sure you want to delete the current database? <y/N> ')
-    rawResponse = config.inQ.get()
+    rawResponse = thisQ.get()
     response = rawResponse.content
 
     if response.lower() == 'y':
@@ -1311,12 +1308,13 @@ def addColorF(inputData, content):
         config.outQ.put('Invalid attribute(s).')
 
 def removeUserF(inputData, content):
+    thisQ = request_queue(inputData, filter_channel=True, filter_user=True)
     userString = content[0]
     thisUser = tryGetOneUser(userString)
 
     if thisUser:
         config.outQ.put(f'Remove user {thisUser.name}({thisUser.id})? <y/N> ')
-        rawResponse = config.inQ.get()
+        rawResponse = thisQ.get()
         response = rawResponse.content
 
         if response.lower() == 'y':
@@ -1330,12 +1328,13 @@ def removeUserF(inputData, content):
         config.outQ.put('User not found.')
         
 def removeServerF(inputData, content):
+    thisQ = request_queue(inputData, filter_channel=True, filter_user=True)
     serverString = content[0]
     thisServer = tryGetOneServer(serverString)
 
     if thisServer:
         config.outQ.put(f'Remove server {thisServer.name}({thisServer.id})? <y/N> ')
-        rawResponse = config.inQ.get()
+        rawResponse = thisQ.get()
         response = rawResponse.content
 
         if response.lower() == 'y':
@@ -1349,6 +1348,7 @@ def removeServerF(inputData, content):
         config.outQ.put('Server not found.')
 
 def removeUserAliasF(inputData, content):
+    thisQ = request_queue(inputData, filter_channel=True, filter_user=True)
     userString = content[0]
     serverString = content[1]
 
@@ -1358,7 +1358,7 @@ def removeUserAliasF(inputData, content):
 
     if thisAlias:
         config.outQ.put(f'Remove alias for user {thisUser.name}({thisUser.id}) on server {thisServer.name}({thisServer.id})? <y/N> ')
-        rawResponse = config.inQ.get()
+        rawResponse = thisQ.get()
         response = rawResponse.content
 
         if response.lower() == 'y':
@@ -1372,8 +1372,7 @@ def removeUserAliasF(inputData, content):
         config.outQ.put('User alias not found.')
  
 def removeColorF(inputData, content):
-    print('entered')
-    thisQ = commandM.request_queue(inputData, filter_user=True)
+    thisQ = request_queue(inputData, filter_channel=True, filter_user=True)
     colorString = content[0]
     thisColor = tryGetOneColor(colorString)
 
