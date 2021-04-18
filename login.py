@@ -22,11 +22,14 @@ currentServer = None
 currentAlias = None
 
 def inM():
+    message_id = 0
     while config.running.is_set():
         input_text = input()
 
+        message_id += 1
+
         if currentAlias:
-            thisMessage = commandM.fullMessageData(currentUser, currentServer, input_text)
+            thisMessage = commandM.fullMessageData(message_id, currentUser, currentServer, input_text)
             config.inQ.put(thisMessage)
         else:
             config.promptQ.put(input_text)
