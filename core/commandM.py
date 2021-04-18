@@ -29,6 +29,7 @@ ongoing = {}
 # The command class. Can be used to define top level commands and sub-commands/arguments/parameters. Every command must be given at least a name and a parent. All subcommand trees must lead back to a top level command that has the module itself as a parent.
 
 def manage_read_pool():
+    global ongoing
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         messageReaders = {}
 
@@ -43,56 +44,59 @@ def manage_read_pool():
                 testFilter.channel = inMessage.channel
                 testFilter.user = inMessage.user
 
-                #results = findFilters(testFilter)
+                results = findFilters(testFilter)
 
-                #if results:
-                    #ongoing[results].put(inMessage)
-                #else:
-                messageReaders[executor.submit(readM, inMessage)] = inMessage
+                if results:
+                    ongoing[results][1].put(inMessage)
+                else:
+                    messageReaders[executor.submit(readM, inMessage)] = inMessage
 
             for future in done:
                 inMessage = messageReaders[future]
 
                 try:
                     response = future.result()
-                except:
-                    print('F exception')
+                except Exception as E:
+                    print(E)
                 else:
                     pass
 
-                #if ongoing[inMessage]:
-                    #del ongoing[inMessage.id]
+                if inMessage.id in ongoing:
+                    del ongoing[inMessage.id]
                 del messageReaders[future]
 
 def findFilters(findMessage):
+    global ongoing
     foundServerFilters = []
     foundChannelFilters = []
     foundUserFilters = []
 
-    for each in ongoing.keys():
-        if findMessage.server.id == each.server.id:
-            foundServerFilters.append(each)
+    for eachKey, eachValue in ongoing.items():
+        if findMessage.server.id == eachValue[0].server.id:
+            foundServerFilters.append(eachKey)
 
     if len(foundServerFilters) == 1:
         return foundServerFilters[0]
 
     elif len(foundServerFilters) > 1:
-        for each in ongoing.keys():
-            if each.channel == None or findMessage.channel == None:
+        for each in foundServerFilters:
+            thisFilter = ongoing[each][0]
+            if thisFilter.channel == None or findMessage.channel == None:
                 foundChannelFilters.append(each)
             else:
-                if findMessage.channel.id == each.channel.id:
+                if findMessage.channel.id == thisFilter.channel.id:
                     foundChannelFilters.append(each)
         
         if len(foundChannelFilters) == 1:
             return foundChannelFilters[0]
 
         elif len(foundChannelFilters) > 1:
-            for each in ongoing.keys():
-                if each.user == None or findMessage.user == None:
+            for each in foundChannelFilters:
+                thisFilter = ongoing[each][0]
+                if thisFilter.user == None or findMessage.user == None:
                     foundUserFilters.append(each)
                 else:
-                    if findMessage.user.id == each.user.id:
+                    if findMessage.user.id == thisFilter.user.id:
                         foundUserFilters.append(each)
 
             if len(foundUserFilters) == 1:
@@ -106,21 +110,19 @@ def findFilters(findMessage):
         return None
 
 def request_queue(filter_message, filter_user=False, filter_channel=False):
-    print('entered request')
-    newQ = Queue.Queue()
-    thisFilter = filter_message
+    global ongoing
+    newQ = queue.Queue()
+    thisFilter = messageData()
 
-    thisFilter.id = None
-    if filter_user == False:
-        thisFilter.user = None
-    if filter_channel == False:
-        thisFilter.channel = None
+    thisFilter.server = filter_message.server
+    if filter_channel == True:
+        thisFilter.channel = filter_message.channel
+    if filter_user == True:
+        thisFilter.user = filter_message.user
 
-    ongoing.update({filter_message : newQ})
+    ongoing.update({filter_message.id : (thisFilter, newQ)})
 
-    print('got queue')
-
-    return ongoing[filter_message]
+    return ongoing[filter_message.id][1]
 
 class command:
     def __init__(self, NAME, PARENT, DESCRIPTION=None, INSTRUCTION=None, FUNCTION=None, ENABLED=True, PERM=0):
