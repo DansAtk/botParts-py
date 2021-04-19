@@ -1040,7 +1040,7 @@ def databaseSetupF(inputData):
             config.debugQ.put('Database initialized.')
     
     except:
-        config.outQ.
+        config.debugQ.put('An error occurred.')
 
 def databaseDeleteF(inputData):
     thisQ = request_queue(inputData, filter_channel=True, filter_user=True)
@@ -1372,13 +1372,13 @@ def removeUserAliasF(inputData, content):
         config.outQ.put('User alias not found.')
  
 def removeColorF(inputData, content):
-    thisQ = request_queue(inputData, filter_channel=True, filter_user=True)
+    thisThread = request_queue(inputData, tag=True, filter_channel=True, filter_user=True)
     colorString = content[0]
     thisColor = tryGetOneColor(colorString)
 
     if thisColor:
-        config.outQ.put(f'Remove color {thisColor.name}({thisColor.id})? <y/N> ')
-        rawResponse = thisQ.get()
+        config.outQ.put(f'Remove color {thisColor.name}({thisColor.id})? ({thisThread["tag"]}>y/N)')
+        rawResponse = thisThread['queue'].get()
         response = rawResponse.content
 
         if response.lower() == 'y':
