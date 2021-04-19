@@ -2,12 +2,22 @@ import sys
 import random
 
 from core import config
-from core.commandM import command, imports
+from core.commandM import command
 from core import DBM
 
 mSelf = sys.modules[__name__]
 includes = {}
-imports.append(__name__)
+gamerun = False
+
+def run_game(inputData):
+    gamerun = True
+
+
+
+
+    while gamerun == True:
+
+
 
 def registerCommands():
     global sayC

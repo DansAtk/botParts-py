@@ -4,11 +4,11 @@ import time
 import json
 
 from core import config
-from core.commandM import command
+from core.commandM import command, imports
 
 mSelf = sys.modules[__name__]
 includes = {}
-config.imports.append(__name__)
+imports.append(__name__)
 
 def registerCommands():
     global botC
@@ -90,7 +90,7 @@ def botShutdownF(inputData=None):
 def moduleCleanup():
     config.debugQ.put('Cleaning up modules...')
 
-    for module in config.imports:
+    for module in imports:
         if hasattr(sys.modules[module], 'cleanup'):
             sys.modules[module].cleanup()
 

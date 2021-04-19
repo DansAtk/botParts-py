@@ -9,11 +9,11 @@ import calendar
 from datetime import *
 
 from core import config
-from core.commandM import command, request_queue
+from core.commandM import command, request_queue, imports
 
 mSelf = sys.modules[__name__]
 includes = {}
-config.imports.append(__name__)
+imports.append(__name__)
 
 class user:
     def __init__(self, ID, NAME=None, TZ=None, BOTRANK=None, BDAY=None, COUNTRY=None, POINTS=None):
@@ -1033,7 +1033,7 @@ def databaseSetupF(inputData):
             conn.commit()
             conn.close()
 
-            for module in config.imports:
+            for module in imports:
                 if hasattr(sys.modules[module], 'dbinit'):
                     sys.modules[module].dbinit(DB)
 

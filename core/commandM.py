@@ -20,11 +20,12 @@ if not config.debugQ:
 
 # These lines are also required by all botParts modules for the module to register itself with the bot and set up its own dictionary of commands. Defining mSelf as the current module makes it easier to define top-level module commands.
 
+imports = []
+ongoing = {}
+
 mSelf = sys.modules[__name__]
 includes = {}
-config.imports.append(__name__)
-
-ongoing = {}
+imports.append(__name__)
 
 # The command class. Can be used to define top level commands and sub-commands/arguments/parameters. Every command must be given at least a name and a parent. All subcommand trees must lead back to a top level command that has the module itself as a parent.
 
@@ -250,6 +251,7 @@ class fullMessageData(messageData):
 
 # Utility function for reading incoming text and parsing it for both a valid trigger and valid commands across all imported botParts modules. If a valid command is found, its associated function is executed and passed the remainder of the input text as arguments.
 def readM(thisMessage):
+    global imports
     doRead = False
     if thisMessage.server.trigger and len(thisMessage.server.trigger) > 0:
         if thisMessage.content.startswith(thisMessage.server.trigger):
@@ -290,7 +292,7 @@ def readM(thisMessage):
 
         valid = False
 
-        for module in config.imports:
+        for module in imports:
             pack = sys.modules[module]
 
             i = 0
@@ -331,8 +333,9 @@ def registerCommands():
 
 # Functions associated with commands declared in registerCommands() can be defined here. These functions can be denoted with an F at the end as a naming convention.
 def commandsF(inputData):
+    global imports
     currentCommands = 'Currently available commands: '
-    for i, module in enumerate(config.imports):
+    for i, module in enumerate(imports):
         for command in sys.modules[module].includes:
             if i:
                 currentCommands += ', '
