@@ -44,10 +44,18 @@ def manage_read_pool():
                 testFilter.channel = inMessage.channel
                 testFilter.user = inMessage.user
 
-                results = findFilters(testFilter)
+                result = findFilters(testFilter)
 
-                if results:
-                    ongoing[results][1].put(inMessage)
+                if result:
+                    if 'tag' in ongoing[result]:
+                        if inMessage.content.startswith(f'{inMessage.server.trigger}{ongoing[result]["tag"]}>'):
+                            inMessage.content = inMessage.content.split(f'{inMessage.server.trigger}{ongoing[result]["tag"]}>', 1)[1] 
+                            ongoing[result]['queue'].put(inMessage)
+                        else:
+                            messageReaders[executor.submit(readM, inMessage)] = inMessage
+                    else:
+                        inMessage.content = inMessage.content.split(f'{inMessage.server.trigger}', 1)[1] 
+                        ongoing[result]['queue'].put(inMessage)
                 else:
                     messageReaders[executor.submit(readM, inMessage)] = inMessage
 
@@ -72,7 +80,7 @@ def findFilters(findMessage):
     foundUserFilters = []
 
     for eachKey, eachValue in ongoing.items():
-        if findMessage.server.id == eachValue[0].server.id:
+        if findMessage.server.id == eachValue['filter'].server.id:
             foundServerFilters.append(eachKey)
 
     if len(foundServerFilters) == 1:
@@ -80,7 +88,7 @@ def findFilters(findMessage):
 
     elif len(foundServerFilters) > 1:
         for each in foundServerFilters:
-            thisFilter = ongoing[each][0]
+            thisFilter = ongoing[each]['filter']
             if thisFilter.channel == None or findMessage.channel == None:
                 foundChannelFilters.append(each)
             else:
@@ -92,7 +100,7 @@ def findFilters(findMessage):
 
         elif len(foundChannelFilters) > 1:
             for each in foundChannelFilters:
-                thisFilter = ongoing[each][0]
+                thisFilter = ongoing[each]['filter']
                 if thisFilter.user == None or findMessage.user == None:
                     foundUserFilters.append(each)
                 else:
@@ -109,7 +117,7 @@ def findFilters(findMessage):
     else:
         return None
 
-def request_queue(filter_message, filter_user=False, filter_channel=False):
+def request_queue(filter_message, tag=False, filter_user=False, filter_channel=False):
     global ongoing
     newQ = queue.Queue()
     thisFilter = messageData()
@@ -120,9 +128,11 @@ def request_queue(filter_message, filter_user=False, filter_channel=False):
     if filter_user == True:
         thisFilter.user = filter_message.user
 
-    ongoing.update({filter_message.id : (thisFilter, newQ)})
+    ongoing.update({filter_message.id : {'filter' : thisFilter, 'queue' : newQ}})
+    if tag == True:
+        ongoing[filter_message.id].update({'tag' : filter_message.id})
 
-    return ongoing[filter_message.id][1]
+    return ongoing[filter_message.id]
 
 class command:
     def __init__(self, NAME, PARENT, DESCRIPTION=None, INSTRUCTION=None, FUNCTION=None, ENABLED=True, PERM=0):
