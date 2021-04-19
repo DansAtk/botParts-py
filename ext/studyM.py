@@ -3,12 +3,12 @@ import sqlite3
 from datetime import *
 
 from core import config
-from core.commandM import command
+from core.commandM import command, imports
 from core import DBM
 
 mSelf = sys.modules[__name__]
 includes = {}
-config.imports.append(__name__)
+imports.append(__name__)
 
 class studyUser(DBM.user):
     def __init__(self, ID, CSTREAK=None, LSTREAK=None, DAYS=None):
@@ -307,8 +307,9 @@ def markF(inputData, content):
     userString = content[0]
     logNote = None
 
-    if content[1].startswith('"') and content[1].endswith('"'):
-        logNote = content[1][1:-1]
+    if len(content) > 1:
+        if content[1].startswith('"') and content[1].endswith('"'):
+            logNote = content[1][1:-1]
 
     thisUser = DBM.tryGetOneUser(userString)
 

@@ -1,6 +1,5 @@
 import pathlib
 import multiprocessing
-import time
 
 inQ = None
 outQ = None
@@ -11,9 +10,6 @@ running = None
 login = None
 
 settings = {'dbversion' : '0.3'}
-
-# Tracking imported botParts modules.
-imports = []
 
 # Paths
 backupPath = pathlib.Path.cwd() / 'backup'
