@@ -275,7 +275,6 @@ class fullMessageData(messageData):
         self.content = CONTENT
         super().__init__(ID, USER, SERVER, CHANNEL)
 
-
 # Utility function for reading incoming text and parsing it for both a valid trigger and valid commands across all imported botParts modules. If a valid command is found, its associated function is executed and passed the remainder of the input text as arguments.
 def readM(thisMessage, theseCommands):
     global imports
@@ -317,103 +316,58 @@ def readM(thisMessage, theseCommands):
         if quoteText:
             fullCommand.append(quoteText)
 
-        valid = False
+        if ' '.join(fullCommand).lower() == 'commands':
+            currentCommands = 'Currently available commands: '
+            for i, module in enumerate(theseCommands):
+                if i:
+                    currentCommands += ', '
 
-        for module in theseCommands:
-            pack = theseCommands[module]
+                for i, each in enumerate(theseCommands[module]):
+                    if i:
+                        currentCommands += ', '
 
-            i = 0
-            if (i < len(fullCommand)) and (fullCommand[i].lower() in pack):
-                pack = pack[fullCommand[i].lower()]
-                i += 1
-                while (i < len(fullCommand)) and (fullCommand[i].lower() in pack.includes):
-                    pack = pack.includes[fullCommand[i].lower()]
+                    currentCommands += each
+
+            config.outQ.put(currentCommands)
+
+        else:
+            valid = False
+
+            for module in theseCommands:
+                pack = theseCommands[module]
+
+                i = 0
+                if (i < len(fullCommand)) and (fullCommand[i].lower() in pack):
+                    pack = pack[fullCommand[i].lower()]
                     i += 1
+                    while (i < len(fullCommand)) and (fullCommand[i].lower() in pack.includes):
+                        pack = pack.includes[fullCommand[i].lower()]
+                        i += 1
+                    
+                if i > 0:
+                    valid = True
 
-            if i > 0:
-                valid = True
+                    if ' '.join(fullCommand[i:]).lower() == 'help':
+                        config.debugQ.put(f'{pack.help()}')
 
-                if ' '.join(fullCommand[i:]).lower() == 'help':
-                    config.debugQ.put(f'{pack.help()}')
-                else:
-                    inputData = messageData()
-                    content = None
+                    else:
+                        inputData = messageData()
+                        content = None
 
-                    if thisMessage.id:
-                        inputData.id = thisMessage.id
-                    if thisMessage.user:
-                        inputData.user = thisMessage.user
-                    if thisMessage.server:
-                        inputData.server = thisMessage.server
-                    if len(fullCommand[i:]) > 0:
-                        content = fullCommand[i:]
+                        if thisMessage.id:
+                            inputData.id = thisMessage.id
+                        if thisMessage.user:
+                            inputData.user = thisMessage.user
+                        if thisMessage.server:
+                            inputData.server = thisMessage.server
+                        if len(fullCommand[i:]) > 0:
+                            content = fullCommand[i:]
 
-                    pack.execute(inputData, content)
+                        pack.execute(inputData, content)
 
-        if valid == False:
-            config.debugQ.put('Invalid command!')
-
-        #valid = False
-#
-        #for module in imports.keys():
-            #pack = sys.modules[module]
-#
-            #i = 0
-            #while (i < len(fullCommand)) and (fullCommand[i].lower() in pack.includes.keys()):
-                #pack = pack.includes[fullCommand[i].lower()]
-                #i += 1
-#
-            #if i > 0:
-                #valid = True
-#
-                #if ' '.join(fullCommand[i:]).lower() == 'help':
-                    #config.debugQ.put(f'{pack.help()}')
-                #else:
-                    #inputData = messageData()
-                    #content = None
-#
-                    #if thisMessage.id:
-                        #inputData.id = thisMessage.id
-                    #if thisMessage.user:
-                        #inputData.user = thisMessage.user
-                    #if thisMessage.server:
-                        #inputData.server = thisMessage.server
-                    #if len(fullCommand[i:]) > 0:
-                        #content = fullCommand[i:]
-#
-                    #pack.execute(inputData, content)
-#
-        #if valid == False:
-            #config.debugQ.put('Invalid command!')
-
-
-# Use registerCommands() to declare and set up commands, and register them with the module's dictionary so they can be found by the bot. Command objects can be denoted with a C at the end as a naming convention.
-def registerCommands():
-    commandsC = command('commands', mSelf)
-    commandsC.description = 'Lists all currently supported commands, across all active modules.'
-    commandsC.instruction = 'Use the command by itself.'
-    commandsC.function = 'commandsF'
-    imports.update({__name__ : includes})
-
-# Functions associated with commands declared in registerCommands() can be defined here. These functions can be denoted with an F at the end as a naming convention.
-def commandsF(inputData):
-    global imports
-    currentCommands = 'Currently available commands: '
-    for i, module in enumerate(imports):
-        if i:
-            currentCommands += ', '
-
-        for i, each in enumerate(imports[module]):
-            if i:
-                currentCommands += ', '
-        
-            currentCommands += each
-
-
-    config.outQ.put(currentCommands)
+            if valid == False:
+                config.debugQ.put('Invalid command!')
 
 # botParts modules are generally designed to be imported by the botParts core modules and not used as mains themselves. If the module is used as main, print an overview of the module's use and then exit. If it is imported, go ahead with registering the module with the bot.
 if __name__ == "__main__":
     print("A framework for easily implementing and handling branching commands for a chat bot. No main.\n")
-else:
-    registerCommands()
