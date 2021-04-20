@@ -8,7 +8,6 @@ from core import DBM
 
 mSelf = sys.modules[__name__]
 includes = {}
-imports.append(__name__)
 
 class studyUser(DBM.user):
     def __init__(self, ID, CSTREAK=None, LSTREAK=None, DAYS=None):
@@ -302,6 +301,7 @@ def registerCommands():
     checkC.description = 'Checks for a user\'s logged study.'
     checkC.instruction = 'Specify a user and (optionally) the date of study, in format DD-MM-YYYY. Checks the current day by default.'
     checkC.function = 'checkF'
+    imports.update({__name__ : includes})
 
 def markF(inputData, content):
     userString = content[0]

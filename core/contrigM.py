@@ -8,7 +8,6 @@ from core.commandM import command, imports
 
 mSelf = sys.modules[__name__]
 includes = {}
-imports.append(__name__)
 
 def registerCommands():
     global botC
@@ -39,6 +38,7 @@ def registerCommands():
     botShutdownC.function = 'botShutdownF'
     includes.update({'exit' : botShutdownC})
     includes.update({'quit' : botShutdownC})
+    imports.update({__name__ : includes})
 
 def botConfigPushF(inputData=None):
     config.debugQ.put('Pushing config to file...')
