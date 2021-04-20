@@ -6,6 +6,7 @@ import inspect
 import multiprocessing
 import queue
 import concurrent.futures
+import copy
 
 from core import config
 
@@ -20,12 +21,11 @@ if not config.debugQ:
 
 # These lines are also required by all botParts modules for the module to register itself with the bot and set up its own dictionary of commands. Defining mSelf as the current module makes it easier to define top-level module commands.
 
-imports = []
+imports = {}
 ongoing = {}
 
 mSelf = sys.modules[__name__]
 includes = {}
-imports.append(__name__)
 
 # The command class. Can be used to define top level commands and sub-commands/arguments/parameters. Every command must be given at least a name and a parent. All subcommand trees must lead back to a top level command that has the module itself as a parent.
 
@@ -40,6 +40,13 @@ def manage_read_pool():
             while not config.inQ.empty():
                 inMessage = config.inQ.get()
 
+                theseCommands = {}
+                for module in imports:
+                    theseCommands.update({module : {}})
+
+                    for name, command in imports[module].items():
+                        theseCommands[module].update({name : command})
+
                 testFilter = messageData()
                 testFilter.server = inMessage.server
                 testFilter.channel = inMessage.channel
@@ -48,17 +55,19 @@ def manage_read_pool():
                 result = findFilters(testFilter)
 
                 if result:
+                    if 'commands' in ongoing[result]:
+                        theseCommands[ongoing[result]['module']].update(ongoing[result]['commands'])
+
                     if 'tag' in ongoing[result]:
                         if inMessage.content.startswith(f'{inMessage.server.trigger}{ongoing[result]["tag"]}>'):
                             inMessage.content = inMessage.content.split(f'{inMessage.server.trigger}{ongoing[result]["tag"]}>', 1)[1] 
                             ongoing[result]['queue'].put(inMessage)
                         else:
-                            messageReaders[executor.submit(readM, inMessage)] = inMessage
+                            messageReaders[executor.submit(readM, inMessage, theseCommands)] = inMessage
                     else:
-                        inMessage.content = inMessage.content.split(f'{inMessage.server.trigger}', 1)[1] 
-                        ongoing[result]['queue'].put(inMessage)
+                        messageReaders[executor.submit(readM, inMessage, theseCommands)] = inMessage
                 else:
-                    messageReaders[executor.submit(readM, inMessage)] = inMessage
+                    messageReaders[executor.submit(readM, inMessage, theseCommands)] = inMessage
 
             for future in done:
                 inMessage = messageReaders[future]
@@ -71,7 +80,9 @@ def manage_read_pool():
                     pass
 
                 if inMessage.id in ongoing:
+                    print(f'removing ongoing game {inMessage.id}')
                     del ongoing[inMessage.id]
+                    print(f'removed.')
                 del messageReaders[future]
 
 def findFilters(findMessage):
@@ -118,25 +129,37 @@ def findFilters(findMessage):
     else:
         return None
 
-def request_queue(filter_message, tag=False, filter_user=False, filter_channel=False):
+def request_queue(ref_message, filter_user=False, filter_channel=False):
     global ongoing
     newQ = queue.Queue()
     thisFilter = messageData()
 
-    thisFilter.server = filter_message.server
+    thisFilter.server = ref_message.server
     if filter_channel == True:
-        thisFilter.channel = filter_message.channel
+        thisFilter.channel = ref_message.channel
     if filter_user == True:
-        thisFilter.user = filter_message.user
+        thisFilter.user = ref_message.user
 
-    ongoing.update({filter_message.id : {'filter' : thisFilter, 'queue' : newQ}})
-    if tag == True:
-        ongoing[filter_message.id].update({'tag' : filter_message.id})
+    ongoing.update({ref_message.id : {'filter' : thisFilter, 'queue' : newQ, 'tag' : ref_message.id}})
 
-    return ongoing[filter_message.id]
+    return ongoing[ref_message.id]
+
+def temp_commands(ref_message, moduleName, addition, filter_user=False, filter_channel=False):
+    global ongoing
+    thisFilter = messageData()
+
+    thisFilter.server = ref_message.server
+    if filter_channel == True:
+        thisFilter.channel = ref_message.channel
+    if filter_user == True:
+        thisFilter.user = ref_message.user
+
+    ongoing.update({ref_message.id : {'filter' : thisFilter, 'module' : moduleName, 'commands' : addition}})
+
+    return 0
 
 class command:
-    def __init__(self, NAME, PARENT, DESCRIPTION=None, INSTRUCTION=None, FUNCTION=None, ENABLED=True, PERM=0):
+    def __init__(self, NAME, PARENT, STORAGE=None, DESCRIPTION=None, INSTRUCTION=None, FUNCTION=None, ENABLED=True, PERM=0):
         self.name = NAME
         self.parent = PARENT
         self.description = DESCRIPTION
@@ -145,6 +168,7 @@ class command:
         self.enabled = ENABLED
         self.perm = PERM
         self.includes = {}
+        self.storage = STORAGE
 
         if inspect.ismodule(self.parent):
             self.parent_module = self.parent
@@ -154,7 +178,10 @@ class command:
                 mod = mod.parent
             self.parent_module = mod
 
-        self.parent.includes.update({self.name : self})
+        if self.storage != None:
+            self.storage.update({self.name : self})
+        else:
+            self.parent.includes.update({self.name : self})
 
     def paramText(self):
         paramList = ''
@@ -250,7 +277,7 @@ class fullMessageData(messageData):
 
 
 # Utility function for reading incoming text and parsing it for both a valid trigger and valid commands across all imported botParts modules. If a valid command is found, its associated function is executed and passed the remainder of the input text as arguments.
-def readM(thisMessage):
+def readM(thisMessage, theseCommands):
     global imports
     doRead = False
     if thisMessage.server.trigger and len(thisMessage.server.trigger) > 0:
@@ -292,13 +319,16 @@ def readM(thisMessage):
 
         valid = False
 
-        for module in imports:
-            pack = sys.modules[module]
+        for module in theseCommands:
+            pack = theseCommands[module]
 
             i = 0
-            while (i < len(fullCommand)) and (fullCommand[i].lower() in pack.includes.keys()):
-                pack = pack.includes[fullCommand[i].lower()]
+            if (i < len(fullCommand)) and (fullCommand[i].lower() in pack):
+                pack = pack[fullCommand[i].lower()]
                 i += 1
+                while (i < len(fullCommand)) and (fullCommand[i].lower() in pack.includes):
+                    pack = pack.includes[fullCommand[i].lower()]
+                    i += 1
 
             if i > 0:
                 valid = True
@@ -323,6 +353,39 @@ def readM(thisMessage):
         if valid == False:
             config.debugQ.put('Invalid command!')
 
+        #valid = False
+#
+        #for module in imports.keys():
+            #pack = sys.modules[module]
+#
+            #i = 0
+            #while (i < len(fullCommand)) and (fullCommand[i].lower() in pack.includes.keys()):
+                #pack = pack.includes[fullCommand[i].lower()]
+                #i += 1
+#
+            #if i > 0:
+                #valid = True
+#
+                #if ' '.join(fullCommand[i:]).lower() == 'help':
+                    #config.debugQ.put(f'{pack.help()}')
+                #else:
+                    #inputData = messageData()
+                    #content = None
+#
+                    #if thisMessage.id:
+                        #inputData.id = thisMessage.id
+                    #if thisMessage.user:
+                        #inputData.user = thisMessage.user
+                    #if thisMessage.server:
+                        #inputData.server = thisMessage.server
+                    #if len(fullCommand[i:]) > 0:
+                        #content = fullCommand[i:]
+#
+                    #pack.execute(inputData, content)
+#
+        #if valid == False:
+            #config.debugQ.put('Invalid command!')
+
 
 # Use registerCommands() to declare and set up commands, and register them with the module's dictionary so they can be found by the bot. Command objects can be denoted with a C at the end as a naming convention.
 def registerCommands():
@@ -330,17 +393,21 @@ def registerCommands():
     commandsC.description = 'Lists all currently supported commands, across all active modules.'
     commandsC.instruction = 'Use the command by itself.'
     commandsC.function = 'commandsF'
+    imports.update({__name__ : includes})
 
 # Functions associated with commands declared in registerCommands() can be defined here. These functions can be denoted with an F at the end as a naming convention.
 def commandsF(inputData):
     global imports
     currentCommands = 'Currently available commands: '
     for i, module in enumerate(imports):
-        for command in sys.modules[module].includes:
+        if i:
+            currentCommands += ', '
+
+        for i, each in enumerate(imports[module]):
             if i:
                 currentCommands += ', '
-            
-            currentCommands += command
+        
+            currentCommands += each
 
 
     config.outQ.put(currentCommands)

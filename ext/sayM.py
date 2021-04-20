@@ -7,7 +7,6 @@ from core import DBM
 
 mSelf = sys.modules[__name__]
 includes = {}
-imports.append(__name__)
 
 def registerCommands():
     global sayC
@@ -39,6 +38,7 @@ def registerCommands():
             'Enter a term without quotes to pull a related saved quote ' \
             'from the database.'
     sayRobotC.function = 'sayRobotF'
+    imports.update({__name__ : includes})
 
 def sayF(inputData, content):
     if content[0].startswith('"') and content[0].endswith('"'):

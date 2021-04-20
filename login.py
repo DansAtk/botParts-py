@@ -12,10 +12,10 @@ config.promptQ = multiprocessing.Queue()
 
 from core import *
 from ext import *
+from ext import zombie
 
 mSelf = sys.modules[__name__]
 includes = {}
-config.imports.append(__name__)
 
 currentUser = None
 currentServer = None
@@ -163,6 +163,7 @@ def registerCommands():
     sessionServerTriggerC.description = 'Used to alter the current server\'s trigger.'
     sessionServerTriggerC.instruction = 'Specify a new trigger.'
     sessionServerTriggerC.function = 'sessionServerTriggerF'
+    commandM.imports.update({__name__ : includes})
     
 def sessionLogoutF(inputData):
     config.login.clear()

@@ -13,7 +13,6 @@ from core.commandM import command, request_queue, imports
 
 mSelf = sys.modules[__name__]
 includes = {}
-imports.append(__name__)
 
 class user:
     def __init__(self, ID, NAME=None, TZ=None, BOTRANK=None, BDAY=None, COUNTRY=None, POINTS=None):
@@ -971,6 +970,7 @@ def registerCommands():
     findColorC.description = 'Searches for colors with names matching the given query.'
     findColorC.instruction = 'Specify the name of a color.'
     findColorC.function = 'findColorF'
+    imports.update({__name__ : includes})
 
 def databaseF(inputData=None):
     config.outQ.put(databaseC.help())
