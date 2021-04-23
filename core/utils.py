@@ -193,37 +193,13 @@ def databaseSetupF(inputData):
         if doInit:
             conn = sqlite3.connect(DB)
             cursor = conn.cursor()
+            config.debugQ.put('Configuring info table...')
             cursor.execute(
                     "CREATE TABLE info("
                     "id INTEGER PRIMARY KEY AUTOINCREMENT, key TEXT, value TEXT)"
                     )
             cursor.execute("INSERT INTO info(key, value) VALUES (?, ?)",
                     ('dbversion', config.settings['dbversion']))
-            config.debugQ.put('Configuring for multiple users...')
-            cursor.execute(
-                    "CREATE TABLE users("
-                    "id INTEGER PRIMARY KEY, name TEXT, botrank INTEGER DEFAULT '0', country TEXT, "
-                    "tz TEXT DEFAULT 'US/Eastern', bday TEXT, points INTEGER DEFAULT '0')"
-                    )
-            config.debugQ.put('Configuring for multiple servers...')
-            cursor.execute(
-                    "CREATE TABLE servers("
-                    "id INTEGER PRIMARY KEY, name TEXT, tz TEXT, trigger TEXT)"
-                    )
-            config.debugQ.put('Configuring for color management...')
-            cursor.execute(
-                    "CREATE TABLE colors("
-                    "id INTEGER PRIMARY KEY, name TEXT, code TEXT)"
-                    )
-            config.debugQ.put('Configuring for user aliases...')
-            cursor.execute(
-                    "CREATE TABLE serverusers("
-                    "userid INTEGER NOT NULL, serverid INTEGER NOT NULL, color INTEGER, nick TEXT, localrank TEXT, "
-                    "PRIMARY KEY(userid, serverid), "
-                    "FOREIGN KEY(userid) REFERENCES users(id) ON DELETE CASCADE ON UPDATE NO ACTION, "
-                    "FOREIGN KEY(serverid) REFERENCES servers(id) ON DELETE CASCADE ON UPDATE NO ACTION, "
-                    "FOREIGN KEY(color) REFERENCES colors(id) ON DELETE SET NULL ON UPDATE NO ACTION)" 
-                    )
             conn.commit()
             conn.close()
 

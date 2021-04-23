@@ -1,1 +1,1 @@
-__all__ = ['commandM', 'users', 'places', 'util']
+__all__ = ['utils', 'commands', 'users', 'places', 'groups', 'aliases']
