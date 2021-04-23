@@ -5,12 +5,11 @@ import shutil
 
 import sqlite3
 import pytz
-import calendar
 from datetime import *
 
 import config
-from core.util import *
 from core.commandM import command, request_queue
+import core.utils
 
 mSelf = sys.modules[__name__]
 includes = {}
@@ -32,7 +31,7 @@ class place:
             return getTime()
 
 def getPlace(placeID):
-    if checkDB():
+    if utils.checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -69,7 +68,7 @@ def tryGetOnePlace(placeString):
     return thisPlace
 
 def addPlace(profile):
-    if checkDB():
+    if utils.checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -82,7 +81,7 @@ def addPlace(profile):
         conn.close()
 
 def removePlace(profile):
-    if checkDB():
+    if utils.checkDB():
         conn = sqlite3.connect(DB)
         conn.execute("PRAGMA foreign_keys = 1")
         cursor = conn.cursor()
@@ -105,7 +104,7 @@ def updatePlace(profile):
         if profile.tz:
             thisPlace.tz = profile.tz
         
-        if checkDB():
+        if utils.checkDB():
             conn = sqlite3.connect(DB)
             cursor = conn.cursor()
             cursor.execute(
@@ -118,7 +117,7 @@ def updatePlace(profile):
             conn.close()
 
 def searchPlacebyName(searchString):
-    if checkDB():
+    if utils.checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -142,7 +141,7 @@ def searchPlacebyName(searchString):
             return None
 
 def searchPlacebyTimezone(searchString):
-    if checkDB():
+    if utils.checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -165,48 +164,63 @@ def searchPlacebyTimezone(searchString):
         else:
             return None
 
+def dbinit():
+    try:
+        conn = sqlite3.connect(DB)
+        cursor = conn.cursor()
+        config.debugQ.put('Configuring for places...')
+        cursor.execute(
+                "CREATE TABLE places("
+                "id INTEGER PRIMARY KEY, name TEXT, tz TEXT, trigger TEXT)"
+                )
+        conn.commit()
+        conn.close()
+
+    except:
+        config.debugQ.put('Unable to configure places table!')
+
 def registerCommands():
     global addPlaceC
-    addPlaceC = command('place', addC)
+    addPlaceC = command('place', utils.addC)
     addPlaceC.description = 'Builds a place from parameters, then adds it to the database.'
     addPlaceC.instruction = 'Specify place attributes using \'Attribute=Value\' with each separated by a space. \'id\' is required.'
     addPlaceC.function = 'addPlaceF'
     addPlaceC.parent_module = mSelf
     global removePlaceC
-    removePlaceC = command('place', removeC)
+    removePlaceC = command('place', utils.removeC)
     removePlaceC.description = 'Removes a place from the database.'
     removePlaceC.instruction = 'Specify a place.'
     removePlaceC.function = 'removePlaceF'
     removePlaceC.parent_module = mSelf
     global editPlaceC
-    editPlaceC = command('place', editC)
+    editPlaceC = command('place', utils.editC)
     editPlaceC.description = 'Updates an existing place with new attributes.'
     editPlaceC.instruction = 'First specify a place. Then, specify new attributes using \'Attribute=Value\' with each separated by a space.'
     editPlaceC.function = 'editPlaceF'
     editPlaceC.parent_module = mSelf
     global showPlaceC
-    showPlaceC = command('place', showC)
+    showPlaceC = command('place', utils.showC)
     showPlaceC.description = 'Displays detailed information about a single place.'
     showPlaceC.instruction = 'Specify a place.'
     showPlaceC.function = 'showPlaceF'
     showPlaceC.parent_module = mSelf
     global listPlaceC
-    listPlaceC = command('place', listC)
+    listPlaceC = command('place', utils.listC)
     listPlaceC.description = 'Lists all places in the database.'
     listPlaceC.function = 'listPlaceF'
     listPlaceC.parent_module = mSelf
     global findPlaceC
-    findPlaceC = command('place', findC)
+    findPlaceC = command('place', utils.findC)
     findPlaceC.description = 'Searches for places meeting the given criteria.'
     findPlaceC.instruction = 'Specify a parameter.'
     findPlaceC.parent_module = mSelf
     global findPlaceNameC
-    findPlaceNameC = command('name', findPlaceC)
+    findPlaceNameC = command('name', utils.findPlaceC)
     findPlaceNameC.description = 'Searches for places with names matching the given query.'
     findPlaceNameC.instruction = 'Specify a name or nickname.'
     findPlaceNameC.function = 'findPlaceNameF'
     global findPlaceTimezoneC
-    findPlaceTimezoneC = command('timezone', findPlaceC)
+    findPlaceTimezoneC = command('timezone', utils.findPlaceC)
     findPlaceTimezoneC.description = 'Searches for places with timezones matching the given query.'
     findPlaceTimezoneC.instruction = 'Specify a timezone.'
     findPlaceTimezoneC.function = 'findPlaceTimezoneF'
@@ -239,7 +253,7 @@ def addPlaceF(inputData, content):
 
             if 'tz' in placeDict.keys():
                 if placeDict['tz'].startswith('"') and placeDict['tz'].endswith('"'):
-                    thisTZ = tryGetOneTimezone(placeDict['tz'][1:-1])
+                    thisTZ = utils.tryGetOneTimezone(placeDict['tz'][1:-1])
                     if thisTZ:
                         newPlace.tz = thisTZ
                     else:
@@ -312,7 +326,7 @@ def editPlaceF(inputData, content):
 
         if 'tz' in placeDict.keys():
             if placeDict['tz'].startswith('"') and placeDict['tz'].endswith('"'):
-                thisTZ = tryGetOneTimezone(placeDict['tz'][1:-1])
+                thisTZ = utils.tryGetOneTimezone(placeDict['tz'][1:-1])
                 if thisTZ:
                     editPlace.tz = thisTZ
                     goodProfile = True
@@ -355,7 +369,7 @@ def showPlaceF(inputData, content):
         config.outQ.put('Place not found.')
 
 def listPlaceF(inputData):
-    if checkDB():
+    if utils.checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(

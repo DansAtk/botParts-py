@@ -5,12 +5,11 @@ import shutil
 
 import sqlite3
 import pytz
-import calendar
 from datetime import *
 
 import config
 from core.commandM import command, request_queue
-from core.util import *
+import core.utils
 
 mSelf = sys.modules[__name__]
 includes = {}
@@ -35,7 +34,7 @@ class user:
             return getTime()
             
 def getUser(userid):
-    if checkDB():
+    if utils.checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -77,7 +76,7 @@ def tryGetOneUser(userstring):
     return thisUser
 
 def addUser(profile):
-    if checkDB():
+    if utils.checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -91,7 +90,7 @@ def addUser(profile):
         conn.close()
 
 def removeUser(profile):
-    if checkDB():
+    if utils.checkDB():
         conn = sqlite3.connect(DB)
         conn.execute("PRAGMA foreign_keys = 1")
         cursor = conn.cursor()
@@ -120,7 +119,7 @@ def updateUser(profile):
         if profile.points:
             thisUser.points = profile.points
         
-        if checkDB():
+        if utils.checkDB():
             conn = sqlite3.connect(DB)
             cursor = conn.cursor()
             cursor.execute(
@@ -133,7 +132,7 @@ def updateUser(profile):
             conn.close()
 
 def searchUserbyName(searchstring):
-    if checkDB():
+    if utils.checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
 
@@ -159,7 +158,7 @@ def searchUserbyName(searchstring):
             return None
 
 def searchUserbyCountry(searchstring):
-    if checkDB():
+    if utils.checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -183,7 +182,7 @@ def searchUserbyCountry(searchstring):
             return None
 
 def searchUserbyTimezone(searchstring):
-    if checkDB():
+    if utils.checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -207,7 +206,7 @@ def searchUserbyTimezone(searchstring):
             return None
 
 def searchUserbyBirthday(searchstring):
-    if checkDB():
+    if utils.checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -230,44 +229,60 @@ def searchUserbyBirthday(searchstring):
         else:
             return None
 
+def dbinit():
+    try:
+        conn = sqlite3.connect(DB)
+        cursor = conn.cursor()
+        config.debugQ.put('Configuring for users...')
+        cursor.execute(
+                "CREATE TABLE users("
+                "id INTEGER PRIMARY KEY, name TEXT, botrank INTEGER DEFAULT '0', country TEXT, "
+                "tz TEXT DEFAULT 'US/Eastern', bday TEXT, points INTEGER DEFAULT '0')"
+                )
+        conn.commit()
+        conn.close()
+
+    except:
+        config.debugQ.put('Unable to configure users table!')
+
 def registerCommands():
     global addUserC
-    addUserC = command('user', addC)
+    addUserC = command('user', utils.addC)
     addUserC.description = 'Builds a user from parameters, then adds it to the database.'
     addUserC.instruction = 'Specify user attributes using \'Attribute=Value\' with each separated by a space. \'id\' is required.'
     addUserC.function = 'addUserF'
     addUserC.parent_module = mSelf
     global removeUserC
-    removeUserC = command('user', removeC)
+    removeUserC = command('user', utils.removeC)
     removeUserC.description = 'Removes a user from the database.'
     removeUserC.instruction = 'Specify a user.'
     removeUserC.function = 'removeUserF'
     removeUserC.parent_module = mSelf
     global editUserC
-    editUserC = command('user', editC)
+    editUserC = command('user', utils.editC)
     editUserC.description = 'Updates an existing user with new attributes.'
     editUserC.instruction = 'First specify a user. Then, specify new attributes using \'Attribute=Value\' with each separated by a space.'
     editUserC.function = 'editUserF'
     editUserC.parent_module = mSelf
     global showUserC
-    showUserC = command('user', showC)
+    showUserC = command('user', utils.showC)
     showUserC.description = 'Displays detailed information about a single user.'
     showUserC.instruction = 'Specify a user.'
     showUserC.function = 'showUserF'
     showUserC.parent_module = mSelf
     global listUserC
-    listUserC = command('user', listC)
+    listUserC = command('user', utils.listC)
     listUserC.description = 'Lists all users in the database.'
     listUserC.function = 'listUserF'
     listUserC.parent_module = mSelf
     global timeForC
-    timeForC = command('for', timeC)
+    timeForC = command('for', utils.timeC)
     timeForC.description = 'Displays the time in a specific user\'s timezone.'
     timeForC.instruction = 'Specify a user.'
     timeForC.function = 'timeForF'
     timeForC.parent_module = mSelf
     global findUserC
-    findUserC = command('user', findC)
+    findUserC = command('user', utils.findC)
     findUserC.description = 'Searches for users meeting the given criteria.'
     findUserC.instruction = 'Specify a parameter.'
     findUserC.parent_module = mSelf
@@ -321,7 +336,7 @@ def addUserF(inputData, content):
 
             if 'tz' in userDict.keys():
                 if userDict['tz'].startswith('"') and userDict['tz'].endswith('"'):
-                    thisTZ = tryGetOneTimezone(userDict['tz'][1:-1])
+                    thisTZ = utils.tryGetOneTimezone(userDict['tz'][1:-1])
                     if thisTZ:
                         newUser.tz = thisTZ
                     else:
@@ -412,7 +427,7 @@ def editUserF(inputData, content):
 
         if 'tz' in userDict.keys():
             if userDict['tz'].startswith('"') and userDict['tz'].endswith('"'):
-                thisTZ = tryGetOneTimezone(userDict['tz'][1:-1])
+                thisTZ = utils.tryGetOneTimezone(userDict['tz'][1:-1])
                 if thisTZ:
                     editUser.tz = thisTZ
                     goodProfile = True
@@ -480,7 +495,7 @@ def showUserF(inputData, content):
         config.outQ.put('User not found.')
 
 def listUserF(inputData):
-    if checkDB():
+    if utils.checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
