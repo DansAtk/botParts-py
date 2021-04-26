@@ -8,15 +8,17 @@ import pytz
 import calendar
 from datetime import *
 
-from core import config
-from core.commandM import command, request_queue, imports
+import config
+from core.util import *
+from core.commandM import command, request_queue
 
 mSelf = sys.modules[__name__]
 includes = {}
+config.register(mSelf)
 DB = config.database
 
 class place:
-    def __init__(self, ID, NAME=None, TRIGGER=':' TZ=None):
+    def __init__(self, ID, NAME=None, TRIGGER=':', TZ=None):
         self.id = ID
         self.name = NAME
         self.trigger = TRIGGER
@@ -202,7 +204,6 @@ def registerCommands():
     findPlaceTimezoneC.description = 'Searches for places with timezones matching the given query.'
     findPlaceTimezoneC.instruction = 'Specify a timezone.'
     findPlaceTimezoneC.function = 'findPlaceTimezoneF'
-    imports.update({__name__ : includes})
 
 def addPlaceF(inputData, content):
     placeData = []

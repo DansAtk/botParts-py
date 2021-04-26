@@ -2,20 +2,23 @@ import sys
 import sqlite3
 from datetime import *
 
-from core import config
-from core.commandM import command, imports
-from core import DBM
+import config
+from core.commandM import command
+from core import users
+from core import places
+from core import util
 
 mSelf = sys.modules[__name__]
 includes = {}
+config.register(mSelf)
 
-class studyUser(DBM.user):
+class studyUser(users.user):
     def __init__(self, ID, CSTREAK=None, LSTREAK=None, DAYS=None):
         self.cstreak = CSTREAK
         self.lstreak = LSTREAK
         self.days = DAYS
 
-        tempUser = DBM.tryGetOneUser(ID)
+        tempUser = users.tryGetOneUser(ID)
         if tempUser:
             super().__init__(tempUser.id, tempUser.name, tempUser.tz, tempUser.botrank, tempUser.bday, tempUser.country, tempUser.points)
         else:
@@ -24,10 +27,10 @@ class studyUser(DBM.user):
 def getStudyUser(userid):
     DB = config.database
 
-    thisUser = DBM.getUser(userid)
+    thisUser = users.getUser(userid)
 
     if thisUser:
-        if DBM.checkDB():
+        if util.checkDB():
             conn = sqlite3.connect(DB)
             cursor = conn.cursor()
             cursor.execute(
@@ -60,7 +63,7 @@ def tryGetOneStudyUser(studyuserstring):
         thisStudyUser = getStudyUser(int(studyuserstring))
 
     except ValueError:
-        thisUser = DBM.tryGetOneUser(studyuserstring)
+        thisUser = users.tryGetOneUser(studyuserstring)
 
         if thisUser:
             thisStudyUser = getStudyUser(thisUser.id)
@@ -70,7 +73,7 @@ def tryGetOneStudyUser(studyuserstring):
 def addStudyUser(profile):
     DB = config.database
 
-    if DBM.checkDB():
+    if util.checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -85,7 +88,7 @@ def addStudyUser(profile):
 def removeStudyUser(profile):
     DB = config.database
 
-    if DBM.checkDB():
+    if util.checkDB():
         conn = sqlite3.connect(DB)
         conn.execute("PRAGMA foreign_keys = 1")
         cursor = conn.cursor()
@@ -110,7 +113,7 @@ def updateStudyUser(profile):
 
         DB = config.database
 
-        if DBM.checkDB():
+        if util.checkDB():
             conn = sqlite3.connect(DB)
             cursor = conn.cursor()
             cursor.execute(
@@ -123,7 +126,7 @@ def updateStudyUser(profile):
             conn.close()
 
 def searchStudyUserbyName(searchstring):
-    search = DBM.searchUserbyName(searchstring)
+    search = users.searchUserbyName(searchstring)
 
     if search:
         foundStudyUsers = []
@@ -144,7 +147,7 @@ def searchStudyUserbyName(searchstring):
         return None
 
 def searchStudyUserbyServer(serverprofile):
-    search = DBM.searchUserbyServer(serverprofile)
+    search = users.searchUserbyServer(serverprofile)
 
     if search:
         foundStudyUsers = []
@@ -174,7 +177,7 @@ class studyLog:
 def getStudyLog(logid):
     DB = config.database
 
-    if DBM.checkDB():
+    if util.checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -200,7 +203,7 @@ def getStudyLog(logid):
 def addStudyLog(profile):
     DB = config.database
 
-    if DBM.checkDB():
+    if util.checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -215,7 +218,7 @@ def addStudyLog(profile):
 def removeStudyLog(profile):
     DB = config.database
 
-    if DBM.checkDB():
+    if util.checkDB():
         conn = sqlite3.connect(DB)
         conn.execute("PRAGMA foreign_keys = 1")
         cursor = conn.cursor()
@@ -240,7 +243,7 @@ def updateStudyLog(profile):
 
         DB = config.database
 
-        if DBM.checkDB():
+        if util.checkDB():
             conn = sqlite3.connect(DB)
             cursor = conn.cursor()
             cursor.execute(
@@ -254,7 +257,7 @@ def updateStudyLog(profile):
 
 def searchStudyLogbyUser(profile):
     DB = config.database
-    if DBM.checkDB():
+    if util.checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -301,7 +304,6 @@ def registerCommands():
     checkC.description = 'Checks for a user\'s logged study.'
     checkC.instruction = 'Specify a user and (optionally) the date of study, in format DD-MM-YYYY. Checks the current day by default.'
     checkC.function = 'checkF'
-    imports.update({__name__ : includes})
 
 def markF(inputData, content):
     userString = content[0]
@@ -311,7 +313,7 @@ def markF(inputData, content):
         if content[1].startswith('"') and content[1].endswith('"'):
             logNote = content[1][1:-1]
 
-    thisUser = DBM.tryGetOneUser(userString)
+    thisUser = users.tryGetOneUser(userString)
 
     if thisUser:
         logDate = thisUser.now().strftime("%d-%m-%Y")
@@ -330,7 +332,7 @@ def markF(inputData, content):
         
 def unmarkF(inputData, content):
     userString = content[0]
-    thisUser = DBM.tryGetOneUser(userString)
+    thisUser = users.tryGetOneUser(userString)
 
     if thisUser:
         search = searchStudyLogbyUser(thisUser)
@@ -364,7 +366,7 @@ def unmarkF(inputData, content):
 def checkF(inputData, content):
     userString = content[0]
 
-    thisUser = DBM.tryGetOneUser(userString)
+    thisUser = users.tryGetOneUser(userString)
 
     if thisUser:
         search = searchStudyLogbyUser(thisUser)
