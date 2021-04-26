@@ -1,14 +1,11 @@
-# Classes and functions for organizing and utilizing commands and subcommands in a botParts bot.
-
-# botParts requires sys, commandM and config to be imported by all modules.
 import sys
 import inspect
 import multiprocessing
-import queue
+from queue import Queue
 import concurrent.futures
 import copy
 
-from core import config
+import config
 
 if not config.inQ:
     config.inQ = Queue()
@@ -19,15 +16,8 @@ if not config.outQ:
 if not config.debugQ:
     config.debugQ = Queue()
 
-# These lines are also required by all botParts modules for the module to register itself with the bot and set up its own dictionary of commands. Defining mSelf as the current module makes it easier to define top-level module commands.
-
-imports = {}
+imports = config.imports
 ongoing = {}
-
-mSelf = sys.modules[__name__]
-includes = {}
-
-# The command class. Can be used to define top level commands and sub-commands/arguments/parameters. Every command must be given at least a name and a parent. All subcommand trees must lead back to a top level command that has the module itself as a parent.
 
 def manage_read_pool():
     global ongoing
@@ -41,14 +31,17 @@ def manage_read_pool():
                 inMessage = config.inQ.get()
 
                 theseCommands = {}
-                for module in imports:
-                    theseCommands.update({module : {}})
+                for collection in imports:
+                    theseCommands.update({collection : {}})
 
-                    for name, command in imports[module].items():
-                        theseCommands[module].update({name : command})
+                    for module in imports[collection]:
+                        theseCommands[collection].update({module : {}})
+
+                        for command in imports[collection][module]:
+                            theseCommands[collection][module].update({command : imports[collection][module][command]})
 
                 testFilter = messageData()
-                testFilter.server = inMessage.server
+                testFilter.place = inMessage.place
                 testFilter.channel = inMessage.channel
                 testFilter.user = inMessage.user
 
@@ -56,11 +49,13 @@ def manage_read_pool():
 
                 if result:
                     if 'commands' in ongoing[result]:
-                        theseCommands[ongoing[result]['module']].update(ongoing[result]['commands'])
+                        for collection in theseCommands:
+                            if ongoing[result]['module'] in theseCommands[collection]:
+                                theseCommands[collection][ongoing[result]['module']].update(ongoing[result]['commands'])
 
                     if 'tag' in ongoing[result]:
-                        if inMessage.content.startswith(f'{inMessage.server.trigger}{ongoing[result]["tag"]}>'):
-                            inMessage.content = inMessage.content.split(f'{inMessage.server.trigger}{ongoing[result]["tag"]}>', 1)[1] 
+                        if inMessage.content.startswith(f'{inMessage.place.trigger}{ongoing[result]["tag"]}>'):
+                            inMessage.content = inMessage.content.split(f'{inMessage.place.trigger}{ongoing[result]["tag"]}>', 1)[1] 
                             ongoing[result]['queue'].put(inMessage)
                         else:
                             messageReaders[executor.submit(readM, inMessage, theseCommands)] = inMessage
@@ -92,7 +87,7 @@ def findFilters(findMessage):
     foundUserFilters = []
 
     for eachKey, eachValue in ongoing.items():
-        if findMessage.server.id == eachValue['filter'].server.id:
+        if findMessage.place.id == eachValue['filter'].place.id:
             foundServerFilters.append(eachKey)
 
     if len(foundServerFilters) == 1:
@@ -134,7 +129,7 @@ def request_queue(ref_message, filter_user=False, filter_channel=False):
     newQ = queue.Queue()
     thisFilter = messageData()
 
-    thisFilter.server = ref_message.server
+    thisFilter.place = ref_message.place
     if filter_channel == True:
         thisFilter.channel = ref_message.channel
     if filter_user == True:
@@ -148,7 +143,7 @@ def temp_commands(ref_message, moduleName, addition, filter_user=False, filter_c
     global ongoing
     thisFilter = messageData()
 
-    thisFilter.server = ref_message.server
+    thisFilter.place = ref_message.place
     if filter_channel == True:
         thisFilter.channel = ref_message.channel
     if filter_user == True:
@@ -235,19 +230,19 @@ class command:
             config.debugQ.put(f'{self.howTo()}')
 
 class messageData:
-    def __init__(self, ID=None, USER=None, SERVER=None, CHANNEL=None):
+    def __init__(self, ID=None, USER=None, PLACE=None, CHANNEL=None):
         self.id = ID
         self.user = USER
-        self.server = SERVER
+        self.place = PLACE
         self.channel = CHANNEL
 
     def fits(other):
         likeness = 0
 
-        if other.server == None or self.server == None:
+        if other.place == None or self.place == None:
             likeness += 1
         else:
-            if self.server.id == other.server.id:
+            if self.place.id == other.place.id:
                 likeness += 1
             else:
                 return 0
@@ -271,17 +266,17 @@ class messageData:
         return likeness
 
 class fullMessageData(messageData):
-    def __init__(self, ID=None, USER=None, SERVER=None, CONTENT=None, CHANNEL=None):
+    def __init__(self, ID=None, USER=None, PLACE=None, CONTENT=None, CHANNEL=None):
         self.content = CONTENT
-        super().__init__(ID, USER, SERVER, CHANNEL)
+        super().__init__(ID, USER, PLACE, CHANNEL)
 
 # Utility function for reading incoming text and parsing it for both a valid trigger and valid commands across all imported botParts modules. If a valid command is found, its associated function is executed and passed the remainder of the input text as arguments.
 def readM(thisMessage, theseCommands):
     global imports
     doRead = False
-    if thisMessage.server.trigger and len(thisMessage.server.trigger) > 0:
-        if thisMessage.content.startswith(thisMessage.server.trigger):
-            fullText = thisMessage.content.split(thisMessage.server.trigger, 1)[1] 
+    if thisMessage.place.trigger and len(thisMessage.place.trigger) > 0:
+        if thisMessage.content.startswith(thisMessage.place.trigger):
+            fullText = thisMessage.content.split(thisMessage.place.trigger, 1)[1] 
 
             doRead = True
 
@@ -318,56 +313,61 @@ def readM(thisMessage, theseCommands):
 
         if ' '.join(fullCommand).lower() == 'commands':
             currentCommands = 'Currently available commands: '
-            for i, module in enumerate(theseCommands):
-                if i:
+
+            for i, collection in enumerate(theseCommands):
+                if i and not currentCommands.endswith(', '):
                     currentCommands += ', '
 
-                for i, each in enumerate(theseCommands[module]):
-                    if i:
+                for i, module in enumerate(theseCommands[collection]):
+                    if i and not currentCommands.endswith(', '):
                         currentCommands += ', '
 
-                    currentCommands += each
+                    for i, each in enumerate(theseCommands[collection][module]):
+                        if i and not currentCommands.endswith(', '):
+                            currentCommands += ', '
+
+                        currentCommands += each
 
             config.outQ.put(currentCommands)
 
         else:
             valid = False
 
-            for module in theseCommands:
-                pack = theseCommands[module]
+            for collection in theseCommands:
+                for module in theseCommands[collection]:
+                    i = 0
+                    pack = theseCommands[collection][module]
 
-                i = 0
-                if (i < len(fullCommand)) and (fullCommand[i].lower() in pack):
-                    pack = pack[fullCommand[i].lower()]
-                    i += 1
-                    while (i < len(fullCommand)) and (fullCommand[i].lower() in pack.includes):
-                        pack = pack.includes[fullCommand[i].lower()]
+                    if (i < len(fullCommand)) and (fullCommand[i].lower() in pack):
+                        pack = pack[fullCommand[i].lower()]
                         i += 1
-                    
-                if i > 0:
-                    valid = True
+                        while (i < len(fullCommand)) and (fullCommand[i].lower() in pack.includes):
+                            pack = pack.includes[fullCommand[i].lower()]
+                            i += 1
+                        
+                    if i > 0:
+                        valid = True
 
-                    if ' '.join(fullCommand[i:]).lower() == 'help':
-                        config.debugQ.put(f'{pack.help()}')
+                        if ' '.join(fullCommand[i:]).lower() == 'help':
+                            config.debugQ.put(f'{pack.help()}')
 
-                    else:
-                        inputData = messageData()
-                        content = None
+                        else:
+                            inputData = messageData()
+                            content = None
 
-                        if thisMessage.id:
-                            inputData.id = thisMessage.id
-                        if thisMessage.user:
-                            inputData.user = thisMessage.user
-                        if thisMessage.server:
-                            inputData.server = thisMessage.server
-                        if len(fullCommand[i:]) > 0:
-                            content = fullCommand[i:]
+                            if thisMessage.id:
+                                inputData.id = thisMessage.id
+                            if thisMessage.user:
+                                inputData.user = thisMessage.user
+                            if thisMessage.place:
+                                inputData.place = thisMessage.place
+                            if len(fullCommand[i:]) > 0:
+                                content = fullCommand[i:]
 
-                        pack.execute(inputData, content)
+                            pack.execute(inputData, content)
 
             if valid == False:
                 config.debugQ.put('Invalid command!')
 
-# botParts modules are generally designed to be imported by the botParts core modules and not used as mains themselves. If the module is used as main, print an overview of the module's use and then exit. If it is imported, go ahead with registering the module with the bot.
 if __name__ == "__main__":
     print("A framework for easily implementing and handling branching commands for a chat bot. No main.\n")

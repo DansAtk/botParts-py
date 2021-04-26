@@ -8,11 +8,13 @@ import pytz
 import calendar
 from datetime import *
 
-from core import config
-from core.commandM import command, request_queue, imports
+import config
+from core.commandM import command, request_queue
+from core.util import *
 
 mSelf = sys.modules[__name__]
 includes = {}
+config.register(mSelf)
 DB = config.database
 
 class user:
@@ -282,7 +284,6 @@ def registerCommands():
     findUserBirthdayC.description = 'Searches for users with birthdays matching the given query.'
     findUserBirthdayC.instruction = 'Specify a birthday in format DD-MM.'
     findUserBirthdayC.function = 'findUserBirthdayF'
-    imports.update({__name__ : includes})
 
 def addUserF(inputData, content):
     userDetails = content
@@ -452,7 +453,9 @@ def editUserF(inputData, content):
         config.outQ.put('User not found.')
 
 def showUserF(inputData, content):
+    print(content)
     userString = ' '.join(content)
+    print(userString)
     thisUser = tryGetOneUser(userString)
 
     if thisUser:

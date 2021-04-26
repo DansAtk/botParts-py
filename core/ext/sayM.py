@@ -1,12 +1,14 @@
 import sys
 import random
 
-from core import config
-from core.commandM import command, imports
-from core import DBM
+import config
+from core.commandM import command
+from core import users
+from core import places
 
 mSelf = sys.modules[__name__]
 includes = {}
+config.register(mSelf)
 
 def registerCommands():
     global sayC
@@ -38,41 +40,32 @@ def registerCommands():
             'Enter a term without quotes to pull a related saved quote ' \
             'from the database.'
     sayRobotC.function = 'sayRobotF'
-    imports.update({__name__ : includes})
 
 def sayF(inputData, content):
     if content[0].startswith('"') and content[0].endswith('"'):
-        #print(f'{content[0][1:-1]}\n')
         config.outQ.put(f'{content[0][1:-1]}')
     else:
-        #print(f'{sayC.howto()}\n')
         config.outQ.put(f'{sayC.howto()}')
 
 def sayQuietlyF(inputData, content):
     if content[0].startswith('"') and content[0].endswith('"'):
         config.outQ.put(f'{content[0][1:-1].lower()}')
-        #print(f'{content[0][1:-1].lower()}\n')
     else:
-        #print(f'{sayQuietlyC.howto()}\n')
         config.outQ.put(f'{sayQuietlyC.howto()}')
 
 def sayLoudlyF(inputData, content):
     if content[0].startswith('"') and content[0].endswith('"'):
-        #print(f'{content[0][1:-1].upper()}\n')
         config.outQ.put(f'{content[0][1:-1].upper()}')
     else:
-        #print(f'{sayLoudlyC.howto()}\n')
         config.outQ.put(f'{sayLoudlyC.howto()}')
 
 def sayRobotF(inputData, content):
     if content[0].startswith('"') and content[0].endswith('"'):
         inputText = ' '.join(content[0][1:-1])
         roboText = (''.join(format(ord(x), '08b') for x in inputText))
-        #print(f'{roboText}\n')
         config.outQ.put(f'{roboText}')
 
     else:
-        #print(f'{sayRobotC.howto()}\n')
         config.outQ.put(f'{sayRobotC.howto()}')
 
 if __name__ == "__main__":
