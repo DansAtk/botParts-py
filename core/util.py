@@ -299,6 +299,10 @@ def botConfigPushF(inputData=None):
         with open(config.conFile, 'w') as conf:
             json.dump(config.settings, conf)
         config.debugQ.put('Success!')
+
+    except IOError:
+        config.debugQ.put('File or location doesn\'t exist!')
+        
     except:
         config.debugQ.put('Failure!')
 
@@ -344,8 +348,12 @@ def moduleCleanup():
     config.debugQ.put('Cleaning up modules...')
 
     for collection in imports:
+        print(collection)
         for module in imports[collection]:
+            print(module)
             if hasattr(sys.modules[module], 'cleanup'):
+                print(f'{module} has it!')
+                thisfunc = getattr(sys.modules[module], 'cleanup')
                 sys.modules[module].cleanup()
 
     config.running.clear()
