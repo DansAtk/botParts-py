@@ -236,34 +236,41 @@ def registerCommands():
     addUserC.description = 'Builds a user from parameters, then adds it to the database.'
     addUserC.instruction = 'Specify user attributes using \'Attribute=Value\' with each separated by a space. \'id\' is required.'
     addUserC.function = 'addUserF'
+    addUserC.parent_module = mSelf
     global removeUserC
     removeUserC = command('user', removeC)
     removeUserC.description = 'Removes a user from the database.'
     removeUserC.instruction = 'Specify a user.'
     removeUserC.function = 'removeUserF'
+    removeUserC.parent_module = mSelf
     global editUserC
     editUserC = command('user', editC)
     editUserC.description = 'Updates an existing user with new attributes.'
     editUserC.instruction = 'First specify a user. Then, specify new attributes using \'Attribute=Value\' with each separated by a space.'
     editUserC.function = 'editUserF'
+    editUserC.parent_module = mSelf
     global showUserC
     showUserC = command('user', showC)
     showUserC.description = 'Displays detailed information about a single user.'
     showUserC.instruction = 'Specify a user.'
     showUserC.function = 'showUserF'
+    showUserC.parent_module = mSelf
     global listUserC
     listUserC = command('user', listC)
     listUserC.description = 'Lists all users in the database.'
     listUserC.function = 'listUserF'
+    listUserC.parent_module = mSelf
     global timeForC
     timeForC = command('for', timeC)
     timeForC.description = 'Displays the time in a specific user\'s timezone.'
     timeForC.instruction = 'Specify a user.'
     timeForC.function = 'timeForF'
+    timeForC.parent_module = mSelf
     global findUserC
     findUserC = command('user', findC)
     findUserC.description = 'Searches for users meeting the given criteria.'
     findUserC.instruction = 'Specify a parameter.'
+    findUserC.parent_module = mSelf
     global findUserNameC
     findUserNameC = command('name', findUserC)
     findUserNameC.description = 'Searches for users with names and/or nicknames matching the given query.'
@@ -453,9 +460,10 @@ def editUserF(inputData, content):
         config.outQ.put('User not found.')
 
 def showUserF(inputData, content):
-    print(content)
-    userString = ' '.join(content)
-    print(userString)
+    if len(content) > 1:
+        userString = ' '.join(content)
+    else:
+        userString = content[0]
     thisUser = tryGetOneUser(userString)
 
     if thisUser:

@@ -16,7 +16,7 @@ signals = {}
 # Paths
 backupPath = pathlib.Path.cwd() / 'backup'
 dataPath = pathlib.Path.cwd() / 'data'
-conFile = pathlib.Path.cwd() / 'config' / 'conf.json'
+conFile = pathlib.Path.cwd() / 'conf.json'
 database = dataPath / 'unified.db'
 
 def register(thisModule):

@@ -165,13 +165,15 @@ class command:
         self.includes = {}
         self.storage = STORAGE
 
+        self.parent_module = None
+
         if inspect.ismodule(self.parent):
             self.parent_module = self.parent
         else:
             mod = self
-            while not inspect.ismodule(mod):
+            while not mod.parent_module:
                 mod = mod.parent
-            self.parent_module = mod
+            self.parent_module = mod.parent_module
 
         if self.storage != None:
             self.storage.update({self.name : self})
