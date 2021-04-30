@@ -2,7 +2,7 @@ import sys
 import random
 
 import config
-from core.commandM import command
+from core.commands import command
 from core import users
 from core import places
 

@@ -2,6 +2,7 @@ import importlib
 import config
 from core import *
 from core.ext import *
+
 thisMod = importlib.import_module(f'interface.{config.interface}')
 thisModExt = importlib.import_module(f'interface.{config.interface}.ext')
 

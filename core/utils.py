@@ -12,7 +12,7 @@ import calendar
 from datetime import *
 
 import config
-from core.commandM import command, request_queue
+from core.commands import command, request_queue
 
 mSelf = sys.modules[__name__]
 includes = {}
@@ -202,11 +202,14 @@ def databaseSetupF(inputData):
                     ('dbversion', config.settings['dbversion']))
             conn.commit()
             conn.close()
+            config.debugQ.put('Success!')
 
             for collection in imports:
                 for module in imports[collection]:
                     if hasattr(sys.modules[module], 'dbinit'):
-                        sys.modules[module].dbinit(DB)
+                        print(collection)
+                        print(module)
+                        sys.modules[module].dbinit()
 
             config.debugQ.put('Database initialized.')
     

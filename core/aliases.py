@@ -6,10 +6,10 @@ import shutil
 import sqlite3
 
 import config
-from core.commandM import command, request_queue
-import core.utils
-import core.users
-import core.places
+from core.commands import command, request_queue
+from core import utils
+from core import users
+from core import places
 
 mSelf = sys.modules[__name__]
 includes = {}
@@ -29,7 +29,7 @@ def getAlias(userid, placeid):
         cursor.execute(
                 "SELECT userid, placeid, nick "
                 "FROM aliases "
-                "WHERE userid = ? AND placeid = ?"
+                "WHERE userid = ? AND placeid = ?",
                 (userid, placeid)
                 )
         result = cursor.fetchone()
@@ -172,10 +172,11 @@ def dbinit():
                 "userid INTEGER NOT NULL, placeid INTEGER NOT NULL, nick TEXT, "
                 "PRIMARY KEY(userid, placeid), "
                 "FOREIGN KEY(userid) REFERENCES users(id) ON DELETE CASCADE ON UPDATE NO ACTION, "
-                "FOREIGN KEY(placeid) REFERENCES places(id) ON DELETE CASCADE ON UPDATE NO ACTION")
+                "FOREIGN KEY(placeid) REFERENCES places(id) ON DELETE CASCADE ON UPDATE NO ACTION)"
                 )
         conn.commit()
         conn.close()
+        config.debugQ.put('Success!')
 
     except:
         config.debugQ.put('Unable to configure aliases table!')
@@ -217,10 +218,10 @@ def registerCommands():
     listUserAliasC.function = 'listUserAliasF'
     listUserAliasC.parent_module = mSelf
     global listPlaceAliasC
-    listAliasC = command('alias', places.listPlaceC)
-    listAliasC.description = 'Lists all aliases associated with a specific place.'
-    listAliasC.instruction = 'Specify a place.'
-    listAliasC.function = 'listPlaceAliasF'
+    listPlaceAliasC = command('alias', places.listPlaceC)
+    listPlaceAliasC.description = 'Lists all aliases associated with a specific place.'
+    listPlaceAliasC.instruction = 'Specify a place.'
+    listPlaceAliasC.function = 'listPlaceAliasF'
     listPlaceAliasC.parent_module = mSelf
 
 def addAliasF(inputData, content):
@@ -230,14 +231,15 @@ def addAliasF(inputData, content):
     placeString = content[1]
     aliasDetails = content[2:]
 
+
     thisUser = users.tryGetOneUser(userString)
     thisPlace = places.tryGetOnePlace(placeString)
 
     if thisUser and thisPlace:
-        thisAlias = getAlias(thisUser.id, thisPlace.id)
+        thisAlias = getAlias(int(thisUser.id), int(thisPlace.id))
 
-        if thisAlias == None:
-            newAlias = alias(thisUser.id, thisServer.id)
+        if not thisAlias:
+            newAlias = alias(thisUser.id, thisPlace.id)
 
             goodProfile = True
 

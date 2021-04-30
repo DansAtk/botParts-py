@@ -75,9 +75,7 @@ def manage_read_pool():
                     pass
 
                 if inMessage.id in ongoing:
-                    print(f'removing ongoing game {inMessage.id}')
                     del ongoing[inMessage.id]
-                    print(f'removed.')
                 del messageReaders[future]
 
 def findFilters(findMessage):
@@ -126,7 +124,7 @@ def findFilters(findMessage):
 
 def request_queue(ref_message, filter_user=False, filter_channel=False):
     global ongoing
-    newQ = queue.Queue()
+    newQ = Queue()
     thisFilter = messageData()
 
     thisFilter.place = ref_message.place

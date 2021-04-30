@@ -8,8 +8,8 @@ import pytz
 from datetime import *
 
 import config
-from core.commandM import command, request_queue
-import core.utils
+from core.commands import command, request_queue
+from core import utils
 
 mSelf = sys.modules[__name__]
 includes = {}
@@ -175,6 +175,7 @@ def dbinit():
                 )
         conn.commit()
         conn.close()
+        config.debugQ.put('Success!')
 
     except:
         config.debugQ.put('Unable to configure places table!')
@@ -215,12 +216,12 @@ def registerCommands():
     findPlaceC.instruction = 'Specify a parameter.'
     findPlaceC.parent_module = mSelf
     global findPlaceNameC
-    findPlaceNameC = command('name', utils.findPlaceC)
+    findPlaceNameC = command('name', findPlaceC)
     findPlaceNameC.description = 'Searches for places with names matching the given query.'
     findPlaceNameC.instruction = 'Specify a name or nickname.'
     findPlaceNameC.function = 'findPlaceNameF'
     global findPlaceTimezoneC
-    findPlaceTimezoneC = command('timezone', utils.findPlaceC)
+    findPlaceTimezoneC = command('timezone', findPlaceC)
     findPlaceTimezoneC.description = 'Searches for places with timezones matching the given query.'
     findPlaceTimezoneC.instruction = 'Specify a timezone.'
     findPlaceTimezoneC.function = 'findPlaceTimezoneF'
