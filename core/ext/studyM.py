@@ -3,14 +3,15 @@ import sqlite3
 from datetime import *
 
 import config
-from core.commandM import command
+from core.commands import command
 from core import users
 from core import places
-from core import util
+from core import utils
 
 mSelf = sys.modules[__name__]
 includes = {}
 config.register(mSelf)
+DB = config.database
 
 class studyUser(users.user):
     def __init__(self, ID, CSTREAK=None, LSTREAK=None, DAYS=None):
@@ -25,18 +26,16 @@ class studyUser(users.user):
             super().__init__(ID)
 
 def getStudyUser(userid):
-    DB = config.database
-
     thisUser = users.getUser(userid)
 
     if thisUser:
-        if util.checkDB():
+        if utils.checkDB():
             conn = sqlite3.connect(DB)
             cursor = conn.cursor()
             cursor.execute(
                     "SELECT cstreak, lstreak, days "
                     "FROM studyusers "
-                    "WHERE user = ?",
+                    "WHERE userid = ?",
                     (userid,)
                     )
             result = cursor.fetchone()
@@ -71,14 +70,12 @@ def tryGetOneStudyUser(studyuserstring):
     return thisStudyUser
 
 def addStudyUser(profile):
-    DB = config.database
-
-    if util.checkDB():
+    if utils.checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
                 "INSERT INTO studyusers"
-                "(user, cstreak, lstreak, days) "
+                "(userid, cstreak, lstreak, days) "
                 "VALUES (?, ?, ?, ?)",
                 (profile.id, profile.cstreak, profile.lstreak, profile.days)
                 )
@@ -86,15 +83,13 @@ def addStudyUser(profile):
         conn.close()
 
 def removeStudyUser(profile):
-    DB = config.database
-
-    if util.checkDB():
+    if utils.checkDB():
         conn = sqlite3.connect(DB)
         conn.execute("PRAGMA foreign_keys = 1")
         cursor = conn.cursor()
         cursor.execute(
                 "DELETE FROM studyusers "
-                "WHERE user = ?",
+                "WHERE userid = ?",
                 (profile.id,)
                 )
         conn.commit()
@@ -111,15 +106,13 @@ def updateStudyUser(profile):
         if profile.days:
             thisStudyUser.days = profile.days
 
-        DB = config.database
-
-        if util.checkDB():
+        if utils.checkDB():
             conn = sqlite3.connect(DB)
             cursor = conn.cursor()
             cursor.execute(
                     "UPDATE studyusers SET "
                     "cstreak = ?, lstreak = ?, days = ? "
-                    "WHERE user = ?",
+                    "WHERE userid = ?",
                     (thisStudyUser.cstreak, thisStudyUser.lstreak, thisStudyUser.days, thisStudyUser.id)
                     )
             conn.commit()
@@ -175,9 +168,7 @@ class studyLog:
         self.note = NOTE
 
 def getStudyLog(logid):
-    DB = config.database
-
-    if util.checkDB():
+    if utils.checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -201,9 +192,7 @@ def getStudyLog(logid):
             return None
 
 def addStudyLog(profile):
-    DB = config.database
-
-    if util.checkDB():
+    if utils.checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -216,9 +205,7 @@ def addStudyLog(profile):
         conn.close()
 
 def removeStudyLog(profile):
-    DB = config.database
-
-    if util.checkDB():
+    if utils.checkDB():
         conn = sqlite3.connect(DB)
         conn.execute("PRAGMA foreign_keys = 1")
         cursor = conn.cursor()
@@ -241,9 +228,7 @@ def updateStudyLog(profile):
         if profile.note:
             thisStudyLog.note = profile.note
 
-        DB = config.database
-
-        if util.checkDB():
+        if utils.checkDB():
             conn = sqlite3.connect(DB)
             cursor = conn.cursor()
             cursor.execute(
@@ -256,8 +241,7 @@ def updateStudyLog(profile):
             conn.close()
 
 def searchStudyLogbyUser(profile):
-    DB = config.database
-    if util.checkDB():
+    if utils.checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -279,6 +263,34 @@ def searchStudyLogbyUser(profile):
 
         else:
             return None
+
+def dbinit():
+    try:
+        config.debugQ.put('Configuring for study logging...')
+        conn = sqlite3.connect(DB)
+        print('test1')
+        cursor = conn.cursor()
+        print('test1')
+        cursor.execute(
+                "CREATE TABLE studysessions("
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, userid INTEGER, date TEXT, note TEXT, "
+                "FOREIGN KEY(userid) REFERENCES users(id) ON DELETE CASCADE ON UPDATE NO ACTION)"
+                )
+        print('test1')
+        cursor.execute(
+                "CREATE TABLE studyusers("
+                "userid INTEGER PRIMARY KEY, cstreak INTEGER DEFAULT 0, lstreak INTEGER DEFAULT 0, days INTEGER DEFAULT 0, "
+                "FOREIGN KEY(userid) REFERENCES users(id) ON DELETE CASCADE ON UPDATE NO ACTION)"
+                )
+        print('test1')
+        conn.commit()
+        print('test1')
+        conn.close()
+        print('test1')
+        config.debugQ.put('Success!')
+    
+    except:
+        config.debugQ.put('Unable to configure study logging!')
 
 def registerCommands():
     global studyC
@@ -398,23 +410,6 @@ def checkF(inputData, content):
 
     else:
         config.outQ.put('User not found.')
-
-def dbinit(DB):
-    config.debugQ.put('Configuring for study logging...')
-    conn = sqlite3.connect(DB)
-    cursor = conn.cursor()
-    cursor.execute(
-            "CREATE TABLE studysessions("
-            "id INTEGER PRIMARY KEY AUTOINCREMENT, user INTEGER, date TEXT, note TEXT, "
-            "FOREIGN KEY(user) REFERENCES users(id) ON DELETE CASCADE ON UPDATE NO ACTION)"
-            )
-    cursor.execute(
-            "CREATE TABLE studyusers("
-            "user INTEGER PRIMARY KEY, cstreak INTEGER DEFAULT 0, lstreak INTEGER DEFAULT 0, days INTEGER DEFAULT 0, "
-            "FOREIGN KEY(user) REFERENCES users(id) ON DELETE CASCADE ON UPDATE NO ACTION)"
-            )
-    conn.commit()
-    conn.close()
 
 if __name__ == "__main__":
     print('A collection of study tracking commands for a botParts bot. No main.')

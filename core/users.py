@@ -8,8 +8,8 @@ import pytz
 from datetime import *
 
 import config
-from core.commandM import command, request_queue
-import core.utils
+from core.commands import command, request_queue
+from core import utils
 
 mSelf = sys.modules[__name__]
 includes = {}
@@ -241,6 +241,7 @@ def dbinit():
                 )
         conn.commit()
         conn.close()
+        config.debugQ.put('Success!')
 
     except:
         config.debugQ.put('Unable to configure users table!')

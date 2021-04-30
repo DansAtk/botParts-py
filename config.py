@@ -9,7 +9,7 @@ promptQ = None
 interface = 'basic'
 running = None
 
-settings = {'dbversion' : '0.3'}
+settings = {'dbversion' : '0.5'}
 imports = {'core' : {}, 'core-ext' : {}, 'interface' : {}, 'interface-ext' : {}}
 signals = {}
 

@@ -5,11 +5,11 @@ import shutil
 
 import sqlite3
 
-from core import config
-from core.commandM import command, request_queue
-import core.utils
-import core.users
-import core.places
+import config
+from core.commands import command, request_queue
+from core import utils
+from core import users
+from core import places
 
 mSelf = sys.modules[__name__]
 includes = {}
@@ -54,7 +54,7 @@ class group:
 
     def addMember(self, memberid):
         if utils.checkDB():
-            if users.getUser(userid):
+            if users.getUser(memberid):
                 conn = sqlite3.connect(DB)
                 cursor = conn.cursor()
                 cursor.execute(
@@ -63,6 +63,8 @@ class group:
                         "VALUES (?, ?)",
                         (self.id, memberid)
                         )
+                conn.commit()
+                conn.close()
             elif getGroup(memberid):
                 conn = sqlite3.connect(DB)
                 cursor = conn.cursor()
@@ -72,6 +74,8 @@ class group:
                         "VALUES (?, ?)",
                         (self.id, memberid)
                         )
+                conn.commit()
+                conn.close()
 
     def removeMember(self, memberid):
         if utils.checkDB():
@@ -87,7 +91,7 @@ class group:
             conn.close()
     
 def getGroup(groupid):
-    if checkDB():
+    if utils.checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
@@ -278,20 +282,22 @@ def dbinit():
         cursor.execute(
                 "CREATE TABLE groups("
                 "id INTEGER PRIMARY KEY, name TEXT, type TEXT NOT NULL, placeid INTEGER, "
-                "FOREIGN KEY(placeid) REFERENCES places(id) ON DELETE CASCADE ON UPDATE NO ACTION"
+                "FOREIGN KEY(placeid) REFERENCES places(id) ON DELETE CASCADE ON UPDATE NO ACTION)"
                 )
         conn.commit()
+        config.debugQ.put('Success!')
         config.debugQ.put('Configuring for memberships...')
         cursor.execute(
                 "CREATE TABLE memberships("
                 "groupid INTEGER NOT NULL, memberuserid INTEGER, membergroupid INTEGER, "
                 "UNIQUE(groupid, memberuserid, membergroupid), "
                 "FOREIGN KEY(groupid) REFERENCES groups(id) ON DELETE CASCADE ON UPDATE NO ACTION, "
-                "FOREIGN KEY(memberuserid) REFERENCES users(id) ON DELETE CASCADE ON UPDATE NO ACTION")
-                "FOREIGN KEY(membergroupid) REFERENCES groups(id) ON DELETE CASCADE ON UPDATE NO ACTION")
+                "FOREIGN KEY(memberuserid) REFERENCES users(id) ON DELETE CASCADE ON UPDATE NO ACTION, "
+                "FOREIGN KEY(membergroupid) REFERENCES groups(id) ON DELETE CASCADE ON UPDATE NO ACTION)"
                 )
         conn.commit()
         conn.close()
+        config.debugQ.put('Success!')
 
     except:
         config.debugQ.put('Unable to configure groups and/or memberships table!')
@@ -421,7 +427,7 @@ def addGroupMemberF(inputData, content):
         cursor = conn.cursor()
         cursor.execute(
                 "SELECT groupid, memberuserid "
-                "FROM groups "
+                "FROM memberships "
                 "WHERE groupid = ? AND memberuserid = ?",
                 (thisGroup.id, thisMemberUser.id)
                 )
@@ -432,7 +438,7 @@ def addGroupMemberF(inputData, content):
             config.outQ.put('User is already a member of the given group.')
 
         else:
-            thisGroup.addMember(thisUser.id)
+            thisGroup.addMember(thisMemberUser.id)
             config.outQ.put('Membership added.')
 
     elif thisGroup and thisMemberGroup:
@@ -440,7 +446,7 @@ def addGroupMemberF(inputData, content):
         cursor = conn.cursor()
         cursor.execute(
                 "SELECT groupid, membergroupid "
-                "FROM groups "
+                "FROM memberships "
                 "WHERE groupid = ? AND membergroupid = ?",
                 (thisGroup.id, thisMemberGroup.id)
                 )
@@ -490,7 +496,7 @@ def removeGroupMemberF(inputData, content):
         cursor = conn.cursor()
         cursor.execute(
                 "SELECT groupid "
-                "FROM groups "
+                "FROM memberships "
                 "WHERE groupid = ? AND memberuserid = ?",
                 (thisGroup.id, thisMemberUser.id)
                 )
@@ -509,7 +515,7 @@ def removeGroupMemberF(inputData, content):
         cursor = conn.cursor()
         cursor.execute(
                 "SELECT groupid "
-                "FROM groups "
+                "FROM memberships "
                 "WHERE groupid = ? AND membergroupid = ?",
                 (thisGroup.id, thisMemberUser.id)
                 )

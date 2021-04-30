@@ -6,8 +6,8 @@ import time
 import config
 from core import users
 from core import places
-from core import commandM
-from core import util
+from core.commands import command, fullMessageData, manage_read_pool
+from core import utils
 
 config.inQ = multiprocessing.Queue()
 config.outQ = multiprocessing.Queue()
@@ -30,7 +30,7 @@ def inM():
         message_id += 1
 
         if currentUser and currentPlace:
-            thisMessage = commandM.fullMessageData(message_id, currentUser, currentPlace, input_text)
+            thisMessage = fullMessageData(message_id, currentUser, currentPlace, input_text)
             config.inQ.put(thisMessage)
         else:
             config.promptQ.put(input_text)
@@ -98,7 +98,6 @@ def login():
     setUser(userText)
 
     if currentUser:
-        print(currentUser.id)
         config.outQ.put('Place: ')
         placeText = config.promptQ.get()
 
@@ -117,30 +116,30 @@ def login():
 
 def registerCommands():
     global sessionC
-    sessionC = commandM.command('session', mSelf)
+    sessionC = command('session', mSelf)
     sessionC.description = 'Commands for managing the current login session.'
     sessionC.instruction = 'Specify a parameter.'
     global sessionLogoutC
-    sessionLogoutC = commandM.command('logout', sessionC)
+    sessionLogoutC = command('logout', sessionC)
     sessionLogoutC.description = 'Logs you out of the current session.'
     sessionLogoutC.function = 'sessionLogoutF'
     global sessionUserC
-    sessionUserC = commandM.command('user', sessionC)
+    sessionUserC = command('user', sessionC)
     sessionUserC.description = 'Used to alter user settings.'
     sessionUserC.instruction = 'Specify a parameter. By itself displays the current settings.'
     sessionUserC.function = 'sessionUserF'
     global sessionUserNameC
-    sessionUserNameC = commandM.command('name', sessionUserC)
+    sessionUserNameC = command('name', sessionUserC)
     sessionUserNameC.description = 'Used to change the current user\'s name.'
     sessionUserNameC.instruction = 'Specify a new name.'
     sessionUserNameC.function = 'sessionUserNameF'
     global sessionPlaceC
-    sessionPlaceC = commandM.command('place', sessionC)
+    sessionPlaceC = command('place', sessionC)
     sessionPlaceC.description = 'Used to alter place settings.'
     sessionPlaceC.instruction = 'Specify a parameter. By itself displays the current settings.'
     sessionPlaceC.function = 'sessionPlaceF'
     global sessionPlaceTriggerC
-    sessionPlaceTriggerC = commandM.command('trigger', sessionPlaceC)
+    sessionPlaceTriggerC = command('trigger', sessionPlaceC)
     sessionPlaceTriggerC.description = 'Used to alter the current place\'s trigger.'
     sessionPlaceTriggerC.instruction = 'Specify a new trigger.'
     sessionPlaceTriggerC.function = 'sessionPlaceTriggerF'
@@ -225,7 +224,7 @@ def start():
         outThread.start()
         debugThread = threading.Thread(target=debugM)
         debugThread.start()
-        mailroom = multiprocessing.Process(target=commandM.manage_read_pool)
+        mailroom = multiprocessing.Process(target=manage_read_pool)
         mailroom.start()
 
         while config.running.is_set():
@@ -255,11 +254,12 @@ def start():
 
     except KeyboardInterrupt:
         if config.running.is_set():
-            util.moduleCleanup()
+            utils.moduleCleanup()
 
     finally:
-        if config.running.is_set():
-            util.moduleCleanup()
+        if config.running:
+            if config.running.is_set():
+                utils.moduleCleanup()
 
         config.debugQ.put('Closing message queues...')
         config.inQ.close()
