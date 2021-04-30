@@ -108,11 +108,11 @@ def login():
 
         else:
             config.outQ.put('Error: Place not found!')
-            config.login.clear()
+            config.signals['login'].clear()
 
     else:
         config.outQ.put('Error: User not found!')
-        config.login.clear()
+        config.signals['login'].clear()
 
 def registerCommands():
     global sessionC
@@ -145,7 +145,7 @@ def registerCommands():
     sessionPlaceTriggerC.function = 'sessionPlaceTriggerF'
     
 def sessionLogoutF(inputData):
-    config.login.clear()
+    config.signals['login'].clear()
 
     config.outQ.put('Logged out!')
 

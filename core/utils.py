@@ -207,8 +207,6 @@ def databaseSetupF(inputData):
             for collection in imports:
                 for module in imports[collection]:
                     if hasattr(sys.modules[module], 'dbinit'):
-                        print(collection)
-                        print(module)
                         sys.modules[module].dbinit()
 
             config.debugQ.put('Database initialized.')
@@ -327,11 +325,8 @@ def moduleCleanup():
     config.debugQ.put('Cleaning up modules...')
 
     for collection in imports:
-        print(collection)
         for module in imports[collection]:
-            print(module)
             if hasattr(sys.modules[module], 'cleanup'):
-                print(f'{module} has it!')
                 thisfunc = getattr(sys.modules[module], 'cleanup')
                 sys.modules[module].cleanup()
 
