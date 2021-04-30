@@ -38,7 +38,7 @@ def getAlias(userid, placeid):
         if result:
             thisAlias = alias(result[0], result[1], result[2])
 
-            return thisUser
+            return thisAlias
 
         else:
             return None
@@ -283,7 +283,7 @@ def removeAliasF(inputData, content):
         thisAlias = getAlias(thisUser.id, thisPlace.id)
 
         if thisAlias:
-            config.outQ.put(f'Remove alias for {thisUser.name}({thisUser.id}) in {thisPlace.name}({thisPlace.id})? <y/N> ')
+            config.outQ.put(f'{thisThread["tag"]}> Remove alias for {thisUser.name}({thisUser.id}) in {thisPlace.name}({thisPlace.id})? ({thisThread["tag"]}> y/N)')
             rawResponse = thisThread['queue'].get()
             response = rawResponse.content
 

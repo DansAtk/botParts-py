@@ -159,7 +159,6 @@ class command:
         self.instruction = INSTRUCTION
         self.function = FUNCTION
         self.enabled = ENABLED
-        self.perm = PERM
         self.includes = {}
         self.storage = STORAGE
 
