@@ -17,17 +17,18 @@ config.register(mSelf)
 DB = config.database
 
 class alias:
-    def __init__(self, USER, PLACE, NICK=None):
+    def __init__(self, USER, PLACE, NICK=None, ID=None):
         self.user = USER
         self.place = PLACE
         self.nick = NICK
+        self.id = ID
 
 def getAlias(userid, placeid):
     if utils.checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
-                "SELECT userid, placeid, nick "
+                "SELECT userid, placeid, nick, rowid "
                 "FROM aliases "
                 "WHERE userid = ? AND placeid = ?",
                 (userid, placeid)
@@ -36,7 +37,7 @@ def getAlias(userid, placeid):
         conn.close()
         
         if result:
-            thisAlias = alias(result[0], result[1], result[2])
+            thisAlias = alias(result[0], result[1], result[2], result[3])
 
             return thisAlias
 
