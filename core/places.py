@@ -31,6 +31,47 @@ class place:
         else:
             return getTime()
 
+    def root(self):
+        thisRoot = self
+        while thisRoot.parent:
+            thisRoot = getPlace(thisRoot.parent)
+
+        return thisRoot
+
+    def children(self):
+        if utils.checkDB():
+            conn = sqlite3.connect(DB)
+            cursor = conn.cursor()
+            cursor.execute(
+                    "SELECT id "
+                    "FROM places "
+                    "WHERE parent = ?",
+                    (self.id,)
+                    )
+            results = cursor.fetchall()
+            conn.close()
+
+            if len(results) > 0:
+                foundChildren = []
+                for each in results:
+                    thisPlace = getPlace(result[0])
+                    foundChildren.append(thisPlace)
+
+                return foundChildren
+
+            else:
+                return None
+
+    def lineage(self):
+        if utils.checkDB():
+            ancestors = [self]
+            thisParent = self
+            while thisParent.parent:
+                thisParent = getPlace(thisParent.parent)
+                ancestors.append(thisParent)
+
+            return ancestors
+
 def getPlace(placeID):
     if utils.checkDB():
         conn = sqlite3.connect(DB)
@@ -51,38 +92,6 @@ def getPlace(placeID):
 
             return thisPlace
         
-        else:
-            return None
-
-def getPlaceRoot(placeID):
-    root = getPlace(placeID)
-
-    while root.parent:
-        root = getPlace(root.parent)
-
-    return root
-
-def getPlaceChildren(placeID):
-    if utils.checkDB():
-        conn = sqlite3.connect(DB)
-        cursor = conn.cursor()
-        cursor.execute(
-                "SELECT id "
-                "FROM places "
-                "WHERE parent = ?",
-                (placeID,)
-                )
-        results = cursor.fetchall()
-        conn.close()
-
-        if len(results) > 0:
-            foundChildren = []
-            for each in results:
-                thisPlace = getPlace(result[0])
-                foundChildren.append(thisPlace)
-
-            return foundChildren
-
         else:
             return None
 
@@ -127,9 +136,7 @@ def removePlace(profile):
         conn.commit()
         conn.close()
 
-    children = getPlaceChildren(profile.id)
-    
-    for child in children:
+    for child in profile.children():
         removePlace(child)
 
 def updatePlace(profile):
