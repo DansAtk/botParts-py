@@ -64,19 +64,19 @@ def getPermbyType(profile):
     thisPerm = None
 
     if profile.type = 'command':
-        thisPerm = getCommandPerm(profile)
+        thisPerm = getCommandPerm(profile.command)
     elif profile.type = 'user':
-        thisPerm = getUserPerm(profile)
+        thisPerm = getUserPerm(profile.command, profile.target)
     elif profile.type = 'place':
-        thisPerm = getPlacePerm(profile)
+        thisPerm = getPlacePerm(profile.command, profile.target)
     elif profile.type = 'alias':
-        thisPerm = getAliasPerm(profile)
+        thisPerm = getAliasPerm(profile.command, profile.target)
     elif profile.type = 'group':
-        thisPerm = getGroupPerm(profile)
+        thisPerm = getGroupPerm(profile.command, profile.target)
 
     return thisPerm
 
-def getCommandPerm(profile):
+def getCommandPerm(thisCommand):
     if utils.checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
@@ -84,7 +84,7 @@ def getCommandPerm(profile):
                 "SELECT rowid "
                 "FROM perms "
                 "WHERE command = ? AND userid IS NULL AND placeid IS NULL AND aliasid IS NULL AND groupid IS NULL",
-                (profile.command,)
+                (thisCommand,)
                 )
         result = cursor.fetchone()
         conn.close()
@@ -95,7 +95,7 @@ def getCommandPerm(profile):
         else:
             return None
 
-def getUserPerm(profile):
+def getUserPerm(thisCommand, userid):
     if utils.checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
@@ -103,7 +103,7 @@ def getUserPerm(profile):
                 "SELECT rowid "
                 "FROM perms "
                 "WHERE command = ? AND userid = ?",
-                (profile.command, profile.target)
+                (thisCommand, userid)
                 )
         result = cursor.fetchone()
         conn.close()
@@ -114,7 +114,7 @@ def getUserPerm(profile):
         else:
             return None
 
-def getPlacePerm(profile):
+def getPlacePerm(thisCommand, placeid):
     if utils.checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
@@ -122,7 +122,7 @@ def getPlacePerm(profile):
                 "SELECT value "
                 "FROM perms "
                 "WHERE command = ? AND placeid = ?",
-                (profile.command, profile.target)
+                (thisCommand, placeid)
                 )
         result = cursor.fetchone()
         conn.close()
@@ -133,7 +133,7 @@ def getPlacePerm(profile):
         else:
             return None
 
-def getAliasPerm(profile):
+def getAliasPerm(thisCommand, aliasid):
     if utils.checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
@@ -141,7 +141,7 @@ def getAliasPerm(profile):
                 "SELECT value "
                 "FROM perms "
                 "WHERE command = ? AND aliasid = ?",
-                (profile.command, profile.target)
+                (thisCommand, aliasid)
                 )
         result = cursor.fetchone()
         conn.close()
@@ -152,7 +152,7 @@ def getAliasPerm(profile):
         else:
             return None
 
-def getGroupPerm(profile):
+def getGroupPerm(thisCommand, groupid):
     if utils.checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
@@ -160,7 +160,7 @@ def getGroupPerm(profile):
                 "SELECT value "
                 "FROM perms "
                 "WHERE command = ? AND groupid = ?",
-                (profile.command, profile.target)
+                (thisCommand, groupid)
                 )
         result = cursor.fetchone()
         conn.close()
@@ -171,8 +171,15 @@ def getGroupPerm(profile):
         else:
             return None
 
-def getAllPerm(inputData):
+def getCombinedPerm(inputData, thisCommand):
+    userPerm = getUserPerm(thisCommand, inputData.user.id)
+    placePerm = getPlacePerm(thisCommand, inputData.place.id)
+    
+    thisAlias = aliases.getAlias(inputData.user.id, inputData.place.id)
+    if thisAlias:
+        aliasPerm = getAliasPerm(thisCommand, thisAlias.id)
 
+    groupPerm = getGroupPerm(thisCommand, thisGroup.id)
 
 def addPermbyType(profile):
     if profile.type = 'command':
