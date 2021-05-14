@@ -309,6 +309,16 @@ def addPlaceF(inputData, content):
                 else:
                     goodProfile = False
 
+            if 'parent' in placeDict.keys():
+                if utils.isQuoted(placeDict['parent']):
+                    thisParent = tryGetOnePlace(placeDict['parent'][1:-1])
+                    if thisParent:
+                        newPlace.parent = thisParent.id
+                    else:
+                        goodProfile = False
+                else:
+                    goodProfile = False
+
     if goodProfile:
         addPlace(newPlace)
         config.outQ.put(f'Added place {newPlace.name}.')
@@ -384,6 +394,17 @@ def editPlaceF(inputData, content):
             else:
                 goodProfile = False
 
+        if 'parent' in placeDict.keys():
+            if utils.isQuoted(placeDict['parent']):
+                thisParent = tryGetOnePlace(placeDict['parent'][1:-1])
+                if thisParent:
+                    editPlace.parent = thisParent.id
+                    goodProfile = True
+                else:
+                    goodProfile = False
+            else:
+                goodProfile = False
+
         if goodProfile:
             updatePlace(editPlace)
             config.outQ.put(f'Updated place {thisPlace.name}.')
@@ -400,10 +421,11 @@ def showPlaceF(inputData, content):
 
     if thisPlace:
         output_text = ''
-        output_text += (f'Name = {thisPlace.name}\n')
-        output_text += (f'ID = {thisPlace.id}\n')
-        output_text += (f'Trigger = {thisPlace.trigger}\n')
-        output_text += (f'Timezone = {thisPlace.tz}')
+        output_text += (f'Name: {thisPlace.name}\n')
+        output_text += (f'ID: {thisPlace.id}\n')
+        output_text += (f'Trigger: {thisPlace.trigger}\n')
+        output_text += (f'Timezone: {thisPlace.tz}\n')
+        output_text += (f'Parent: {thisPlace.parent}')
 
         config.outQ.put(output_text)
 
