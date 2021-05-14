@@ -368,5 +368,36 @@ def readM(thisMessage, theseCommands):
             if valid == False:
                 config.debugQ.put('Invalid command!')
 
+def verifyCommand(fullText):
+    global imports
+    commandText = fullText.split(' ')
+    fullCommand = []
+
+    for parameter in commandText:
+        fullCommand.append(parameter)
+
+    valid = False
+
+    if fullText.lower() == 'commands':
+        valid = True
+
+    else:
+        for collection in imports:
+            for module in imports[collection]:
+                i = 0
+                pack = imports[collection][module]
+
+                if (i < len(fullCommand)) and (fullCommand[i].lower() in pack):
+                    pack = pack[fullCommand[i].lower()]
+                    i += 1
+                    while (i < len(fullCommand)) and (fullCommand[i].lower() in pack.includes):
+                        pack = pack.includes[fullCommand[i].lower()]
+                        i += 1
+                    
+                if i == (len(fullCommand) - 1):
+                    valid = True
+    
+    return valid
+
 if __name__ == "__main__":
     print("A framework for easily implementing and handling branching commands for a chat bot. No main.\n")

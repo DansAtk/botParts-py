@@ -20,6 +20,14 @@ config.register(mSelf)
 DB = config.database
 imports = config.imports
 
+def isQuoted(thisString):
+    if thisString.startswith('"') and thisString.endswith('"'):
+        return True
+    elif thisString.startswith("'") and thisString.endswith("'"):
+        return True
+    else:
+        return False
+    
 def getTime(refTZ=None):
     if refTZ:
         return datetime.now(pytz.timezone(refTZ))
