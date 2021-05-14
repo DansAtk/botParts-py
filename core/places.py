@@ -17,11 +17,12 @@ config.register(mSelf)
 DB = config.database
 
 class place:
-    def __init__(self, ID, NAME=None, TRIGGER=':', TZ=None):
+    def __init__(self, ID, NAME=None, TRIGGER=':', TZ=None, PARENT=None):
         self.id = ID
         self.name = NAME
         self.trigger = TRIGGER
         self.tz = TZ
+        self.parent = PARENT
 
     def now(self):
         if self.tz:
@@ -35,7 +36,7 @@ def getPlace(placeID):
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
-                "SELECT name, trigger, tz FROM places WHERE id = ?",
+                "SELECT name, trigger, tz, parent FROM places WHERE id = ?",
                 (placeID,)
                 )
         result = cursor.fetchone()
@@ -46,9 +47,42 @@ def getPlace(placeID):
             thisPlace.name = result[0]
             thisPlace.trigger = result[1]
             thisPlace.tz = result[2]
+            thisPlace.parent = result[3]
 
             return thisPlace
         
+        else:
+            return None
+
+def getPlaceRoot(placeID):
+    root = getPlace(placeID)
+
+    while root.parent:
+        root = getPlace(root.parent)
+
+    return root
+
+def getPlaceChildren(placeID):
+    if utils.checkDB():
+        conn = sqlite3.connect(DB)
+        cursor = conn.cursor()
+        cursor.execute(
+                "SELECT id "
+                "FROM places "
+                "WHERE parent = ?",
+                (placeID,)
+                )
+        results = cursor.fetchall()
+        conn.close()
+
+        if len(results) > 0:
+            foundChildren = []
+            for each in results:
+                thisPlace = getPlace(result[0])
+                foundChildren.append(thisPlace)
+
+            return foundChildren
+
         else:
             return None
 
@@ -73,9 +107,9 @@ def addPlace(profile):
         cursor = conn.cursor()
         cursor.execute(
                 "INSERT INTO places"
-                "(id, name, trigger, tz) "
-                "VALUES (?, ?, ?, ?)",
-                (profile.id, profile.name, profile.trigger, profile.tz)
+                "(id, name, trigger, tz, parent) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (profile.id, profile.name, profile.trigger, profile.tz, profile.parent)
                 )
         conn.commit()
         conn.close()
@@ -93,6 +127,11 @@ def removePlace(profile):
         conn.commit()
         conn.close()
 
+    children = getPlaceChildren(profile.id)
+    
+    for child in children:
+        removePlace(child)
+
 def updatePlace(profile):
     thisPlace = getPlace(profile.id)
 
@@ -103,15 +142,17 @@ def updatePlace(profile):
             thisPlace.trigger = profile.trigger
         if profile.tz:
             thisPlace.tz = profile.tz
+        if profile.parent:
+            thisPlace.parent = profile.parent
         
         if utils.checkDB():
             conn = sqlite3.connect(DB)
             cursor = conn.cursor()
             cursor.execute(
                     "UPDATE places SET "
-                    "name = ?, trigger = ?, tz = ? "
+                    "name = ?, trigger = ?, tz = ?, parent = ? "
                     "WHERE id = ?",
-                    (thisPlace.name, thisPlace.trigger, thisPlace.tz, thisPlace.id)
+                    (thisPlace.name, thisPlace.trigger, thisPlace.tz, thisPlace.parent, thisPlace.id)
                     )
             conn.commit()
             conn.close()
@@ -171,7 +212,7 @@ def dbinit():
         config.debugQ.put('Configuring for places...')
         cursor.execute(
                 "CREATE TABLE places("
-                "id INTEGER PRIMARY KEY, name TEXT, tz TEXT, trigger TEXT)"
+                "id INTEGER PRIMARY KEY, name TEXT, tz TEXT, trigger TEXT, parent INTEGER)"
                 )
         conn.commit()
         conn.close()
