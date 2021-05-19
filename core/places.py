@@ -63,14 +63,23 @@ class place:
                 return None
 
     def lineage(self):
-        if utils.checkDB():
-            ancestors = [self]
-            thisParent = self
-            while thisParent.parent:
-                thisParent = getPlace(thisParent.parent)
-                ancestors.append(thisParent)
+        ancestors = [self]
+        thisParent = self
+        while thisParent.parent:
+            thisParent = getPlace(thisParent.parent)
+            ancestors.append(thisParent)
 
-            return ancestors
+        return ancestors
+
+    def checkInheritance(self, placeid):
+        inheritsFrom = False
+        thisLineage = self.lineage()
+
+        for each in thisLineage:
+            if placeid == each.id:
+                inheritsFrom = True
+
+        return inheritsFrom
 
 def getPlace(placeID):
     if utils.checkDB():

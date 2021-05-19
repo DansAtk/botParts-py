@@ -40,12 +40,7 @@ def manage_read_pool():
                         for command in imports[collection][module]:
                             theseCommands[collection][module].update({command : imports[collection][module][command]})
 
-                testFilter = messageData()
-                testFilter.place = inMessage.place
-                testFilter.channel = inMessage.channel
-                testFilter.user = inMessage.user
-
-                result = findFilters(testFilter)
+                result = findFilter(inMessage)
 
                 if result:
                     if 'commands' in ongoing[result]:
@@ -78,78 +73,58 @@ def manage_read_pool():
                     del ongoing[inMessage.id]
                 del messageReaders[future]
 
-def findFilters(findMessage):
+def findFilter(findMessage):
     global ongoing
-    foundServerFilters = []
-    foundChannelFilters = []
-    foundUserFilters = []
+    foundFilters = []
 
     for eachKey, eachValue in ongoing.items():
-        if findMessage.place.id == eachValue['filter'].place.id:
-            foundServerFilters.append(eachKey)
+        if eachValue['filter'].compare(findMessage):
+            foundFilters.append(eachKey)
 
-    if len(foundServerFilters) == 1:
-        return foundServerFilters[0]
-
-    elif len(foundServerFilters) > 1:
-        for each in foundServerFilters:
-            thisFilter = ongoing[each]['filter']
-            if thisFilter.channel == None or findMessage.channel == None:
-                foundChannelFilters.append(each)
-            else:
-                if findMessage.channel.id == thisFilter.channel.id:
-                    foundChannelFilters.append(each)
-        
-        if len(foundChannelFilters) == 1:
-            return foundChannelFilters[0]
-
-        elif len(foundChannelFilters) > 1:
-            for each in foundChannelFilters:
-                thisFilter = ongoing[each]['filter']
-                if thisFilter.user == None or findMessage.user == None:
-                    foundUserFilters.append(each)
-                else:
-                    if findMessage.user.id == thisFilter.user.id:
-                        foundUserFilters.append(each)
-
-            if len(foundUserFilters) == 1:
-                return foundUserFilters[0]
-            
-            else:
-                return None
-        else:
-            return None
+    if len(foundFilters) == 1:
+        return foundFilters[0]
+    
     else:
         return None
 
-def request_queue(ref_message, filter_user=False, filter_channel=False):
+def request_queue(ref_message, filter_place=None, filter_user=None, filter_group=None):
     global ongoing
     newQ = Queue()
-    thisFilter = messageData()
+    thisFilter = messageFilter()
 
-    thisFilter.place = ref_message.place
-    if filter_channel == True:
-        thisFilter.channel = ref_message.channel
-    if filter_user == True:
-        thisFilter.user = ref_message.user
+    if filter_place or filter_user or filter_group:
+        if filter_place:
+            thisFilter.place = filter_place
+        if filter_user:
+            thisFilter.user = filter_user
+        if filter_group:
+            thisFilter.group = filter_group
 
-    ongoing.update({ref_message.id : {'filter' : thisFilter, 'queue' : newQ, 'tag' : ref_message.id}})
+        ongoing.update({ref_message.id : {'filter' : thisFilter, 'queue' : newQ, 'tag' : ref_message.id}})
 
-    return ongoing[ref_message.id]
+        return ongoing[ref_message.id]
 
-def temp_commands(ref_message, moduleName, addition, filter_user=False, filter_channel=False):
+    else:
+        return None
+
+def temp_commands(ref_message, moduleName, addition, filter_place=None, filter_user=None, filter_group=None):
     global ongoing
-    thisFilter = messageData()
+    thisFilter = messageFilter()
 
-    thisFilter.place = ref_message.place
-    if filter_channel == True:
-        thisFilter.channel = ref_message.channel
-    if filter_user == True:
-        thisFilter.user = ref_message.user
+    if filter_place or filter_user or filter_group:
+        if filter_place:
+            thisFilter.place = filter_place
+        if filter_user:
+            thisFilter.user = filter_user
+        if filter_group:
+            thisFilter.group = filter_group
 
-    ongoing.update({ref_message.id : {'filter' : thisFilter, 'module' : moduleName, 'commands' : addition}})
+        ongoing.update({ref_message.id : {'filter' : thisFilter, 'module' : moduleName, 'commands' : addition}})
 
-    return 0
+        return 0
+
+    else:
+        return 1
 
 class command:
     def __init__(self, NAME, PARENT, STORAGE=None, DESCRIPTION=None, INSTRUCTION=None, FUNCTION=None, ENABLED=True, PERM=0):
@@ -229,45 +204,36 @@ class command:
             config.debugQ.put(f'{self.howTo()}')
 
 class messageData:
-    def __init__(self, ID=None, USER=None, PLACE=None, CHANNEL=None):
+    def __init__(self, ID=None, USER=None, PLACE=None):
         self.id = ID
         self.user = USER
         self.place = PLACE
-        self.channel = CHANNEL
-
-    def fits(other):
-        likeness = 0
-
-        if other.place == None or self.place == None:
-            likeness += 1
-        else:
-            if self.place.id == other.place.id:
-                likeness += 1
-            else:
-                return 0
-
-        if other.channel == None or self.channel == None:
-            likeness += 1
-        else:
-            if self.channel.id == other.channel.id:
-                likeness += 1
-            else:
-                return 0
-
-        if other.user == None or self.user == None:
-            likeness += 1
-        else:
-            if self.user.id == other.user.id:
-                likeness += 1
-            else:
-                return 0
-
-        return likeness
 
 class fullMessageData(messageData):
-    def __init__(self, ID=None, USER=None, PLACE=None, CONTENT=None, CHANNEL=None):
+    def __init__(self, ID=None, USER=None, PLACE=None, CONTENT=None):
         self.content = CONTENT
-        super().__init__(ID, USER, PLACE, CHANNEL)
+        super().__init__(ID, USER, PLACE)
+
+class messageFilter:
+    def __init__(self, USER=None, PLACE=None, GROUP=None):
+        self.user = USER
+        self.place = PLACE
+        self.group = GROUP
+
+    def compare(self, message):
+        isMatch = True
+
+        if self.user:
+            if message.user.id != self.user.id:
+                isMatch = False
+        if self.place and isMatch:
+            if not message.place.checkInheritance(self.place.id):
+                isMatch = False
+        if self.group and isMatch:
+            if not self.group.checkUserMember(message.user.id):
+                isMatch = False
+
+        return isMatch
 
 # Utility function for reading incoming text and parsing it for both a valid trigger and valid commands across all imported botParts modules. If a valid command is found, its associated function is executed and passed the remainder of the input text as arguments.
 def readM(thisMessage, theseCommands):

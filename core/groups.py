@@ -38,9 +38,6 @@ class group:
             results = cursor.fetchall()
             conn.close()
 
-            self.memberusers = []
-            self.membergroups = []
-
             if len(results) > 0:
                 for each in results:
                     if each[1] == None:
@@ -50,7 +47,9 @@ class group:
                         thisGroup = getGroup(each[1])
                         self.members['groups'].append(thisGroup)
 
-            return self.members
+                return self.members
+            else:
+                return None
 
     def addMember(self, memberid):
         if utils.checkDB():
@@ -89,6 +88,24 @@ class group:
                     )
             conn.commit()
             conn.close()
+
+    def checkUserMember(self, userid):
+        foundMembership = False
+        groupMembers = self.getMembers()
+
+        if groupMembers:
+            for eachUser in groupMembers['users']:
+                if eachUser.id == userid:
+                    foundMembership = True
+
+            if not foundMembership:
+                for eachGroup in groupMembers['groups']:
+                    result = eachGroup.checkUserMember(userid)
+                    if result:
+                        foundMembership = True
+
+        return foundMembership
+
     
 def getGroup(groupid):
     if utils.checkDB():
