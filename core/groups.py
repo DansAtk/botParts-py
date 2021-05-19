@@ -89,6 +89,21 @@ class group:
             conn.commit()
             conn.close()
 
+    def lineage(self):
+        ancestors = [self]
+        parents = searchGroupbyMemberGroup(self.id)
+        if parents:
+            for each in parents:
+                notLooping = True
+                for x in ancestors:
+                    if each.id == x.id:
+                        notLooping = False
+
+                if notLooping:
+                    ancestors.append(each.lineage())
+
+        return ancestors
+
     def checkUserMember(self, userid):
         foundMembership = False
         groupMembers = self.getMembers()
@@ -243,15 +258,118 @@ def searchGroupbyType(searchString):
         else:
             return None
 
-def searchGroupbyMember(memberid):
+def searchGroupbyMemberUser(memberUserID):
     if utils.checkDB():
         conn = sqlite3.connect(DB)
         cursor = conn.cursor()
         cursor.execute(
                 "SELECT groupid "
                 "FROM memberships "
-                "WHERE (memberuserid = ? OR membergroupid = ?)",
-                (memberid, memberid)
+                "WHERE memberuserid = ?",
+                (memberUserID,)
+                )
+        search = cursor.fetchall()
+        conn.close()
+
+        if len(search) > 0:
+            foundGroups = []
+            for result in search:
+                thisGroup = getGroup(result[0])
+                foundGroups.append(thisGroup)
+
+            return foundGroups
+
+        else:
+            return None
+
+def searchGroupbyMemberUserandPlace(memberUserID, placeID):
+    totalGroups = []
+
+    globalGroups = searchGlobalGroupbyMemberUser(memberUserID)
+    if globalGroups:
+        for eachGlobal in globalGroups:
+            totalGroups.append(eachGlobal)
+
+    localGroups = searchLocalGroupbyMemberUserandPlace(memberUserID, placeID)
+    if localGroups:
+        for eachLocal in localGroups:
+            totalGroups.append(eachLocal)
+
+    if len(totalGroups) > 0:
+        return totalGroups
+    else:
+        return None
+
+def searchGlobalGroupbyMemberUser(memberUserID):
+    if utils.checkDB():
+        conn = sqlite3.connect(DB)
+        cursor = conn.cursor()
+        cursor.execute(
+                "SELECT groupid "
+                "FROM memberships "
+                "WHERE (memberuserid = ? AND placeid IS NULL)",
+                (memberUserID,)
+                )
+        search = cursor.fetchall()
+        conn.close()
+
+        if len(search) > 0:
+            foundGroups = []
+            for result in search:
+                thisGroup = getGroup(result[0])
+                foundGroups.append(thisGroup)
+
+            return foundGroups
+
+        else:
+            return None
+
+def searchLocalGroupbyMemberUserandPlace(memberUserID, placeid):
+    thisPlace = places.getPlace(placeid)
+    if thisPlace:
+        placeLineage = thisPlace.lineage()
+        if utils.checkDB():
+            foundGroups = []
+            conn = sqlite3.connect(DB)
+            cursor = conn.cursor()
+
+            for each in placeLineage:
+                cursor.execute(
+                        "SELECT groupid "
+                        "FROM memberships "
+                        "WHERE (memberuserid = ? AND placeid = ?)",
+                        (memberUserID, each.id)
+                        )
+                search = cursor.fetchall()
+
+                if len(search) > 0:
+                    for result in search:
+                        thisGroup = getGroup(result[0])
+                        exists = False
+                        for x in foundGroups:
+                            if thisGroup.id == x.id:
+                                exists = True
+                        
+                        if not exists:
+                            foundGroups.append(thisGroup)
+
+            conn.close()
+            
+            if len(foundGroups) > 0:
+                return foundGroups
+
+            else:
+                return None
+
+def searchGroupbyMemberGroup(memberGroupID):
+    if utils.checkDB():
+        conn = sqlite3.connect(DB)
+        cursor = conn.cursor()
+        cursor.execute(
+                "SELECT groupid "
+                "FROM memberships "
+                "WHERE membergroupid = ?",
+                (memberGroupID,)
                 )
         search = cursor.fetchall()
         conn.close()

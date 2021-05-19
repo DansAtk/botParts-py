@@ -133,6 +133,24 @@ def getPlacePerm(thisCommand, placeid):
         else:
             return None
 
+def getPlaceInheritedPerm(thisCommand, placeid):
+    totalPlacePerm = None
+
+    thisPlace = places.getPlace(placeid)
+    if thisPlace:
+        placeLineage = thisPlace.lineage()
+        for each in placeLineage:
+            eachPerm = getPlacePerm(thisCommand, each.id)
+
+            if eachPerm:
+                if totalPlacePerm:
+                    if eachPerm.value > totalPlacePerm.value:
+                        totalPlacePerm = eachPerm
+                else:
+                    totalPlacePerm = eachPerm
+
+    return totalPlacePerm
+
 def getAliasPerm(thisCommand, aliasid):
     if utils.checkDB():
         conn = sqlite3.connect(DB)
@@ -171,15 +189,101 @@ def getGroupPerm(thisCommand, groupid):
         else:
             return None
 
-def getCombinedPerm(inputData, thisCommand):
-    userPerm = getUserPerm(thisCommand, inputData.user.id)
-    placePerm = getPlacePerm(thisCommand, inputData.place.id)
+def getGroupInheritedPerm(thisCommand, groupid):
+    thisGroup = groups.getGroup(groupid)
+    groupLineage = thisGroup.lineage()
+
+    thisPerm = None
+
+    for each in groupLineage:
+        eachPerm = getGroupPerm(thisCommand, each.id)
+        if eachPerm:
+            if thisPerm:
+                if eachPerm.value > thisPerm.value:
+                    thisPerm = eachPerm
+            else:
+                thisPerm = eachPerm
+
+    return thisPerm
+
+def getGlobalGroupPermbyUser(thisCommand, userid):
+    userGroups = groups.searchGlobalGroupbyMemberUser(userid)
     
+    totalPerm = None
+
+    if userGroups:
+        for each in userGroups:
+            thisGroupPerm = getGroupInheritedPerm(thisCommand, each.id)
+            if thisGroupPerm:
+                if totalPerm:
+                    if thisGroupPerm.value > totalPerm.value:
+                        totalPerm = thisGroupPerm
+                else:
+                    totalPerm = thisGroupPerm
+
+    return totalPerm
+
+def getLocalGroupPermbyUserandPlace(thisCommand, userid, placeid):
+    userGroups = groups.searchLocalGroupbyMemberUserandPlace(userid, placeid)
+
+    totalPerm = None
+
+    if userGroups:
+        for each in userGroups:
+            thisGroupPerm = getGroupInheritedPerm(thisCommand, each.id)
+            if thisGroupPerm:
+                if totalPerm:
+                    if thisGroupPerm.value > totalPerm.value:
+                        totalPerm = thisGroupPerm
+                else:
+                    totalPerm = thisGroupPerm
+
+    return totalPerm
+
+def getTotalGroupPermbyUserandPlace(thisCommand, userid, placeid):
+    userGroups = groups.searchGroupbyMemberUserandPlace(userid, placeid)
+
+    totalPerm = None
+
+    if userGroups:
+        for each in userGroups:
+            thisGroupPerm = getGroupInheritedPerm(thisCommand, each.id)
+            if thisGroupPerm:
+                if totalPerm:
+                    if thisGroupPerm.value > totalPerm.value:
+                        totalPerm = thisGroupPerm
+                else:
+                    totalPerm = thisGroupPerm
+
+    return totalPerm
+
+def getCombinedPerm(inputData, thisCommand):
+    resultantPerm = None
+    userPerm = getUserPerm(thisCommand, inputData.user.id)
+    globalGroupPerm = getGlobalGroupPermbyUser(thisCommand, inputData.user.id)
+    placePerm = getPlaceInheritedPerm(thisCommand, inputData.place.id)
     thisAlias = aliases.getAlias(inputData.user.id, inputData.place.id)
     if thisAlias:
         aliasPerm = getAliasPerm(thisCommand, thisAlias.id)
+    else:
+        aliasPerm = None
+    localGroupPerm = getLocalGroupPermbyUserandPlace(thisCommand, inputData.user.id, inputData.place.id)
+    commandPerm = getCommandPerm(thisCommand)
 
-    groupPerm = getGroupPerm(thisCommand, thisGroup.id)
+    if userPerm:
+        resultantPerm = userPerm
+    elif globalGroupPerm:
+        resultantPerm = globalGroupPerm
+    elif placePerm:
+        resultantPerm = placePerm
+    elif aliasPerm:
+        resultantPerm = aliasPerm
+    elif localGroupPerm:
+        resultantPerm = localGroupPerm
+    elif commandPerm:
+        resultantPerm = commandPerm
+
+    return resultantPerm
 
 def addPermbyType(profile):
     if profile.type = 'command':
