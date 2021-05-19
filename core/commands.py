@@ -38,24 +38,28 @@ def manage_read_pool():
                         theseCommands[collection].update({module : {}})
 
                         for command in imports[collection][module]:
+                            #THIS IS WHERE TO LOAD theseCommands WITH PERMISSIONS
                             theseCommands[collection][module].update({command : imports[collection][module][command]})
 
-                result = findFilter(inMessage)
+                results = findFilters(inMessage)
 
-                if result:
-                    if 'commands' in ongoing[result]:
-                        for collection in theseCommands:
-                            if ongoing[result]['module'] in theseCommands[collection]:
-                                theseCommands[collection][ongoing[result]['module']].update(ongoing[result]['commands'])
+                if results:
+                    for each in results:
+                        if 'commands' in ongoing[each]:
+                            for collection in theseCommands:
+                                if ongoing[each]['module'] in theseCommands[collection]:
+                                    theseCommands[collection][ongoing[each]['module']].update(ongoing[each]['commands'])
 
-                    if 'tag' in ongoing[result]:
-                        if inMessage.content.startswith(f'{inMessage.place.trigger}{ongoing[result]["tag"]}>'):
-                            inMessage.content = inMessage.content.split(f'{inMessage.place.trigger}{ongoing[result]["tag"]}>', 1)[1] 
-                            ongoing[result]['queue'].put(inMessage)
+                        #THIS IS WHERE TO LOAD ONGOING COMMANDS WITH PERMISSIONS
+
+                        if 'tag' in ongoing[each]:
+                            if inMessage.content.startswith(f'{inMessage.place.trigger}{ongoing[each]["tag"]}>'):
+                                inMessage.content = inMessage.content.split(f'{inMessage.place.trigger}{ongoing[each]["tag"]}>', 1)[1] 
+                                ongoing[each]['queue'].put(inMessage)
+                            else:
+                                messageReaders[executor.submit(readM, inMessage, theseCommands)] = inMessage
                         else:
                             messageReaders[executor.submit(readM, inMessage, theseCommands)] = inMessage
-                    else:
-                        messageReaders[executor.submit(readM, inMessage, theseCommands)] = inMessage
                 else:
                     messageReaders[executor.submit(readM, inMessage, theseCommands)] = inMessage
 
@@ -73,7 +77,7 @@ def manage_read_pool():
                     del ongoing[inMessage.id]
                 del messageReaders[future]
 
-def findFilter(findMessage):
+def findFilters(findMessage):
     global ongoing
     foundFilters = []
 
@@ -81,8 +85,8 @@ def findFilter(findMessage):
         if eachValue['filter'].compare(findMessage):
             foundFilters.append(eachKey)
 
-    if len(foundFilters) == 1:
-        return foundFilters[0]
+    if len(foundFilters) > 0:
+        return foundFilters
     
     else:
         return None
@@ -127,8 +131,9 @@ def temp_commands(ref_message, moduleName, addition, filter_place=None, filter_u
         return 1
 
 class command:
-    def __init__(self, NAME, PARENT, STORAGE=None, DESCRIPTION=None, INSTRUCTION=None, FUNCTION=None, ENABLED=True, PERM=0):
+    def __init__(self, NAME, PARENT, STORAGE=None, DESCRIPTION=None, INSTRUCTION=None, FUNCTION=None, ENABLED=True):
         self.name = NAME
+        self.full_name = NAME
         self.parent = PARENT
         self.description = DESCRIPTION
         self.instruction = INSTRUCTION
@@ -146,6 +151,11 @@ class command:
             while not mod.parent_module:
                 mod = mod.parent
             self.parent_module = mod.parent_module
+
+        com = self
+        while not inspect.ismodule(com.parent):
+            self.full_name = f'{com.parent.name} {self.full_name}'
+            com = com.parent
 
         if self.storage != None:
             self.storage.update({self.name : self})
