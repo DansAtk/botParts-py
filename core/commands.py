@@ -6,6 +6,7 @@ import concurrent.futures
 import copy
 
 import config
+from core.perms import getCombinedPerm
 
 if not config.inQ:
     config.inQ = Queue()
@@ -339,7 +340,15 @@ def readM(thisMessage, theseCommands):
                             if len(fullCommand[i:]) > 0:
                                 content = fullCommand[i:]
 
-                            pack.execute(inputData, content)
+                            thisPerm = perms.getCombinedPerm(inputData, pack.full_name)
+                            
+                            if thisPerm:
+                                if thisPerm.value == 1:
+                                    config.outQ.put('You do not have permission to do that!')
+                                else:
+                                    pack.execute(inputData, content)
+                            else:
+                                pack.execute(inputData, content)
 
             if valid == False:
                 config.debugQ.put('Invalid command!')
