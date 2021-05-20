@@ -6,7 +6,7 @@ import shutil
 import sqlite3
 
 import config
-from core.commands import command, request_queue
+from core import commands
 from core import utils
 from core import users
 from core import places
@@ -184,42 +184,42 @@ def dbinit():
 
 def registerCommands():
     global addAliasC
-    addAliasC = command('alias', utils.addC)
+    addAliasC = commands.command('alias', utils.addC)
     addAliasC.description = 'Builds an alias from parameters, then adds it to the database.'
     addAliasC.instruction = 'First specify a user and server. Then, specify alias attributes using \'Attribute=Value\' with each separated by a space.'
     addAliasC.function = 'addAliasF'
     addAliasC.parent_module = mSelf
     global removeAliasC
-    removeAliasC = command('alias', utils.removeC)
+    removeAliasC = commands.command('alias', utils.removeC)
     removeAliasC.description = 'Removes an alias from the database.'
     removeAliasC.instruction = 'Specify a user and server.'
     removeAliasC.function = 'removeAliasF'
     removeAliasC.parent_module = mSelf
     global editAliasC
-    editAliasC = command('alias', utils.editC)
+    editAliasC = commands.command('alias', utils.editC)
     editAliasC.description = 'Updates an existing alias with new attributes.'
     editAliasC.instruction = 'First specify a user and server. Then, specify new attributes using \'Attribute=Value\' with each separated by a space.'
     editAliasC.function = 'editAliasF'
     editAliasC.parent_module = mSelf
     global showAliasC
-    showAliasC = command('alias', utils.showC)
+    showAliasC = commands.command('alias', utils.showC)
     showAliasC.description = 'Displays detailed information about a specific alias.'
     showAliasC.instruction = 'Specify a user and place.'
     showAliasC.function = 'showAliasF'
     showAliasC.parent_module = mSelf
     global listAliasC
-    listAliasC = command('alias', utils.listC)
+    listAliasC = commands.command('alias', utils.listC)
     listAliasC.description = 'Lists all known aliases.'
     listAliasC.function = 'listAliasF'
     listAliasC.parent_module = mSelf
     global listUserAliasC
-    listUserAliasC = command('alias', users.listUserC)
+    listUserAliasC = commands.command('alias', users.listUserC)
     listUserAliasC.description = 'Lists all aliases associated with a specific user.'
     listUserAliasC.instruction = 'Specify a user.'
     listUserAliasC.function = 'listUserAliasF'
     listUserAliasC.parent_module = mSelf
     global listPlaceAliasC
-    listPlaceAliasC = command('alias', places.listPlaceC)
+    listPlaceAliasC = commands.command('alias', places.listPlaceC)
     listPlaceAliasC.description = 'Lists all aliases associated with a specific place.'
     listPlaceAliasC.instruction = 'Specify a place.'
     listPlaceAliasC.function = 'listPlaceAliasF'
@@ -273,7 +273,7 @@ def addAliasF(inputData, content):
         config.outQ.put('User and/or place not found.')
 
 def removeAliasF(inputData, content):
-    thisThread = request_queue(inputData, filter_channel=True, filter_user=True)
+    thisThread = commands.request_queue(inputData, filter_place=True, filter_user=True)
     userString = content[0]
     placeString = content[1]
 

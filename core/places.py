@@ -8,7 +8,7 @@ import pytz
 from datetime import *
 
 import config
-from core.commands import command, request_queue
+from core import commands
 from core import utils
 
 mSelf = sys.modules[__name__]
@@ -239,46 +239,46 @@ def dbinit():
 
 def registerCommands():
     global addPlaceC
-    addPlaceC = command('place', utils.addC)
+    addPlaceC = commands.command('place', utils.addC)
     addPlaceC.description = 'Builds a place from parameters, then adds it to the database.'
     addPlaceC.instruction = 'Specify place attributes using \'Attribute=Value\' with each separated by a space. \'id\' is required.'
     addPlaceC.function = 'addPlaceF'
     addPlaceC.parent_module = mSelf
     global removePlaceC
-    removePlaceC = command('place', utils.removeC)
+    removePlaceC = commands.command('place', utils.removeC)
     removePlaceC.description = 'Removes a place from the database.'
     removePlaceC.instruction = 'Specify a place.'
     removePlaceC.function = 'removePlaceF'
     removePlaceC.parent_module = mSelf
     global editPlaceC
-    editPlaceC = command('place', utils.editC)
+    editPlaceC = commands.command('place', utils.editC)
     editPlaceC.description = 'Updates an existing place with new attributes.'
     editPlaceC.instruction = 'First specify a place. Then, specify new attributes using \'Attribute=Value\' with each separated by a space.'
     editPlaceC.function = 'editPlaceF'
     editPlaceC.parent_module = mSelf
     global showPlaceC
-    showPlaceC = command('place', utils.showC)
+    showPlaceC = commands.command('place', utils.showC)
     showPlaceC.description = 'Displays detailed information about a single place.'
     showPlaceC.instruction = 'Specify a place.'
     showPlaceC.function = 'showPlaceF'
     showPlaceC.parent_module = mSelf
     global listPlaceC
-    listPlaceC = command('place', utils.listC)
+    listPlaceC = commands.command('place', utils.listC)
     listPlaceC.description = 'Lists all places in the database.'
     listPlaceC.function = 'listPlaceF'
     listPlaceC.parent_module = mSelf
     global findPlaceC
-    findPlaceC = command('place', utils.findC)
+    findPlaceC = commands.command('place', utils.findC)
     findPlaceC.description = 'Searches for places meeting the given criteria.'
     findPlaceC.instruction = 'Specify a parameter.'
     findPlaceC.parent_module = mSelf
     global findPlaceNameC
-    findPlaceNameC = command('name', findPlaceC)
+    findPlaceNameC = commands.command('name', findPlaceC)
     findPlaceNameC.description = 'Searches for places with names matching the given query.'
     findPlaceNameC.instruction = 'Specify a name or nickname.'
     findPlaceNameC.function = 'findPlaceNameF'
     global findPlaceTimezoneC
-    findPlaceTimezoneC = command('timezone', findPlaceC)
+    findPlaceTimezoneC = commands.command('timezone', findPlaceC)
     findPlaceTimezoneC.description = 'Searches for places with timezones matching the given query.'
     findPlaceTimezoneC.instruction = 'Specify a timezone.'
     findPlaceTimezoneC.function = 'findPlaceTimezoneF'
@@ -343,7 +343,7 @@ def addPlaceF(inputData, content):
         config.outQ.put('Invalid attribute(s).')
 
 def removePlaceF(inputData, content):
-    thisThread = request_queue(inputData, filter_channel=True, filter_user=True)
+    thisThread = commands.request_queue(inputData, filter_place=True, filter_user=True)
     thisQ = thisThread['queue']
     placeString = content[0]
     thisPlace = tryGetOnePlace(placeString)

@@ -6,7 +6,7 @@ import shutil
 import sqlite3
 
 import config
-from core.commands import command, verifyCommand
+from core import commands
 from core import utils
 from core import users
 from core import places
@@ -63,15 +63,15 @@ def getPerm(permid):
 def getPermbyType(profile):
     thisPerm = None
 
-    if profile.type = 'command':
+    if profile.type == 'command':
         thisPerm = getCommandPerm(profile.command)
-    elif profile.type = 'user':
+    elif profile.type == 'user':
         thisPerm = getUserPerm(profile.command, profile.target)
-    elif profile.type = 'place':
+    elif profile.type == 'place':
         thisPerm = getPlacePerm(profile.command, profile.target)
-    elif profile.type = 'alias':
+    elif profile.type == 'alias':
         thisPerm = getAliasPerm(profile.command, profile.target)
-    elif profile.type = 'group':
+    elif profile.type == 'group':
         thisPerm = getGroupPerm(profile.command, profile.target)
 
     return thisPerm
@@ -286,15 +286,15 @@ def getCombinedPerm(inputData, thisCommand):
     return resultantPerm
 
 def addPermbyType(profile):
-    if profile.type = 'command':
+    if profile.type == 'command':
         addCommandPerm(profile)
-    elif profile.type = 'user':
+    elif profile.type == 'user':
         addUserPerm(profile)
-    elif profile.type = 'place':
+    elif profile.type == 'place':
         addPlacePerm(profile)
-    elif profile.type = 'alias':
+    elif profile.type == 'alias':
         addAliasPerm(profile)
-    elif profile.type = 'group':
+    elif profile.type == 'group':
         addGroupPerm(profile)
 
 def addCommandPerm(profile):
@@ -377,15 +377,15 @@ def removePerm(permid):
         conn.close()
 
 def removePermbyType(profile):
-    if profile.type = 'command':
+    if profile.type == 'command':
         removeCommandPerm(profile)
-    elif profile.type = 'user':
+    elif profile.type == 'user':
         removeUserPerm(profile)
-    elif profile.type = 'place':
+    elif profile.type == 'place':
         removePlacePerm(profile)
-    elif profile.type = 'alias':
+    elif profile.type == 'alias':
         removeAliasPerm(profile)
-    elif profile.type = 'group':
+    elif profile.type == 'group':
         removeGroupPerm(profile)
 
 def removeUserPerm(profile):
@@ -480,25 +480,25 @@ def dbinit():
 
 def registerCommands():
     global addPermC
-    addPermC = command('perm', utils.addC)
+    addPermC = commands.command('perm', utils.addC)
     addPermC.description = ''
     addPermC.instruction = ''
     addPermC.function = 'addPermF'
     addPermC.parent_module = mSelf
     global removePermC
-    removePermC = command('perm', utils.removeC)
+    removePermC = commands.command('perm', utils.removeC)
     removePermC.description = ''
     removePermC.instruction = ''
     removePermC.function = 'removePermF'
     removePermC.parent_module = mSelf
     global editPermC
-    editPermC = command('perm', utils.editC)
+    editPermC = commands.command('perm', utils.editC)
     editPermC.description = ''
     editPermC.instruction = ''
     editPermC.function = 'editPermF'
     editPermC.parent_module = mSelf
     global showPermC
-    showPermC = command('perm', utils.showC)
+    showPermC = commands.command('perm', utils.showC)
     showPermC.description = ''
     showPermC.instruction = ''
     showPermC.function = 'showPermF'
@@ -520,8 +520,8 @@ def addPermF(inputData, content):
 
     if ('command' in permDict.keys()) and ('value' in permDict.keys()):
         if utils.isQuoted(permDict['command']):
-            if verifyCommand(permDict['command'][1:-1]):
-                thisPerm = perm(permDict['command'][1:-1].lower()))
+            if commands.verifyCommand(permDict['command'][1:-1]):
+                thisPerm = perm(permDict['command'][1:-1].lower())
                 goodProfile = True
 
                 if 'value' in permDict.keys():
@@ -605,7 +605,7 @@ def removePermF(inputData, content):
     if ('command' in permDict.keys()) and ('value' in permDict.keys()):
         if utils.isQuoted(permDict['command']):
             if verifyCommand(permDict['command'][1:-1]):
-                thisPerm = perm(permDict['command'][1:-1].lower()))
+                thisPerm = perm(permDict['command'][1:-1].lower())
                 goodProfile = True
 
                 if all(x in permDict.keys() for x in ['user', 'place']):
@@ -687,7 +687,7 @@ def editPermF(inputData, content):
     if ('command' in permDict.keys()) and ('value' in permDict.keys()):
         if utils.isQuoted(permDict['command']):
             if verifyCommand(permDict['command'][1:-1]):
-                thisPerm = perm(permDict['command'][1:-1].lower()))
+                thisPerm = perm(permDict['command'][1:-1].lower())
                 goodProfile = True
 
                 if 'value' in permDict.keys():
@@ -776,7 +776,7 @@ def showPermF(inputData, content):
     if ('command' in permDict.keys()) and ('value' in permDict.keys()):
         if utils.isQuoted(permDict['command']):
             if verifyCommand(permDict['command'][1:-1]):
-                thisPerm = perm(permDict['command'][1:-1].lower()))
+                thisPerm = perm(permDict['command'][1:-1].lower())
                 goodProfile = True
 
                 if all(x in permDict.keys() for x in ['user', 'place']):

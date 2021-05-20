@@ -6,7 +6,7 @@ import concurrent.futures
 import copy
 
 import config
-from core.perms import getCombinedPerm
+from core import perms
 
 if not config.inQ:
     config.inQ = Queue()
@@ -39,7 +39,6 @@ def manage_read_pool():
                         theseCommands[collection].update({module : {}})
 
                         for command in imports[collection][module]:
-                            #THIS IS WHERE TO LOAD theseCommands WITH PERMISSIONS
                             theseCommands[collection][module].update({command : imports[collection][module][command]})
 
                 results = findFilters(inMessage)
@@ -50,8 +49,6 @@ def manage_read_pool():
                             for collection in theseCommands:
                                 if ongoing[each]['module'] in theseCommands[collection]:
                                     theseCommands[collection][ongoing[each]['module']].update(ongoing[each]['commands'])
-
-                        #THIS IS WHERE TO LOAD ONGOING COMMANDS WITH PERMISSIONS
 
                         if 'tag' in ongoing[each]:
                             if inMessage.content.startswith(f'{inMessage.place.trigger}{ongoing[each]["tag"]}>'):

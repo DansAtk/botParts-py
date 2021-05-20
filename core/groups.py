@@ -6,7 +6,7 @@ import shutil
 import sqlite3
 
 import config
-from core.commands import command, request_queue
+from core import commands
 from core import utils
 from core import users
 from core import places
@@ -439,70 +439,70 @@ def dbinit():
 
 def registerCommands():
     global addGroupC
-    addGroupC = command('group', utils.addC)
+    addGroupC = commands.command('group', utils.addC)
     addGroupC.description = 'Builds a group from parameters, then adds it to the database.'
     addGroupC.instruction = 'Specify group attributes using \'Attribute=Value\' with each separated by a space.'
     addGroupC.function = 'addGroupF'
     addGroupC.parent_module = mSelf
     global addGroupMemberC
-    addGroupMemberC = command('member', addGroupC)
+    addGroupMemberC = commands.command('member', addGroupC)
     addGroupMemberC.description = 'Adds a user (or group) as a member of a group.'
     addGroupMemberC.instruction = 'Specify a group followed by its new member.'
     addGroupMemberC.function = 'addGroupMemberF'
     global removeGroupC
-    removeGroupC = command('group', utils.removeC)
+    removeGroupC = commands.command('group', utils.removeC)
     removeGroupC.description = 'Removes a group from the database.'
     removeGroupC.instruction = 'Specify a group.'
     removeGroupC.function = 'removeGroupF'
     removeGroupC.parent_module = mSelf
     global removeGroupMemberC
-    removeGroupMemberC = command('member', removeGroupC)
+    removeGroupMemberC = commands.command('member', removeGroupC)
     removeGroupMemberC.description = 'Removes a user\'s (or group\'s) membership from a group.'
     removeGroupMemberC.instruction = 'Specify a group followed by its member.'
     removeGroupMemberC.function = 'removeGroupMemberF'
     global editGroupC
-    editGroupC = command('group', utils.editC)
+    editGroupC = commands.command('group', utils.editC)
     editGroupC.description = 'Updates an existing group with new attributes.'
     editGroupC.instruction = 'First specify a group. Then, specify new attributes using \'Attribute=Value\' with each separated by a space.'
     editGroupC.function = 'editGroupF'
     editGroupC.parent_module = mSelf
     global showGroupC
-    showGroupC = command('group', utils.showC)
+    showGroupC = commands.command('group', utils.showC)
     showGroupC.description = 'Displays detailed information about a single group.'
     showGroupC.instruction = 'Specify a group.'
     showGroupC.function = 'showGroupF'
     showGroupC.parent_module = mSelf
     global listGroupC
-    listGroupC = command('group', utils.listC)
+    listGroupC = commands.command('group', utils.listC)
     listGroupC.description = 'Lists all groups in the database.'
     listGroupC.function = 'listGroupF'
     listGroupC.parent_module = mSelf
     global listGroupMemberC
-    listGroupMemberC = command('member', listGroupC)
+    listGroupMemberC = commands.command('member', listGroupC)
     listGroupMemberC.description = 'Lists all members of a given group.'
     listGroupMemberC.function = 'listGroupMemberF'
     global findGroupC
-    findGroupC = command('group', utils.findC)
+    findGroupC = commands.command('group', utils.findC)
     findGroupC.description = 'Searches for groups meeting the given criteria.'
     findGroupC.instruction = 'Specify a criteria.'
     findGroupC.parent_module = mSelf
     global findGroupNameC
-    findGroupNameC = command('name', findGroupC)
+    findGroupNameC = commands.command('name', findGroupC)
     findGroupNameC.description = 'Searches for groups with names matching the given query.'
     findGroupNameC.instruction = 'Specify a name.'
     findGroupNameC.function = 'findGroupNameF'
     global findGroupTypeC
-    findGroupTypeC = command('type', findGroupC)
+    findGroupTypeC = commands.command('type', findGroupC)
     findGroupTypeC.description = 'Searches for groups with types matching the given query.'
     findGroupTypeC.instruction = 'Specify a type.'
     findGroupTypeC.function = 'findGroupTypeF'
     global findGroupPlaceC
-    findGroupPlaceC = command('place', findGroupC)
+    findGroupPlaceC = commands.command('place', findGroupC)
     findGroupPlaceC.description = 'Searches for groups with places matching the given query.'
     findGroupPlaceC.instruction = 'Specify a place.'
     findGroupPlaceC.function = 'findGroupPlaceF'
     global findGroupMemberC
-    findGroupMemberC = command('member', findGroupC)
+    findGroupMemberC = commands.command('member', findGroupC)
     findGroupMemberC.description = 'Searches for groups of which the given user or group is a member.'
     findGroupMemberC.instruction = 'Specify a user or group.'
     findGroupMemberC.function = 'findGroupMemberF'
@@ -599,7 +599,7 @@ def addGroupMemberF(inputData, content):
         config.outQ.put('Group and/or member not found.')
 
 def removeGroupF(inputData, content):
-    thisThread = request_queue(inputData, filter_channel=True, filter_user=True)
+    thisThread = commands.request_queue(inputData, filter_place=True, filter_user=True)
     groupString = content[0]
     thisGroup = tryGetOneGroup(groupString)
 

@@ -8,7 +8,7 @@ import pytz
 from datetime import *
 
 import config
-from core.commands import command, request_queue
+from core import commands
 from core import utils
 
 mSelf = sys.modules[__name__]
@@ -248,62 +248,62 @@ def dbinit():
 
 def registerCommands():
     global addUserC
-    addUserC = command('user', utils.addC)
+    addUserC = commands.command('user', utils.addC)
     addUserC.description = 'Builds a user from parameters, then adds it to the database.'
     addUserC.instruction = 'Specify user attributes using \'Attribute=Value\' with each separated by a space. \'id\' is required.'
     addUserC.function = 'addUserF'
     addUserC.parent_module = mSelf
     global removeUserC
-    removeUserC = command('user', utils.removeC)
+    removeUserC = commands.command('user', utils.removeC)
     removeUserC.description = 'Removes a user from the database.'
     removeUserC.instruction = 'Specify a user.'
     removeUserC.function = 'removeUserF'
     removeUserC.parent_module = mSelf
     global editUserC
-    editUserC = command('user', utils.editC)
+    editUserC = commands.command('user', utils.editC)
     editUserC.description = 'Updates an existing user with new attributes.'
     editUserC.instruction = 'First specify a user. Then, specify new attributes using \'Attribute=Value\' with each separated by a space.'
     editUserC.function = 'editUserF'
     editUserC.parent_module = mSelf
     global showUserC
-    showUserC = command('user', utils.showC)
+    showUserC = commands.command('user', utils.showC)
     showUserC.description = 'Displays detailed information about a single user.'
     showUserC.instruction = 'Specify a user.'
     showUserC.function = 'showUserF'
     showUserC.parent_module = mSelf
     global listUserC
-    listUserC = command('user', utils.listC)
+    listUserC = commands.command('user', utils.listC)
     listUserC.description = 'Lists all users in the database.'
     listUserC.function = 'listUserF'
     listUserC.parent_module = mSelf
     global timeForC
-    timeForC = command('for', utils.timeC)
+    timeForC = commands.command('for', utils.timeC)
     timeForC.description = 'Displays the time in a specific user\'s timezone.'
     timeForC.instruction = 'Specify a user.'
     timeForC.function = 'timeForF'
     timeForC.parent_module = mSelf
     global findUserC
-    findUserC = command('user', utils.findC)
+    findUserC = commands.command('user', utils.findC)
     findUserC.description = 'Searches for users meeting the given criteria.'
     findUserC.instruction = 'Specify a parameter.'
     findUserC.parent_module = mSelf
     global findUserNameC
-    findUserNameC = command('name', findUserC)
+    findUserNameC = commands.command('name', findUserC)
     findUserNameC.description = 'Searches for users with names and/or nicknames matching the given query.'
     findUserNameC.instruction = 'Specify a name or nickname.'
     findUserNameC.function = 'findUserNameF'
     global findUserCountryC
-    findUserCountryC = command('country', findUserC)
+    findUserCountryC = commands.command('country', findUserC)
     findUserCountryC.description = 'Searches for users with countries matching the given query.'
     findUserCountryC.instruction = 'Specify a country.'
     findUserCountryC.function = 'findUserCountryF'
     global findUserTimezoneC
-    findUserTimezoneC = command('timezone', findUserC)
+    findUserTimezoneC = commands.command('timezone', findUserC)
     findUserTimezoneC.description = 'Searches for users with timezones matching the given query.'
     findUserTimezoneC.instruction = 'Specify a timezone.'
     findUserTimezoneC.function = 'findUserTimezoneF'
     global findUserBirthdayC
-    findUserBirthdayC = command('birthday', findUserC)
+    findUserBirthdayC = commands.command('birthday', findUserC)
     findUserBirthdayC.description = 'Searches for users with birthdays matching the given query.'
     findUserBirthdayC.instruction = 'Specify a birthday in format DD-MM.'
     findUserBirthdayC.function = 'findUserBirthdayF'
@@ -377,7 +377,7 @@ def addUserF(inputData, content):
         config.outQ.put('Invalid attribute(s).')
 
 def removeUserF(inputData, content):
-    thisThread = request_queue(inputData, filter_channel=True, filter_user=True)
+    thisThread = commands.request_queue(inputData, filter_place=True, filter_user=True)
     thisQ = thisThread['queue']
     userString = ' '.join(content)
     thisUser = tryGetOneUser(userString)
